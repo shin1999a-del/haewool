@@ -1,188 +1,193 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="ko" id="html-root">
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>떡방앗간 관리 시스템</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;700&family=Noto+Sans+KR:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;700&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet"/>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Noto Sans KR','Apple SD Gothic Neo',sans-serif;background:#fdf6ed;color:#2a1208;min-height:100vh}
-::-webkit-scrollbar{width:6px;height:6px}
-::-webkit-scrollbar-track{background:#f5ede2}
-::-webkit-scrollbar-thumb{background:#c8a882;border-radius:3px}
-button{font-family:inherit;cursor:pointer}
-input,select,textarea{font-family:inherit}
-@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
-.card{background:#fff;border-radius:14px;padding:20px;box-shadow:0 2px 12px rgba(0,0,0,.07);margin-bottom:16px;transition:all .2s}
-.card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.12)}
-/* HEADER */
-header{background:linear-gradient(135deg,#2a1208 0%,#6b2f0a 60%,#8b4c12 100%);color:#fff;padding:18px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;position:relative;overflow:hidden}
-header::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 80% 50%,rgba(200,131,42,.18),transparent 60%);pointer-events:none}
-.logo{display:flex;align-items:center;gap:14px;position:relative}
-.logo-icon{font-size:40px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.3))}
-.logo-ko{font-size:20px;font-weight:700;font-family:'Noto Serif KR',serif;letter-spacing:.04em}
-.logo-en{font-size:10px;letter-spacing:.25em;opacity:.5}
-.header-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px;position:relative}
-.kpi-row{display:flex;gap:10px;flex-wrap:wrap}
-.kpi-chip{background:rgba(255,255,255,.1);border-radius:8px;padding:6px 14px;text-align:center}
-.kpi-chip .val{font-size:15px;font-weight:700}
-.kpi-chip .lbl{font-size:10px;opacity:.6}
-.save-status{font-size:11px;opacity:.8}
-/* NAV */
-nav{background:#fff;border-bottom:2px solid #f0ddc8;display:flex;overflow-x:auto;padding:0 16px}
-nav button{padding:14px 16px;border:none;background:none;cursor:pointer;display:flex;align-items:center;gap:6px;font-size:14px;color:#7a4a20;font-weight:500;white-space:nowrap;border-bottom:3px solid transparent;transition:all .2s}
-nav button:hover{background:#f5ede2}
-nav button.active{color:#8b2500;border-bottom:3px solid #c8832a;background:#fff8ef}
-/* MAIN */
-main{max-width:1280px;margin:0 auto;padding:28px 16px;animation:fadeIn .4s ease}
-.sec-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
-h2{font-size:22px;font-weight:700;color:#2a1208;font-family:'Noto Serif KR',serif}
-.add-btn{padding:10px 20px;background:linear-gradient(135deg,#8b2500,#c8832a);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;box-shadow:0 2px 8px rgba(200,131,42,.4);transition:all .2s}
-.add-btn:hover{opacity:.88;transform:scale(.98)}
-/* KPI GRID */
-.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px}
-.kpi-card{background:#fff;border-radius:14px;padding:20px;box-shadow:0 2px 12px rgba(0,0,0,.07);border-top:3px solid}
-.kpi-card .icon{font-size:28px;margin-bottom:8px}
-.kpi-card .val{font-size:22px;font-weight:700}
-.kpi-card .title{font-size:13px;color:#888;margin-top:4px}
-.kpi-card .sub{font-size:11px;color:#bbb;margin-top:2px}
-/* TOOLBAR */
-.toolbar{display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
-.search-input{flex:1;min-width:200px;padding:10px 14px;border:1px solid #e8d4b8;border-radius:10px;font-size:14px;background:#fff;outline:none}
-select.sel{padding:10px 14px;border:1px solid #e8d4b8;border-radius:10px;font-size:14px;background:#fff}
-select.sel-sm{padding:6px 10px;border:1px solid #e8d4b8;border-radius:8px;font-size:13px;background:#fff}
-/* TABLE */
-table{width:100%;border-collapse:collapse}
-th{padding:8px 12px;text-align:left;font-size:12px;color:#888;font-weight:600;border-bottom:2px solid #f0ddc8;background:#fdf6ed}
-tr{border-bottom:1px solid #f5ede2}
-td{padding:10px 12px;font-size:13px;vertical-align:middle}
-/* BADGES */
-.badge{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700}
-.mono{background:#f5ede2;padding:2px 6px;border-radius:4px;font-size:11px;font-family:monospace;color:#8b4c12}
-/* ORDER CARDS */
-.order-grid{display:flex;flex-direction:column;gap:12px}
-.order-card{background:#fff;border-radius:14px;padding:18px;box-shadow:0 2px 12px rgba(0,0,0,.07);border-left:4px solid;transition:all .2s}
-.order-card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.12)}
-.order-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:6px}
-.order-name{font-size:17px;font-weight:700;color:#2a1208;margin-bottom:8px;font-family:'Noto Serif KR',serif}
-.item-tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
-.itag{background:#fff3e0;color:#8b4c12;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600}
-.order-note{font-size:12px;color:#aaa;background:#fdf6ed;padding:4px 8px;border-radius:6px;margin-bottom:8px}
-.order-bot{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
-.unpaid-badge{background:#ffeaea;color:#e05555;border:1px solid rgba(224,85,85,.33);padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700}
-.pay-btn{padding:6px 12px;background:#2e7d5a;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;transition:all .2s}
-.pay-btn:hover{opacity:.88}
-.edit-btn{padding:6px 12px;background:#f5ede2;color:#6b2f0a;border:1px solid #e8d4b8;border-radius:8px;font-size:12px;font-weight:600;transition:all .2s}
-.del-btn-sm{padding:6px 12px;background:#fff0f0;color:#e05555;border:1px solid #e8d4b8;border-radius:8px;font-size:12px;font-weight:600}
-/* CALENDAR */
-.cal-wrap{background:#fff;border-radius:14px;padding:20px;box-shadow:0 2px 12px rgba(0,0,0,.07)}
-.cal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
-.cal-title{font-size:20px;font-weight:700;font-family:'Noto Serif KR',serif;color:#2a1208}
-.cal-nav{background:none;border:1px solid #e8d4b8;border-radius:8px;padding:6px 14px;font-size:18px;cursor:pointer;color:#6b2f0a}
-.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
-.cal-day-head{text-align:center;font-size:13px;font-weight:700;padding:8px 0;background:#fdf6ed;border-radius:6px}
-.cal-cell-empty{min-height:90px;background:#fdf6ed;border-radius:8px;opacity:.3}
-.cal-cell{min-height:90px;border-radius:8px;padding:5px;overflow:hidden;cursor:pointer;transition:all .15s;border:1px solid #f0e0cc}
-.cal-cell:hover{border-color:#c8832a}
-.cal-date{font-size:13px;font-weight:500;margin-bottom:1px}
-.lunar-date{font-size:9px;color:#bbb;margin-bottom:2px}
-.holiday-tag{font-size:8px;background:#ffeaea;color:#e05555;border-radius:3px;padding:1px 3px;margin-bottom:2px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.lunar-tag{font-size:8px;background:#f3e5f5;color:#7b1fa2;border-radius:3px;padding:1px 3px;margin-bottom:2px;font-weight:600}
-.cal-order-dot{font-size:8px;padding:2px 4px;border-radius:3px;margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
-.cal-detail{margin-top:16px;padding:16px;background:#fdf6ed;border-radius:10px}
-.cal-detail-row{display:flex;gap:12px;align-items:center;padding:8px 0;border-bottom:1px solid #f0ddc8;flex-wrap:wrap;font-size:13px}
-/* CUSTOMERS */
-.cust-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
-.cust-card{background:#fff;border-radius:14px;padding:18px;box-shadow:0 2px 12px rgba(0,0,0,.07);display:flex;gap:14px;transition:all .2s}
-.cust-card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.12)}
-.avatar{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#c8832a,#8b2500);color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;flex-shrink:0;font-family:'Noto Serif KR',serif}
-.cust-name{font-size:16px;font-weight:700;color:#2a1208;margin-bottom:4px;font-family:'Noto Serif KR',serif}
-.cust-detail{font-size:12px;color:#777;margin-bottom:2px}
-.cust-note{font-size:11px;color:#c8832a;background:#fff8ef;padding:2px 8px;border-radius:4px;margin-top:4px;display:inline-block}
-.cust-stats{display:flex;gap:14px;margin-top:8px;font-size:12px;color:#aaa}
-/* EXPENSES */
-.exp-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
-.exp-card{background:#fff;border-radius:12px;padding:16px;box-shadow:0 2px 12px rgba(0,0,0,.07);position:relative;transition:all .2s}
-.exp-card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.12)}
-.exp-cat{font-size:10px;color:#c8832a;font-weight:700;text-transform:uppercase;letter-spacing:.12em;background:#fff8ef;display:inline-block;padding:2px 8px;border-radius:4px;margin-bottom:6px}
-.exp-item{font-size:15px;font-weight:700;color:#2a1208;margin-bottom:4px;font-family:'Noto Serif KR',serif}
-.exp-amt{font-size:20px;font-weight:700;color:#e05555}
-.del-btn{position:absolute;top:10px;right:10px;background:none;border:none;color:#ddd;cursor:pointer;font-size:14px}
-.del-btn:hover{color:#e05555}
-/* UNPAID */
-.unpaid-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #f5ede2;flex-wrap:wrap;gap:8px}
-/* MODAL */
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;z-index:9999;padding:16px;backdrop-filter:blur(2px)}
-.modal{background:#fff;border-radius:18px;padding:28px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 64px rgba(0,0,0,.2);animation:fadeIn .3s ease}
-.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px}
-.modal-title{font-size:18px;font-weight:700;color:#2a1208;font-family:'Noto Serif KR',serif}
-.close-btn{background:none;border:none;font-size:20px;cursor:pointer;color:#bbb}
-.form-col{display:flex;flex-direction:column;gap:14px}
-.lbl{display:block;font-size:12px;font-weight:700;color:#8b4c12;margin-bottom:4px;letter-spacing:.05em}
-.inp{width:100%;padding:10px 14px;border:1px solid #e8d4b8;border-radius:10px;font-size:14px;background:#fdf8f4;outline:none}
-.inp:focus{border-color:#c8832a}
-.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:20px}
-.cancel-btn{padding:10px 22px;background:#f5ede2;color:#888;border:none;border-radius:10px;font-size:14px;font-weight:600}
-.submit-btn{padding:10px 22px;background:linear-gradient(135deg,#8b2500,#c8832a);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700}
-/* DASH */
-.dash-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-bottom:16px}
-.bar-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
-.dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
-.bar-label{font-size:12px;color:#666;width:68px;flex-shrink:0}
-.bar-count{font-size:12px;font-weight:700;width:60px;flex-shrink:0}
-.bar-track{flex:1;height:6px;background:#f0e4d0;border-radius:3px;overflow:hidden}
-.bar-fill{height:100%;border-radius:3px;transition:width .6s ease}
-.link-btn{background:none;border:none;color:#c8832a;cursor:pointer;font-size:13px;font-weight:600}
+:root{--bg:#fdf6ed;--white:#fff;--dark:#2a1208;--mid:#6b2f0a;--gold:#c8832a;--cream:#f5ede2;--border:#e8d4b8;--green:#2e7d5a;--blue:#1565a8;--red:#e05555;--gray:#888;--lgray:#f5ede2}
+body{font-family:'Noto Sans KR','Apple SD Gothic Neo',sans-serif;background:var(--bg);color:var(--dark);min-height:100vh}
+body.ja{font-family:'Noto Sans JP','Hiragino Sans',sans-serif}
+::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-track{background:var(--cream)}::-webkit-scrollbar-thumb{background:#c8a882;border-radius:3px}
+button{font-family:inherit;cursor:pointer}input,select,textarea{font-family:inherit}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+header{background:linear-gradient(135deg,#2a1208 0%,#6b2f0a 55%,#8b4c12 100%);color:#fff;position:relative;overflow:hidden}
+header::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 75% 50%,rgba(200,131,42,.15),transparent 60%);pointer-events:none}
+.hdr-inner{position:relative;max-width:1300px;margin:0 auto;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.logo{display:flex;align-items:center;gap:12px}
+.logo-icon{font-size:36px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.3))}
+.logo-ko{font-size:19px;font-weight:700;font-family:'Noto Serif KR',serif;letter-spacing:.04em}
+body.ja .logo-ko{font-family:'Noto Serif JP',serif}
+.logo-en{font-size:9px;letter-spacing:.22em;opacity:.5;margin-top:2px}
+.hdr-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px;position:relative}
+.kpi-row{display:flex;gap:8px;flex-wrap:wrap}
+.kpi-chip{background:rgba(255,255,255,.1);border-radius:8px;padding:5px 12px;text-align:center;min-width:80px}
+.kpi-chip .val{font-size:14px;font-weight:700}.kpi-chip .lbl{font-size:9px;opacity:.6;margin-top:1px}
+.hdr-controls{display:flex;align-items:center;gap:8px}
+.save-dot{width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0;transition:background .3s}
+.save-dot.saving{background:var(--gold);animation:pulse 1s infinite}
+.save-txt{font-size:10px;opacity:.7}
+.lang-btn{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:20px;padding:4px 12px;font-size:11px;font-weight:600;transition:all .2s}
+.lang-btn:hover{background:rgba(255,255,255,.25)}
+nav{background:var(--white);border-bottom:2px solid var(--border);display:flex;overflow-x:auto;padding:0 16px;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+nav button{padding:13px 15px;border:none;background:none;cursor:pointer;display:flex;align-items:center;gap:5px;font-size:13px;color:#7a4a20;font-weight:500;white-space:nowrap;border-bottom:3px solid transparent;transition:all .2s}
+nav button:hover{background:var(--cream)}
+nav button.active{color:#8b2500;border-bottom:3px solid var(--gold);background:#fff8ef}
+main{max-width:1300px;margin:0 auto;padding:24px 16px;animation:fadeIn .35s ease}
+.card{background:var(--white);border-radius:14px;padding:18px;box-shadow:0 2px 10px rgba(0,0,0,.06);margin-bottom:16px;transition:box-shadow .2s}
+.card:hover{box-shadow:0 6px 20px rgba(0,0,0,.1)}
+.card-title{font-size:15px;font-weight:700;color:var(--dark);margin-bottom:14px;font-family:'Noto Serif KR',serif}
+body.ja .card-title{font-family:'Noto Serif JP',serif}
 .card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
-.card-title{font-size:16px;font-weight:700;color:#2a1208;margin-bottom:14px;font-family:'Noto Serif KR',serif}
-.legend-row{display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap}
-.legend-item{display:flex;align-items:center;gap:4px;font-size:12px;color:#666}
-.legend-dot{width:12px;height:12px;border-radius:3px}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:20px}
+.kpi-card{background:var(--white);border-radius:14px;padding:18px;box-shadow:0 2px 10px rgba(0,0,0,.06);border-top:3px solid}
+.kpi-card .icon{font-size:26px;margin-bottom:7px}.kpi-card .val{font-size:20px;font-weight:700}
+.kpi-card .ttl{font-size:12px;color:var(--gray);margin-top:3px}.kpi-card .sub{font-size:10px;color:#bbb;margin-top:2px}
+.sec-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:8px}
+h2.sec-title{font-size:20px;font-weight:700;color:var(--dark);font-family:'Noto Serif KR',serif}
+body.ja h2.sec-title{font-family:'Noto Serif JP',serif}
+.toolbar{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:center}
+.search-wrap{position:relative;flex:1;min-width:180px}
+.search-wrap input{width:100%;padding:10px 36px 10px 14px;border:1px solid var(--border);border-radius:10px;font-size:13px;background:var(--white);outline:none;transition:border .2s}
+.search-wrap input:focus{border-color:var(--gold)}
+.search-clear{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--gray);font-size:16px;cursor:pointer;padding:0;line-height:1}
+select.sel{padding:10px 14px;border:1px solid var(--border);border-radius:10px;font-size:13px;background:var(--white)}
+select.sel-sm{padding:6px 9px;border:1px solid var(--border);border-radius:8px;font-size:12px;background:var(--white)}
+.add-btn{padding:9px 18px;background:linear-gradient(135deg,#8b2500,#c8832a);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;box-shadow:0 2px 8px rgba(200,131,42,.35);transition:all .2s;white-space:nowrap}
+.add-btn:hover{opacity:.88;transform:scale(.98)}
+.pay-btn{padding:5px 11px;background:var(--green);color:#fff;border:none;border-radius:7px;font-size:11px;font-weight:700}
+.edit-btn{padding:5px 11px;background:var(--lgray);color:var(--mid);border:1px solid var(--border);border-radius:7px;font-size:11px;font-weight:600}
+.del-btn-sm{padding:5px 11px;background:#fff0f0;color:var(--red);border:1px solid #ffd0d0;border-radius:7px;font-size:11px;font-weight:600}
+.link-btn{background:none;border:none;color:var(--gold);cursor:pointer;font-size:12px;font-weight:600}
+.print-btn{padding:5px 11px;background:#e3f2fd;color:var(--blue);border:1px solid #bbdefb;border-radius:7px;font-size:11px;font-weight:600}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{padding:8px 10px;text-align:left;font-size:11px;color:var(--gray);font-weight:700;border-bottom:2px solid var(--border);background:var(--lgray)}
+tr.trow{border-bottom:1px solid #f5ede2;transition:background .15s}tr.trow:hover{background:#fffbf6}
+td{padding:9px 10px;vertical-align:middle}
+.badge{padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700;display:inline-block}
+.mono{background:var(--lgray);padding:2px 6px;border-radius:4px;font-size:10px;font-family:monospace;color:#8b4c12}
+.unpaid-badge{background:#ffeaea;color:var(--red);border:1px solid rgba(224,85,85,.3);padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700}
+.order-grid{display:flex;flex-direction:column;gap:10px}
+.order-card{background:var(--white);border-radius:12px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.06);border-left:4px solid;transition:all .2s}
+.order-card:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(0,0,0,.1)}
+.order-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;flex-wrap:wrap;gap:5px}
+.order-name{font-size:16px;font-weight:700;color:var(--dark);margin-bottom:7px;font-family:'Noto Serif KR',serif}
+body.ja .order-name{font-family:'Noto Serif JP',serif}
+.item-tags{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:7px}
+.itag{background:#fff3e0;color:#8b4c12;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600}
+.order-note{font-size:11px;color:#aaa;background:var(--lgray);padding:4px 8px;border-radius:5px;margin-bottom:7px}
+.order-bot{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px}
+.cust-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:14px}
+.cust-card{background:var(--white);border-radius:14px;padding:16px;box-shadow:0 2px 10px rgba(0,0,0,.06);display:flex;gap:12px;transition:all .2s}
+.cust-card:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(0,0,0,.1)}
+.avatar{width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#c8832a,#8b2500);color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;flex-shrink:0;font-family:'Noto Serif KR',serif}
+body.ja .avatar{font-family:'Noto Serif JP',serif}
+.cust-name{font-size:15px;font-weight:700;color:var(--dark);margin-bottom:3px;font-family:'Noto Serif KR',serif}
+body.ja .cust-name{font-family:'Noto Serif JP',serif}
+.cust-detail{font-size:11px;color:#777;margin-bottom:2px}
+.cust-note{font-size:10px;color:var(--gold);background:#fff8ef;padding:2px 7px;border-radius:4px;margin-top:3px;display:inline-block}
+.cust-stats{display:flex;gap:12px;margin-top:7px;font-size:11px;color:#aaa}
+.exp-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px}
+.exp-card{background:var(--white);border-radius:12px;padding:14px;box-shadow:0 2px 8px rgba(0,0,0,.06);position:relative;transition:all .2s}
+.exp-card:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(0,0,0,.1)}
+.exp-cat{font-size:9px;color:var(--gold);font-weight:700;text-transform:uppercase;letter-spacing:.12em;background:#fff8ef;display:inline-block;padding:2px 7px;border-radius:4px;margin-bottom:5px}
+.exp-item{font-size:14px;font-weight:700;color:var(--dark);margin-bottom:3px;font-family:'Noto Serif KR',serif}
+body.ja .exp-item{font-family:'Noto Serif JP',serif}
+.exp-amt{font-size:18px;font-weight:700;color:var(--red)}
+.del-x{position:absolute;top:9px;right:9px;background:none;border:none;color:#ddd;cursor:pointer;font-size:13px}
+.del-x:hover{color:var(--red)}
+.unpaid-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid #f5ede2;flex-wrap:wrap;gap:6px;font-size:12px}
+.cal-wrap{background:var(--white);border-radius:14px;padding:18px;box-shadow:0 2px 10px rgba(0,0,0,.06)}
+.cal-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.cal-title{font-size:18px;font-weight:700;font-family:'Noto Serif KR',serif;color:var(--dark)}
+body.ja .cal-title{font-family:'Noto Serif JP',serif}
+.cal-nav{background:none;border:1px solid var(--border);border-radius:7px;padding:5px 12px;font-size:16px;cursor:pointer;color:var(--mid)}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.cal-dh{text-align:center;font-size:11px;font-weight:700;padding:6px 0;background:var(--lgray);border-radius:5px}
+.cal-empty{min-height:80px;background:var(--lgray);border-radius:7px;opacity:.3}
+.cal-cell{min-height:80px;border-radius:7px;padding:5px;overflow:hidden;cursor:pointer;transition:all .15s;border:1px solid var(--border)}
+.cal-cell:hover{border-color:var(--gold);background:#fffbf5}
+.cal-date{font-size:12px;font-weight:500;margin-bottom:1px}
+.lunar-date{font-size:8px;color:#ccc;margin-bottom:2px}
+.hol-tag{font-size:7px;background:#ffeaea;color:var(--red);border-radius:2px;padding:1px 3px;margin-bottom:2px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lunar-tag{font-size:7px;background:#f3e5f5;color:#7b1fa2;border-radius:2px;padding:1px 3px;margin-bottom:2px;font-weight:600}
+.cal-dot{font-size:8px;padding:2px 3px;border-radius:3px;margin-bottom:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.cal-detail{margin-top:14px;padding:14px;background:var(--lgray);border-radius:10px}
+.cal-detail-row{display:flex;gap:10px;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);flex-wrap:wrap;font-size:12px}
+.legend-row{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+.legend-item{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--gray)}
+.legend-dot{width:10px;height:10px;border-radius:3px}
+.dash-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-bottom:14px}
+.bar-row{display:flex;align-items:center;gap:7px;margin-bottom:7px}
+.dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.bar-label{font-size:11px;color:var(--gray);width:62px;flex-shrink:0}
+.bar-count{font-size:11px;font-weight:700;width:54px;flex-shrink:0}
+.bar-track{flex:1;height:5px;background:var(--cream);border-radius:3px;overflow:hidden}
+.bar-fill{height:100%;border-radius:3px;transition:width .6s ease}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:9999;padding:14px;backdrop-filter:blur(2px)}
+.modal{background:var(--white);border-radius:16px;padding:24px;width:100%;max-width:500px;max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2);animation:fadeIn .3s ease}
+.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.modal-title{font-size:17px;font-weight:700;color:var(--dark);font-family:'Noto Serif KR',serif}
+body.ja .modal-title{font-family:'Noto Serif JP',serif}
+.close-btn{background:none;border:none;font-size:18px;cursor:pointer;color:#bbb}
+.form-col{display:flex;flex-direction:column;gap:12px}
+.lbl{display:block;font-size:11px;font-weight:700;color:#8b4c12;margin-bottom:3px;letter-spacing:.05em}
+.inp{width:100%;padding:9px 13px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:#fdf8f4;outline:none;transition:border .2s}
+.inp:focus{border-color:var(--gold)}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:18px}
+.cancel-btn{padding:9px 20px;background:var(--lgray);color:var(--gray);border:none;border-radius:9px;font-size:13px;font-weight:600}
+.submit-btn{padding:9px 20px;background:linear-gradient(135deg,#8b2500,#c8832a);color:#fff;border:none;border-radius:9px;font-size:13px;font-weight:700}
+.toast{position:fixed;bottom:24px;right:24px;background:#2a1208;color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:600;z-index:99999;animation:fadeIn .3s ease;box-shadow:0 4px 20px rgba(0,0,0,.3)}
+.notif-card{background:linear-gradient(135deg,#fff8ef,#fff3e0);border:1px solid #f0ddc8;border-radius:12px;padding:16px;margin-bottom:12px}
+.notif-title{font-weight:700;font-size:14px;color:var(--dark);margin-bottom:4px}
+.notif-desc{font-size:12px;color:var(--gray);margin-bottom:10px;line-height:1.6}
 @media(max-width:600px){
-  header{padding:14px 16px}
-  .logo-ko{font-size:16px}
-  nav button{padding:12px 12px;font-size:13px}
+  .hdr-inner{padding:12px 14px}.logo-ko{font-size:15px}
+  nav button{padding:11px 11px;font-size:12px}
   .kpi-grid{grid-template-columns:repeat(2,1fr)}
-  .cal-grid{gap:2px}
-  .cal-cell{min-height:70px;padding:3px}
-  .cal-date{font-size:11px}
+  .cal-cell{min-height:60px;padding:3px}.cal-date{font-size:10px}
 }
 </style>
 </head>
 <body>
-
+<div class="toast" id="toast" style="display:none"></div>
 <header>
-  <div class="logo">
-    <div class="logo-icon">🍡</div>
-    <div>
-      <div class="logo-ko">떡방앗간 관리 시스템</div>
-      <div class="logo-en">TTEOK SHOP MANAGER</div>
+  <div class="hdr-inner">
+    <div class="logo">
+      <div class="logo-icon">🍡</div>
+      <div>
+        <div class="logo-ko" id="logo-text">떡방앗간 관리 시스템</div>
+        <div class="logo-en">TTEOK SHOP MANAGER</div>
+      </div>
     </div>
-  </div>
-  <div class="header-right">
-    <div class="kpi-row">
-      <div class="kpi-chip"><div class="val" id="hdr-revenue" style="color:#f5c842">₩0</div><div class="lbl">이번 달 매출</div></div>
-      <div class="kpi-chip"><div class="val" id="hdr-expense" style="color:#e05555">₩0</div><div class="lbl">이번 달 경비</div></div>
-      <div class="kpi-chip"><div class="val" id="hdr-unpaid" style="color:#9c6fe4">0건</div><div class="lbl">미결제</div></div>
+    <div class="hdr-right">
+      <div class="kpi-row">
+        <div class="kpi-chip"><div class="val" id="h-rev" style="color:#f5c842">₩0</div><div class="lbl" id="h-rev-l">이번 달 매출</div></div>
+        <div class="kpi-chip"><div class="val" id="h-exp" style="color:#e05555">₩0</div><div class="lbl" id="h-exp-l">이번 달 경비</div></div>
+        <div class="kpi-chip"><div class="val" id="h-unp" style="color:#9c6fe4">0건</div><div class="lbl" id="h-unp-l">미결제</div></div>
+      </div>
+      <div class="hdr-controls">
+        <div class="save-dot saving" id="save-dot"></div>
+        <span class="save-txt" id="save-txt">연결 중...</span>
+        <button class="lang-btn" onclick="toggleLang()">🌐 日本語</button>
+      </div>
     </div>
-    <div class="save-status" id="save-status" style="color:#6fcf97">✓ 자동 저장됨</div>
   </div>
 </header>
-
-<nav id="nav">
-  <button class="active" onclick="showTab('dashboard')">📊 대시보드</button>
-  <button onclick="showTab('orders')">📋 예약 주문</button>
-  <button onclick="showTab('calendar')">📅 주문 캘린더</button>
-  <button onclick="showTab('customers')">👥 고객 관리</button>
-  <button onclick="showTab('payments')">💳 결제 관리</button>
-  <button onclick="showTab('expenses')">🧾 경비 관리</button>
+<nav id="nav-bar">
+  <button class="active" onclick="showTab('dashboard')">📊 <span class="nav-l" data-ko="대시보드" data-ja="ダッシュボード">대시보드</span></button>
+  <button onclick="showTab('orders')">📋 <span class="nav-l" data-ko="예약 주문" data-ja="予約注文">예약 주문</span></button>
+  <button onclick="showTab('calendar')">📅 <span class="nav-l" data-ko="주문 캘린더" data-ja="注文カレンダー">주문 캘린더</span></button>
+  <button onclick="showTab('customers')">👥 <span class="nav-l" data-ko="고객 관리" data-ja="顧客管理">고객 관리</span></button>
+  <button onclick="showTab('payments')">💳 <span class="nav-l" data-ko="결제 관리" data-ja="決済管理">결제 관리</span></button>
+  <button onclick="showTab('expenses')">🧾 <span class="nav-l" data-ko="경비 관리" data-ja="経費管理">경비 관리</span></button>
+  <button onclick="showTab('settings')">⚙️ <span class="nav-l" data-ko="설정" data-ja="設定">설정</span></button>
 </nav>
-
 <main id="main-content"></main>
-
-<!-- MODAL -->
 <div class="overlay" id="modal-overlay" style="display:none" onclick="closeModal()">
   <div class="modal" onclick="event.stopPropagation()">
     <div class="modal-head">
@@ -193,529 +198,266 @@ td{padding:10px 12px;font-size:13px;vertical-align:middle}
     <div class="modal-actions" id="modal-actions"></div>
   </div>
 </div>
-
 <script>
-// ==================== 데이터 ====================
-const STORAGE_KEY = 'tteok_shop_v3';
-const PRODUCTS = ['인절미','찰떡','백설기','송편','꿀떡','약식','경단','화전','수리취떡','시루떡','가래떡','떡국떡'];
-const EXPENSE_CATS = ['원재료','포장재','공과금','인건비','설비','기타'];
-const METHODS = ['현금','카드','카카오페이','토스','계좌이체','기타'];
-const STATUS_MAP = {
-  pending:   {label:'접수중',  color:'#c8832a',bg:'#fff3e0'},
-  confirmed: {label:'확인완료',color:'#2e7d5a',bg:'#e8f5e9'},
-  preparing: {label:'제조중',  color:'#1565a8',bg:'#e3f2fd'},
-  ready:     {label:'수령가능',color:'#7b1fa2',bg:'#f3e5f5'},
-  done:      {label:'완료',    color:'#666',   bg:'#f5f5f5'},
-};
-const KR_HOLIDAYS = {
-  '2026-01-01':'신정','2026-01-28':'설날 연휴','2026-01-29':'설날','2026-01-30':'설날 연휴',
-  '2026-03-01':'삼일절','2026-05-05':'어린이날','2026-05-15':'부처님 오신 날',
-  '2026-06-06':'현충일','2026-08-15':'광복절','2026-09-24':'추석 연휴',
-  '2026-09-25':'추석','2026-09-26':'추석 연휴','2026-10-03':'개천절',
-  '2026-10-09':'한글날','2026-12-25':'크리스마스',
-  '2027-01-01':'신정','2027-01-17':'설날 연휴','2027-01-18':'설날','2027-01-19':'설날 연휴',
-  '2027-03-01':'삼일절','2027-05-05':'어린이날','2027-06-06':'현충일',
-  '2027-08-15':'광복절','2027-10-03':'개천절','2027-10-09':'한글날','2027-12-25':'크리스마스',
-};
-const LUNAR_FEST = {
-  '2026-01-29':'정월 초하루','2026-02-17':'정월 대보름','2026-05-15':'사월 초파일',
-  '2026-09-25':'추석 (음8/15)','2026-12-22':'동지',
-};
-const INITIAL = {
-  orders:[
-    {id:'ORD-001',customerName:'김지은',items:[{name:'인절미',qty:20,price:2500}],total:50000,pickup:'2026-05-15',status:'confirmed',paid:true,note:'설 선물용 포장 요청'},
-    {id:'ORD-002',customerName:'이민준',items:[{name:'찰떡',qty:10,price:3000},{name:'백설기',qty:5,price:2000}],total:40000,pickup:'2026-05-20',status:'preparing',paid:false,note:''},
-    {id:'ORD-003',customerName:'박서연',items:[{name:'송편',qty:30,price:2200}],total:66000,pickup:'2026-09-25',status:'pending',paid:false,note:'추석 선물 세트'},
-  ],
-  customers:[
-    {id:'C001',name:'김지은',phone:'010-1234-5678',email:'jieun@example.com',address:'서울시 종로구 인사동 1-2',totalOrders:6,totalSpent:320000,note:'단골 VIP 고객'},
-    {id:'C002',name:'이민준',phone:'010-9876-5432',email:'minjun@example.com',address:'서울시 마포구 홍대입구 3-4',totalOrders:2,totalSpent:85000,note:''},
-    {id:'C003',name:'박서연',phone:'010-2222-3333',email:'seoyeon@example.com',address:'서울시 강남구 압구정로 7-8',totalOrders:9,totalSpent:520000,note:'명절 대량 주문 단골'},
-  ],
-  payments:[
-    {id:'PAY-001',orderId:'ORD-001',amount:50000,method:'현금',date:'2026-05-10',status:'완료'},
-  ],
-  expenses:[
-    {id:'EXP-001',category:'원재료',item:'찹쌀 (20kg)',amount:52000,date:'2026-05-08',vendor:'○○농협'},
-    {id:'EXP-002',category:'포장재',item:'선물 상자·리본',amount:18000,date:'2026-05-07',vendor:'△△포장재'},
-    {id:'EXP-003',category:'공과금',item:'전기요금',amount:85000,date:'2026-05-01',vendor:'한국전력'},
-  ],
-};
-
-let DB = loadDB();
-let currentTab = 'dashboard';
-let calYear = new Date().getFullYear();
-let calMonth = new Date().getMonth();
-let calSelected = null;
-let saveTimer = null;
-
-function loadDB(){
-  try{ const r=localStorage.getItem(STORAGE_KEY); if(r)return JSON.parse(r); }catch(e){}
-  return JSON.parse(JSON.stringify(INITIAL));
+const SUPABASE_URL='https://adkfwhkneptmndzgrsfq.supabase.co';
+const SUPABASE_KEY='sb_publishable_QLsQShr2Sjw3iOQCfd-KRA_QywsT1t_';
+async function sb(method,table,body,id,extra){
+  const url=`${SUPABASE_URL}/rest/v1/${table}${id?`?id=eq.${id}`:extra||''}`;
+  const res=await fetch(url,{method,headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`,'Content-Type':'application/json','Prefer':method==='POST'?'return=representation':''},body:body?JSON.stringify(body):null});
+  if(!res.ok)throw new Error(await res.text());
+  const tx=await res.text();return tx?JSON.parse(tx):[];
 }
-function saveDB(){
-  document.getElementById('save-status').textContent='⏳ 저장 중...';
-  document.getElementById('save-status').style.color='#f5c842';
-  clearTimeout(saveTimer);
-  saveTimer=setTimeout(()=>{
-    try{ localStorage.setItem(STORAGE_KEY,JSON.stringify(DB)); }catch(e){}
-    document.getElementById('save-status').textContent='✓ 자동 저장됨';
-    document.getElementById('save-status').style.color='#6fcf97';
-  },600);
-}
-function nextId(arr,prefix){
-  return prefix+'-'+String(arr.length+1).padStart(3,'0');
-}
-
-// ==================== 헤더 업데이트 ====================
-function updateHeader(){
-  const rev=DB.payments.filter(p=>p.status==='완료').reduce((s,p)=>s+p.amount,0);
-  const exp=DB.expenses.reduce((s,e)=>s+e.amount,0);
-  const unp=DB.orders.filter(o=>!o.paid).length;
-  document.getElementById('hdr-revenue').textContent='₩'+rev.toLocaleString();
-  document.getElementById('hdr-expense').textContent='₩'+exp.toLocaleString();
-  document.getElementById('hdr-unpaid').textContent=unp+'건';
-}
-
-// ==================== 탭 전환 ====================
-function showTab(tab){
-  currentTab=tab;
-  document.querySelectorAll('nav button').forEach((b,i)=>{
-    b.classList.toggle('active',['dashboard','orders','calendar','customers','payments','expenses'][i]===tab);
-  });
-  updateHeader();
-  const el=document.getElementById('main-content');
-  el.style.animation='none';
-  el.offsetHeight;
-  el.style.animation='fadeIn .4s ease';
-  if(tab==='dashboard')renderDashboard();
-  else if(tab==='orders')renderOrders();
-  else if(tab==='calendar')renderCalendar();
-  else if(tab==='customers')renderCustomers();
-  else if(tab==='payments')renderPayments();
-  else if(tab==='expenses')renderExpenses();
-}
-
-// ==================== 음력 근사 ====================
-function getLunar(ds){
-  const d=new Date(ds);
-  const epoch=new Date(1900,0,31).getTime();
-  const days=Math.floor((d.getTime()-epoch)/86400000);
-  const cycle=29.53059;
-  const months=days/cycle;
-  const m=Math.floor(months%12)+1;
-  const day=Math.floor((months%1)*cycle)+1;
-  return {m,d:day};
-}
-
-// ==================== 배지 HTML ====================
-function badge(status){
-  const s=STATUS_MAP[status]||{label:status,color:'#888',bg:'#eee'};
-  return `<span class="badge" style="background:${s.bg};color:${s.color};border:1px solid ${s.color}55">${s.label}</span>`;
-}
+const api={get:(t,q)=>sb('GET',t,null,null,q||''),post:(t,b)=>sb('POST',t,b),patch:(t,id,b)=>sb('PATCH',t,b,id),del:(t,id)=>sb('DELETE',t,null,id)};
+let DB={orders:[],customers:[],payments:[],expenses:[]};
+let LANG=localStorage.getItem('tteok_lang')||'ko';
+let currentTab='dashboard',calYear=new Date().getFullYear(),calMonth=new Date().getMonth(),calSelected=null;
+let tmpItems=[],kakaoWebhook=localStorage.getItem('kakao_webhook')||'';
+const STATUS_MAP={pending:{ko:'접수중',ja:'受付中',color:'#c8832a',bg:'#fff3e0'},confirmed:{ko:'확인완료',ja:'確認済',color:'#2e7d5a',bg:'#e8f5e9'},preparing:{ko:'제조중',ja:'製造中',color:'#1565a8',bg:'#e3f2fd'},ready:{ko:'수령가능',ja:'受取可',color:'#7b1fa2',bg:'#f3e5f5'},done:{ko:'완료',ja:'完了',color:'#666',bg:'#f5f5f5'}};
+const KR_HOLIDAYS={'2026-01-01':'신정','2026-01-28':'설날 연휴','2026-01-29':'설날','2026-01-30':'설날 연휴','2026-03-01':'삼일절','2026-05-05':'어린이날','2026-05-15':'부처님 오신 날','2026-06-06':'현충일','2026-08-15':'광복절','2026-09-24':'추석 연휴','2026-09-25':'추석','2026-09-26':'추석 연휴','2026-10-03':'개천절','2026-10-09':'한글날','2026-12-25':'크리스마스'};
+const LUNAR_FEST={'2026-01-29':'정월 초하루','2026-02-17':'정월 대보름','2026-05-15':'사월 초파일','2026-09-25':'추석 (음8/15)'};
+function PRODS(){return['인절미','찰떡','백설기','송편','꿀떡','약식','경단','화전','수리취떡','시루떡','가래떡','떡국떡'];}
+function ECATS(){return['원재료','포장재','공과금','인건비','설비','기타'];}
+function METHS(){return['현금','카드','카카오페이','토스','계좌이체','기타'];}
+function sl(ko,ja){return LANG==='ko'?ko:ja;}
+function slStatus(s){return STATUS_MAP[s]?STATUS_MAP[s][LANG]:s;}
+function badge(s){const m=STATUS_MAP[s]||{[LANG]:s,color:'#888',bg:'#eee'};return `<span class="badge" style="background:${m.bg};color:${m.color};border:1px solid ${m.color}44">${slStatus(s)}</span>`;}
 function mono(t){return `<code class="mono">${t}</code>`;}
+function kpiCard(icon,title,val,sub,color){return `<div class="kpi-card" style="border-top:3px solid ${color}"><div class="icon">${icon}</div><div class="val" style="color:${color}">${val}</div><div class="ttl">${title}</div><div class="sub">${sub}</div></div>`;}
+function nextId(){return 'ID-'+Date.now().toString(36).toUpperCase();}
+function getLunar(ds){const d=new Date(ds),ep=new Date(1900,0,31).getTime(),days=Math.floor((d.getTime()-ep)/86400000),cy=29.53059;return{m:Math.floor((days/cy)%12)+1,d:Math.floor(((days/cy)%1)*cy)+1};}
+function toast(msg,dur=2500){const el=document.getElementById('toast');el.textContent=msg;el.style.display='block';clearTimeout(el._t);el._t=setTimeout(()=>el.style.display='none',dur);}
+function setStatus(s){const dot=document.getElementById('save-dot'),txt=document.getElementById('save-txt');if(s==='connecting'){dot.className='save-dot saving';txt.textContent=sl('연결 중...','接続中...');}else if(s==='ok'){dot.className='save-dot';dot.style.background='var(--green)';txt.textContent=sl('클라우드 연결됨','クラウド接続済');}else if(s==='saving'){dot.className='save-dot saving';txt.textContent=sl('저장 중...','保存中...');}else if(s==='saved'){dot.className='save-dot';dot.style.background='var(--green)';txt.textContent=sl('저장됨','保存済');}else{dot.className='save-dot';dot.style.background='var(--red)';txt.textContent='오류';}}
+async function loadAll(){setStatus('connecting');try{const[o,c,p,e]=await Promise.all([api.get('orders','?order=created_at.desc'),api.get('customers','?order=created_at.desc'),api.get('payments','?order=created_at.desc'),api.get('expenses','?order=created_at.desc')]);DB={orders:o.map(x=>({...x,items:x.items||[]})),customers:c,payments:p,expenses:e};setStatus('ok');updateHeader();showTab(currentTab);}catch(e){setStatus('error');toast('⚠️ '+e.message,4000);}}
+function updateHeader(){const rev=DB.payments.filter(p=>p.status==='완료').reduce((s,p)=>s+p.amount,0),exp=DB.expenses.reduce((s,e)=>s+e.amount,0),unp=DB.orders.filter(o=>!o.paid).length;document.getElementById('h-rev').textContent='₩'+rev.toLocaleString();document.getElementById('h-exp').textContent='₩'+exp.toLocaleString();document.getElementById('h-unp').textContent=unp+sl('건','件');}
+function toggleLang(){LANG=LANG==='ko'?'ja':'ko';localStorage.setItem('tteok_lang',LANG);document.getElementById('html-root').lang=LANG;document.body.classList.toggle('ja',LANG==='ja');document.getElementById('logo-text').textContent=sl('떡방앗간 관리 시스템','トック屋管理システム');document.querySelector('.lang-btn').textContent=sl('🌐 日本語','🌐 한국어');document.querySelectorAll('.nav-l').forEach(el=>{el.textContent=el.dataset[LANG];});document.getElementById('h-rev-l').textContent=sl('이번 달 매출','今月売上');document.getElementById('h-exp-l').textContent=sl('이번 달 경비','今月経費');document.getElementById('h-unp-l').textContent=sl('미결제','未払い');updateHeader();showTab(currentTab);}
+function showTab(tab){currentTab=tab;document.querySelectorAll('nav button').forEach((b,i)=>{b.classList.toggle('active',['dashboard','orders','calendar','customers','payments','expenses','settings'][i]===tab);});const el=document.getElementById('main-content');el.style.animation='none';el.offsetHeight;el.style.animation='fadeIn .35s ease';({dashboard:renderDashboard,orders:()=>renderOrders('','all'),calendar:renderCalendar,customers:()=>renderCustomers(''),payments:renderPayments,expenses:()=>renderExpenses('전체'),settings:renderSettings})[tab]?.();}
+async function sendKakao(msg){if(!kakaoWebhook)return;try{await fetch(kakaoWebhook,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:'🍡 떡방앗간\n'+msg})});}catch(e){}}
 
-// ==================== 대시보드 ====================
+// ── DASHBOARD ──
 function renderDashboard(){
-  const rev=DB.payments.filter(p=>p.status==='완료').reduce((s,p)=>s+p.amount,0);
-  const exp=DB.expenses.reduce((s,e)=>s+e.amount,0);
-  const profit=rev-exp;
+  const rev=DB.payments.filter(p=>p.status==='완료').reduce((s,p)=>s+p.amount,0),exp=DB.expenses.reduce((s,e)=>s+e.amount,0),profit=rev-exp;
   const sc={};DB.orders.forEach(o=>{sc[o.status]=(sc[o.status]||0)+1;});
   const ec={};DB.expenses.forEach(e=>{ec[e.category]=(ec[e.category]||0)+e.amount;});
-  const upcoming=DB.orders.filter(o=>o.status!=='done').sort((a,b)=>a.pickup.localeCompare(b.pickup)).slice(0,5);
-
+  const upcoming=DB.orders.filter(o=>o.status!=='done').sort((a,b)=>a.pickup.localeCompare(b.pickup)).slice(0,6);
   document.getElementById('main-content').innerHTML=`
-  <div class="sec-head"><h2>📊 대시보드</h2></div>
+  <div class="sec-head"><h2 class="sec-title">📊 ${sl('대시보드','ダッシュボード')}</h2></div>
   <div class="kpi-grid">
-    ${kpiCard('💰','이번 달 매출','₩'+rev.toLocaleString(),DB.payments.length+'건 결제','#c8832a')}
-    ${kpiCard('🧾','이번 달 경비','₩'+exp.toLocaleString(),DB.expenses.length+'건 지출','#e05555')}
-    ${kpiCard('📈','순이익','₩'+profit.toLocaleString(),profit>=0?'흑자 ▲':'적자 ▼',profit>=0?'#2e7d5a':'#e05555')}
-    ${kpiCard('👥','등록 고객 수',DB.customers.length+'명','누적 고객','#1565a8')}
+    ${kpiCard('💰',sl('이번 달 매출','今月売上'),'₩'+rev.toLocaleString(),DB.payments.length+sl('건 결제','件の決済'),'#c8832a')}
+    ${kpiCard('🧾',sl('이번 달 경비','今月経費'),'₩'+exp.toLocaleString(),DB.expenses.length+sl('건 지출','件の支出'),'#e05555')}
+    ${kpiCard('📈',sl('순이익','純利益'),'₩'+profit.toLocaleString(),profit>=0?sl('흑자 ▲','黒字 ▲'):sl('적자 ▼','赤字 ▼'),profit>=0?'#2e7d5a':'#e05555')}
+    ${kpiCard('👥',sl('등록 고객 수','登録顧客数'),DB.customers.length+sl('명','名'),sl('누적 고객','累計顧客'),'#1565a8')}
   </div>
   <div class="dash-row">
-    <div class="card">
-      <div class="card-title">주문 현황</div>
-      ${Object.entries(STATUS_MAP).map(([k,v])=>`
-        <div class="bar-row">
-          <div class="dot" style="background:${v.color}"></div>
-          <div class="bar-label">${v.label}</div>
-          <div class="bar-count">${sc[k]||0}건</div>
-          <div class="bar-track"><div class="bar-fill" style="width:${((sc[k]||0)/Math.max(DB.orders.length,1)*100)}%;background:${v.color}"></div></div>
-        </div>`).join('')}
+    <div class="card"><div class="card-title">${sl('주문 현황','注文状況')}</div>
+      ${Object.entries(STATUS_MAP).map(([k,v])=>`<div class="bar-row"><div class="dot" style="background:${v.color}"></div><div class="bar-label">${v[LANG]}</div><div class="bar-count">${sc[k]||0}${sl('건','件')}</div><div class="bar-track"><div class="bar-fill" style="width:${((sc[k]||0)/Math.max(DB.orders.length,1)*100)}%;background:${v.color}"></div></div></div>`).join('')}
     </div>
-    <div class="card">
-      <div class="card-title">경비 카테고리별</div>
-      ${Object.entries(ec).map(([cat,amt])=>`
-        <div class="bar-row">
-          <div class="bar-label">${cat}</div>
-          <div class="bar-count" style="width:90px">₩${amt.toLocaleString()}</div>
-          <div class="bar-track"><div class="bar-fill" style="width:${(amt/Math.max(exp,1)*100)}%;background:#e05555"></div></div>
-        </div>`).join('')}
+    <div class="card"><div class="card-title">${sl('경비 카테고리별','経費カテゴリ別')}</div>
+      ${Object.entries(ec).map(([c,a])=>`<div class="bar-row"><div class="bar-label">${c}</div><div class="bar-count" style="width:80px">₩${a.toLocaleString()}</div><div class="bar-track"><div class="bar-fill" style="width:${(a/Math.max(exp,1)*100)}%;background:#e05555"></div></div></div>`).join('')}
     </div>
   </div>
-  <div class="card">
-    <div class="card-head"><div class="card-title" style="margin-bottom:0">다가오는 예약 주문</div></div>
-    <table><thead><tr><th>주문번호</th><th>고객명</th><th>수령일</th><th>금액</th><th>상태</th><th>결제</th></tr></thead>
-    <tbody>${upcoming.map(o=>`<tr>
-      <td>${mono(o.id)}</td><td>${o.customerName}</td><td>${o.pickup}</td>
-      <td>₩${o.total.toLocaleString()}</td><td>${badge(o.status)}</td>
-      <td style="color:${o.paid?'#2e7d5a':'#e05555'};font-weight:600">${o.paid?'✓ 완료':'미결제'}</td>
-    </tr>`).join('')}</tbody></table>
-  </div>`;
-}
-function kpiCard(icon,title,val,sub,color){
-  return `<div class="kpi-card card" style="border-top:3px solid ${color}"><div class="icon">${icon}</div><div class="val" style="color:${color}">${val}</div><div class="title">${title}</div><div class="sub">${sub}</div></div>`;
-}
+  <div class="card"><div class="card-head"><div class="card-title" style="margin-bottom:0">${sl('다가오는 예약 주문','直近の予約注文')}</div></div>
+    <table><thead><tr><th>${sl('주문번호','注文番号')}</th><th>${sl('고객명','顧客名')}</th><th>${sl('수령일','受取日')}</th><th>${sl('금액','金額')}</th><th>${sl('상태','状態')}</th><th>${sl('결제','決済')}</th></tr></thead><tbody>
+    ${upcoming.map(o=>`<tr class="trow"><td>${mono(o.id)}</td><td>${o.customer_name}</td><td>${o.pickup}</td><td>₩${o.total.toLocaleString()}</td><td>${badge(o.status)}</td><td style="color:${o.paid?'#2e7d5a':'#e05555'};font-weight:600">${o.paid?sl('✓ 완료','✓ 完了'):sl('미결제','未払い')}</td></tr>`).join('')}
+    </tbody></table>
+  </div>`;}
 
-// ==================== 예약 주문 ====================
-function renderOrders(search='',filter='all'){
-  const filtered=DB.orders.filter(o=>(filter==='all'||o.status===filter)&&(o.customerName.includes(search)||o.id.includes(search))).sort((a,b)=>a.pickup.localeCompare(b.pickup));
+// ── ORDERS ──
+function renderOrders(search,filter){
+  const s=search||'',f=filter||'all';
+  const filtered=DB.orders.filter(o=>(f==='all'||o.status===f)&&(o.customer_name.includes(s)||o.id.includes(s))).sort((a,b)=>a.pickup.localeCompare(b.pickup));
   document.getElementById('main-content').innerHTML=`
-  <div class="sec-head"><h2>📋 예약 주문 관리</h2><button class="add-btn" onclick="openAddOrder()">+ 신규 주문</button></div>
+  <div class="sec-head"><h2 class="sec-title">📋 ${sl('예약 주문 관리','予約注文管理')}</h2><button class="add-btn" onclick="openAddOrder()">+ ${sl('신규 주문','新規注文')}</button></div>
   <div class="toolbar">
-    <input class="search-input" placeholder="고객명·주문번호 검색..." value="${search}" oninput="renderOrders(this.value,document.getElementById('order-filter').value)"/>
-    <select class="sel" id="order-filter" onchange="renderOrders(document.querySelector('.search-input').value,this.value)">
-      <option value="all" ${filter==='all'?'selected':''}>전체 상태</option>
-      ${Object.entries(STATUS_MAP).map(([k,v])=>`<option value="${k}" ${filter===k?'selected':''}>${v.label}</option>`).join('')}
+    <div class="search-wrap">
+      <input id="ord-s" placeholder="${sl('고객명·주문번호 검색...','顧客名・注文番号検索...')}" value="${s}" oninput="renderOrders(this.value,document.getElementById('ord-f').value)"/>
+      <button class="search-clear" onclick="document.getElementById('ord-s').value='';renderOrders('',document.getElementById('ord-f').value)">×</button>
+    </div>
+    <select class="sel" id="ord-f" onchange="renderOrders(document.getElementById('ord-s').value,this.value)">
+      <option value="all" ${f==='all'?'selected':''}>${sl('전체 상태','全状態')}</option>
+      ${Object.entries(STATUS_MAP).map(([k,v])=>`<option value="${k}" ${f===k?'selected':''}>${v[LANG]}</option>`).join('')}
     </select>
   </div>
   <div class="order-grid">
+    ${filtered.length===0?`<div class="card" style="text-align:center;color:var(--gray);padding:32px">${sl('주문이 없습니다','注文がありません')}</div>`:''}
     ${filtered.map(o=>`
     <div class="order-card" style="border-left-color:${STATUS_MAP[o.status]?.color||'#ccc'}">
       <div class="order-top">
-        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-          ${mono(o.id)} ${badge(o.status)} ${!o.paid?'<span class="unpaid-badge">미결제</span>':''}
-        </div>
-        <span style="font-size:13px;color:#999">🗓 ${o.pickup}</span>
+        <div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap">${mono(o.id)} ${badge(o.status)} ${!o.paid?`<span class="unpaid-badge">${sl('미결제','未払い')}</span>`:''}</div>
+        <span style="font-size:11px;color:var(--gray)">🗓 ${o.pickup}</span>
       </div>
-      <div class="order-name">${o.customerName}</div>
-      <div class="item-tags">${o.items.map(it=>`<span class="itag">${it.name} ×${it.qty}</span>`).join('')}</div>
+      <div class="order-name">${o.customer_name}</div>
+      <div class="item-tags">${(o.items||[]).map(it=>`<span class="itag">${it.name} ×${it.qty}</span>`).join('')}</div>
       ${o.note?`<div class="order-note">📝 ${o.note}</div>`:''}
       <div class="order-bot">
-        <strong style="color:#c8832a">₩${o.total.toLocaleString()}</strong>
-        <div style="display:flex;gap:6px;flex-wrap:wrap">
-          <select class="sel-sm" onchange="updateOrderStatus('${o.id}',this.value)">
-            ${Object.entries(STATUS_MAP).map(([k,v])=>`<option value="${k}" ${o.status===k?'selected':''}>${v.label}</option>`).join('')}
+        <strong style="color:var(--gold)">₩${o.total.toLocaleString()}</strong>
+        <div style="display:flex;gap:5px;flex-wrap:wrap">
+          <select class="sel-sm" onchange="updateStatus('${o.id}',this.value)">
+            ${Object.entries(STATUS_MAP).map(([k,v])=>`<option value="${k}" ${o.status===k?'selected':''}>${v[LANG]}</option>`).join('')}
           </select>
-          ${!o.paid?`<button class="pay-btn" onclick="markPaid('${o.id}')">결제 완료</button>`:''}
-          <button class="edit-btn" onclick="openViewOrder('${o.id}')">상세</button>
-          <button class="del-btn-sm" onclick="deleteOrder('${o.id}')">삭제</button>
+          ${!o.paid?`<button class="pay-btn" onclick="markPaid('${o.id}')">${sl('결제 완료','支払完了')}</button>`:''}
+          <button class="print-btn" onclick="printReceipt('${o.id}')">🖨 ${sl('영수증','領収書')}</button>
+          <button class="edit-btn" onclick="openViewOrder('${o.id}')">${sl('상세','詳細')}</button>
+          <button class="del-btn-sm" onclick="delOrder('${o.id}')">${sl('삭제','削除')}</button>
         </div>
       </div>
     </div>`).join('')}
-  </div>`;
-}
-function updateOrderStatus(id,status){DB.orders=DB.orders.map(o=>o.id===id?{...o,status}:o);saveDB();updateHeader();}
-function markPaid(id){DB.orders=DB.orders.map(o=>o.id===id?{...o,paid:true}:o);saveDB();updateHeader();renderOrders();}
-function deleteOrder(id){if(confirm('삭제하시겠습니까?')){DB.orders=DB.orders.filter(o=>o.id!==id);saveDB();renderOrders();}}
+  </div>`;}
 
-// ==================== 캘린더 ====================
+async function updateStatus(id,status){try{setStatus('saving');await api.patch('orders',id,{status});DB.orders=DB.orders.map(o=>o.id===id?{...o,status}:o);setStatus('saved');await sendKakao(`${sl('주문 상태 변경','注文状態変更')}\n${id} → ${slStatus(status)}`);const s=document.getElementById('ord-s')?.value||'',f=document.getElementById('ord-f')?.value||'all';renderOrders(s,f);}catch(e){toast('⚠️ '+e.message);}}
+async function markPaid(id){try{setStatus('saving');await api.patch('orders',id,{paid:true});DB.orders=DB.orders.map(o=>o.id===id?{...o,paid:true}:o);setStatus('saved');updateHeader();const o=DB.orders.find(x=>x.id===id);await sendKakao(`${sl('결제 완료','支払完了')}\n${o?.customer_name} / ₩${o?.total?.toLocaleString()}`);renderOrders('','all');toast(sl('✓ 결제 완료','✓ 支払完了'));}catch(e){toast('⚠️ '+e.message);}}
+async function delOrder(id){if(!confirm(sl('삭제하시겠습니까?','削除しますか？')))return;try{setStatus('saving');await api.del('orders',id);DB.orders=DB.orders.filter(o=>o.id!==id);setStatus('saved');updateHeader();renderOrders('','all');toast(sl('삭제되었습니다','削除しました'));}catch(e){toast('⚠️ '+e.message);}}
+
+function printReceipt(id){const o=DB.orders.find(x=>x.id===id);if(!o)return;const w=window.open('','_blank','width=400,height=600');w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>body{font-family:'Noto Sans KR',sans-serif;padding:20px;max-width:320px;margin:0 auto}h2{text-align:center;font-size:18px;margin-bottom:4px}.sub{text-align:center;font-size:11px;color:#888;margin-bottom:16px}hr{border:none;border-top:1px dashed #ccc;margin:12px 0}.row{display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px}.total{font-size:16px;font-weight:700}.footer{text-align:center;font-size:10px;color:#aaa;margin-top:16px}@media print{button{display:none}}</style></head><body><h2>🍡 떡방앗간</h2><div class="sub">${sl('영수증','領収書')}</div><hr/><div class="row"><span>${sl('주문번호','注文番号')}</span><span>${o.id}</span></div><div class="row"><span>${sl('고객명','顧客名')}</span><span>${o.customer_name}</span></div><div class="row"><span>${sl('수령일','受取日')}</span><span>${o.pickup}</span></div><hr/>${(o.items||[]).map(it=>`<div class="row"><span>${it.name} ×${it.qty}</span><span>₩${(it.qty*it.price).toLocaleString()}</span></div>`).join('')}<hr/><div class="row total"><span>${sl('합계','合計')}</span><span>₩${o.total.toLocaleString()}</span></div><div class="row"><span>${sl('결제','決済')}</span><span>${o.paid?sl('완료','完了'):sl('미결제','未払い')}</span></div>${o.note?`<div class="row"><span>${sl('비고','備考')}</span><span>${o.note}</span></div>`:''}<hr/><div class="footer">${new Date().toLocaleString('ko-KR')}<br>${sl('감사합니다 🍡','ありがとうございます 🍡')}</div><br><button onclick="window.print()" style="width:100%;padding:10px;background:#2a1208;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:14px">${sl('인쇄하기','印刷する')}</button></body></html>`);w.document.close();}
+
+// ── CALENDAR ──
 function renderCalendar(){
-  const DAYS=['일','월','화','수','목','금','토'];
-  const MONTHS=['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
-  const firstDay=new Date(calYear,calMonth,1).getDay();
-  const daysInMonth=new Date(calYear,calMonth+1,0).getDate();
+  const DAYS=LANG==='ko'?['일','월','화','수','목','금','토']:['日','月','火','水','木','金','土'];
+  const MONTHS=LANG==='ko'?['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월']:['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+  const fd=new Date(calYear,calMonth,1).getDay(),dim=new Date(calYear,calMonth+1,0).getDate();
   const todayStr=new Date().toISOString().slice(0,10);
-  const byDate={};
-  DB.orders.forEach(o=>{if(!byDate[o.pickup])byDate[o.pickup]=[];byDate[o.pickup].push(o);});
-
+  const byDate={};DB.orders.forEach(o=>{if(!byDate[o.pickup])byDate[o.pickup]=[];byDate[o.pickup].push(o);});
   let cells='';
-  for(let i=0;i<firstDay;i++) cells+=`<div class="cal-cell-empty"></div>`;
-  for(let d=1;d<=daysInMonth;d++){
+  for(let i=0;i<fd;i++)cells+=`<div class="cal-empty"></div>`;
+  for(let d=1;d<=dim;d++){
     const ds=`${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    const holiday=KR_HOLIDAYS[ds]||'';
-    const lunar=LUNAR_FEST[ds]||'';
-    const orders=byDate[ds]||[];
-    const isToday=ds===todayStr;
-    const isSun=(firstDay+d-1)%7===0;
-    const isSat=(firstDay+d-1)%7===6;
-    const isSel=calSelected===ds;
-    const lun=getLunar(ds);
-    const dateColor=holiday?'#e05555':isSun?'#e05555':isSat?'#1565a8':'#2a1208';
-    cells+=`<div class="cal-cell" 
-      style="background:${isSel?'#fff3e0':isToday?'#e8f5e9':'#fff'};border:${isToday?'2px solid #2e7d5a':isSel?'2px solid #c8832a':'1px solid #f0e0cc'}"
-      onclick="calSelectDate('${ds}')">
-      <div class="cal-date" style="color:${dateColor};font-weight:${isToday?700:500}">${d}${isToday?'<span style="font-size:7px;background:#2e7d5a;color:#fff;border-radius:2px;padding:0 2px;margin-left:2px">오늘</span>':''}</div>
-      <div class="lunar-date">음 ${lun.m}/${lun.d}</div>
-      ${holiday?`<div class="holiday-tag">${holiday}</div>`:''}
-      ${lunar&&!holiday?`<div class="lunar-tag">${lunar}</div>`:''}
-      ${orders.slice(0,2).map(o=>`<div class="cal-order-dot" style="background:${STATUS_MAP[o.status]?.color||'#888'}22;color:${STATUS_MAP[o.status]?.color||'#888'}">${o.customerName}</div>`).join('')}
-      ${orders.length>2?`<div style="font-size:8px;color:#888">+${orders.length-2}건</div>`:''}
+    const hol=KR_HOLIDAYS[ds]||'',lunar=LUNAR_FEST[ds]||'',orders=byDate[ds]||[],isToday=ds===todayStr;
+    const isSun=(fd+d-1)%7===0,isSat=(fd+d-1)%7===6,isSel=calSelected===ds;
+    const lun=getLunar(ds),dc=hol?'#e05555':isSun?'#e05555':isSat?'#1565a8':'var(--dark)';
+    cells+=`<div class="cal-cell" style="background:${isSel?'#fff3e0':isToday?'#e8f5e9':'#fff'};border:${isToday?'2px solid #2e7d5a':isSel?'2px solid #c8832a':'1px solid var(--border)'}" onclick="calSel('${ds}')">
+      <div class="cal-date" style="color:${dc};font-weight:${isToday?700:500}">${d}${isToday?`<span style="font-size:7px;background:#2e7d5a;color:#fff;border-radius:2px;padding:0 2px;margin-left:2px">${sl('오늘','今日')}</span>`:''}</div>
+      <div class="lunar-date">${sl('음','陰')} ${lun.m}/${lun.d}</div>
+      ${hol?`<div class="hol-tag">${hol}</div>`:''}${lunar&&!hol?`<div class="lunar-tag">${lunar}</div>`:''}
+      ${orders.slice(0,2).map(o=>`<div class="cal-dot" style="background:${STATUS_MAP[o.status]?.color||'#888'}22;color:${STATUS_MAP[o.status]?.color||'#888'}">${o.customer_name}</div>`).join('')}
+      ${orders.length>2?`<div style="font-size:7px;color:var(--gray)">+${orders.length-2}${sl('건','件')}</div>`:''}
     </div>`;
   }
-
-  const selOrders=calSelected?byDate[calSelected]||[]:[];
+  const selO=calSelected?byDate[calSelected]||[]:[];
   document.getElementById('main-content').innerHTML=`
-  <div class="sec-head"><h2>📅 주문 캘린더</h2><button class="add-btn" onclick="openAddOrder()">+ 신규 주문</button></div>
+  <div class="sec-head"><h2 class="sec-title">📅 ${sl('주문 캘린더','注文カレンダー')}</h2><button class="add-btn" onclick="openAddOrder()">+ ${sl('신규 주문','新規注文')}</button></div>
   <div class="legend-row">
-    <div class="legend-item"><div class="legend-dot" style="background:#e05555"></div>공휴일</div>
-    <div class="legend-item"><div class="legend-dot" style="background:#7b1fa2"></div>음력 명절</div>
-    <div class="legend-item"><div class="legend-dot" style="background:#1565a8"></div>주문 있음</div>
-    <div class="legend-item"><div class="legend-dot" style="background:#2e7d5a"></div>오늘</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#e05555"></div>${sl('공휴일','祝日')}</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#7b1fa2"></div>${sl('음력 명절','旧暦節句')}</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#2e7d5a"></div>${sl('오늘','今日')}</div>
   </div>
   <div class="cal-wrap">
-    <div class="cal-header">
+    <div class="cal-hdr">
       <button class="cal-nav" onclick="calPrev()">‹</button>
-      <span class="cal-title">${calYear}년 ${MONTHS[calMonth]}</span>
+      <span class="cal-title">${calYear}${sl('년 ','年')}${MONTHS[calMonth]}</span>
       <button class="cal-nav" onclick="calNext()">›</button>
     </div>
     <div class="cal-grid">
-      ${DAYS.map((d,i)=>`<div class="cal-day-head" style="color:${i===0?'#e05555':i===6?'#1565a8':'#666'}">${d}</div>`).join('')}
+      ${DAYS.map((d,i)=>`<div class="cal-dh" style="color:${i===0?'#e05555':i===6?'#1565a8':'#666'}">${d}</div>`).join('')}
       ${cells}
     </div>
-    ${calSelected&&selOrders.length?`
-    <div class="cal-detail">
-      <div class="card-title">${calSelected} 주문 목록</div>
-      ${selOrders.map(o=>`<div class="cal-detail-row">
-        ${mono(o.id)}<span>${o.customerName}</span>
-        <span>${o.items.map(it=>it.name+'×'+it.qty).join(', ')}</span>
-        ${badge(o.status)}<strong style="color:#c8832a">₩${o.total.toLocaleString()}</strong>
-      </div>`).join('')}
-    </div>`:''}
-  </div>`;
-}
+    ${calSelected&&selO.length?`<div class="cal-detail"><div class="card-title">${calSelected} ${sl('주문 목록','注文一覧')}</div>${selO.map(o=>`<div class="cal-detail-row">${mono(o.id)}<span>${o.customer_name}</span><span>${(o.items||[]).map(it=>it.name+'×'+it.qty).join(', ')}</span>${badge(o.status)}<strong style="color:var(--gold)">₩${o.total.toLocaleString()}</strong><button class="print-btn" onclick="printReceipt('${o.id}')">🖨</button></div>`).join('')}</div>`:''}
+  </div>`;}
 function calPrev(){if(calMonth===0){calYear--;calMonth=11;}else calMonth--;calSelected=null;renderCalendar();}
 function calNext(){if(calMonth===11){calYear++;calMonth=0;}else calMonth++;calSelected=null;renderCalendar();}
-function calSelectDate(ds){calSelected=calSelected===ds?null:ds;renderCalendar();}
+function calSel(ds){calSelected=calSelected===ds?null:ds;renderCalendar();}
 
-// ==================== 고객 관리 ====================
-function renderCustomers(search=''){
-  const filtered=DB.customers.filter(c=>c.name.includes(search)||c.phone.includes(search));
+// ── CUSTOMERS ──
+function renderCustomers(search){
+  const s=search||'',filtered=DB.customers.filter(c=>c.name.includes(s)||c.phone.includes(s));
   document.getElementById('main-content').innerHTML=`
-  <div class="sec-head"><h2>👥 고객 관리</h2><button class="add-btn" onclick="openAddCustomer()">+ 신규 고객</button></div>
+  <div class="sec-head"><h2 class="sec-title">👥 ${sl('고객 관리','顧客管理')}</h2><button class="add-btn" onclick="openAddCustomer()">+ ${sl('신규 고객','新規顧客')}</button></div>
   <div class="toolbar">
-    <input class="search-input" placeholder="이름·전화번호 검색..." value="${search}" oninput="renderCustomers(this.value)"/>
+    <div class="search-wrap">
+      <input id="cust-s" placeholder="${sl('이름·전화번호 검색...','氏名・電話番号検索...')}" value="${s}" oninput="renderCustomers(this.value)"/>
+      <button class="search-clear" onclick="document.getElementById('cust-s').value='';renderCustomers('')">×</button>
+    </div>
   </div>
   <div class="cust-grid">
-    ${filtered.map(c=>`
-    <div class="cust-card">
-      <div class="avatar">${c.name[0]}</div>
-      <div style="flex:1">
-        <div class="cust-name">${c.name}</div>
-        <div class="cust-detail">📞 ${c.phone}</div>
-        <div class="cust-detail">✉️ ${c.email}</div>
-        <div class="cust-detail">📍 ${c.address}</div>
-        ${c.note?`<div class="cust-note">⭐ ${c.note}</div>`:''}
-        <div class="cust-stats"><span>주문 <strong>${c.totalOrders}회</strong></span><span>누적 <strong>₩${c.totalSpent.toLocaleString()}</strong></span></div>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:4px">
-        <button class="edit-btn" onclick="openEditCustomer('${c.id}')">편집</button>
-        <button class="del-btn-sm" onclick="deleteCustomer('${c.id}')">삭제</button>
-      </div>
-    </div>`).join('')}
-  </div>`;
-}
-function deleteCustomer(id){if(confirm('삭제하시겠습니까?')){DB.customers=DB.customers.filter(c=>c.id!==id);saveDB();renderCustomers();}}
+    ${filtered.length===0?`<div class="card" style="text-align:center;color:var(--gray);padding:32px">${sl('고객이 없습니다','顧客がいません')}</div>`:''}
+    ${filtered.map(c=>`<div class="cust-card"><div class="avatar">${c.name[0]}</div><div style="flex:1"><div class="cust-name">${c.name}</div><div class="cust-detail">📞 ${c.phone}</div><div class="cust-detail">✉️ ${c.email}</div><div class="cust-detail">📍 ${c.address}</div>${c.note?`<div class="cust-note">⭐ ${c.note}</div>`:''}<div class="cust-stats"><span>${sl('주문','注文')} <strong>${c.total_orders}${sl('회','回')}</strong></span><span>${sl('누적','累計')} <strong>₩${c.total_spent.toLocaleString()}</strong></span></div></div><div style="display:flex;flex-direction:column;gap:4px"><button class="edit-btn" onclick="openEditCustomer('${c.id}')">${sl('편집','編集')}</button><button class="del-btn-sm" onclick="delCustomer('${c.id}')">${sl('삭제','削除')}</button></div></div>`).join('')}
+  </div>`;}
+async function delCustomer(id){if(!confirm(sl('삭제하시겠습니까?','削除しますか？')))return;try{setStatus('saving');await api.del('customers',id);DB.customers=DB.customers.filter(c=>c.id!==id);setStatus('saved');renderCustomers('');toast(sl('삭제되었습니다','削除しました'));}catch(e){toast('⚠️ '+e.message);}}
 
-// ==================== 결제 관리 ====================
+// ── PAYMENTS ──
 function renderPayments(){
   const total=DB.payments.filter(p=>p.status==='완료').reduce((s,p)=>s+p.amount,0);
   const byM={};DB.payments.forEach(p=>{byM[p.method]=(byM[p.method]||0)+p.amount;});
   const unpaid=DB.orders.filter(o=>!o.paid);
   document.getElementById('main-content').innerHTML=`
-  <div class="sec-head"><h2>💳 결제 관리</h2><button class="add-btn" onclick="openAddPayment()">+ 결제 입력</button></div>
-  <div class="kpi-grid">
-    ${kpiCard('💰','총 결제액','₩'+total.toLocaleString(),DB.payments.length+'건','#2e7d5a')}
-    ${Object.entries(byM).map(([m,v])=>kpiCard('💳',m,'₩'+v.toLocaleString(),'결제 수단별','#1565a8')).join('')}
+  <div class="sec-head"><h2 class="sec-title">💳 ${sl('결제 관리','決済管理')}</h2><button class="add-btn" onclick="openAddPayment()">+ ${sl('결제 입력','決済入力')}</button></div>
+  <div class="kpi-grid">${kpiCard('💰',sl('총 결제액','総決済額'),'₩'+total.toLocaleString(),DB.payments.length+sl('건','件'),'#2e7d5a')}${Object.entries(byM).map(([m,v])=>kpiCard('💳',m,'₩'+v.toLocaleString(),sl('결제 수단별','決済手段別'),'#1565a8')).join('')}</div>
+  <div class="card"><div class="card-title">${sl('결제 내역','決済履歴')}</div>
+    <table><thead><tr><th>${sl('결제ID','決済ID')}</th><th>${sl('주문번호','注文番号')}</th><th>${sl('금액','金額')}</th><th>${sl('결제 수단','決済手段')}</th><th>${sl('날짜','日付')}</th><th>${sl('상태','状態')}</th></tr></thead><tbody>
+    ${DB.payments.map(p=>`<tr class="trow"><td>${mono(p.id)}</td><td>${mono(p.order_id)}</td><td>₩${p.amount.toLocaleString()}</td><td>${p.method}</td><td>${p.date}</td><td style="color:#2e7d5a;font-weight:600">✓ ${p.status}</td></tr>`).join('')}
+    </tbody></table>
   </div>
-  <div class="card">
-    <div class="card-title">결제 내역</div>
-    <table><thead><tr><th>결제ID</th><th>주문번호</th><th>금액</th><th>결제 수단</th><th>날짜</th><th>상태</th></tr></thead>
-    <tbody>${DB.payments.map(p=>`<tr>
-      <td>${mono(p.id)}</td><td>${mono(p.orderId)}</td><td>₩${p.amount.toLocaleString()}</td>
-      <td>${p.method}</td><td>${p.date}</td><td style="color:#2e7d5a;font-weight:600">✓ ${p.status}</td>
-    </tr>`).join('')}</tbody></table>
-  </div>
-  ${unpaid.length?`<div class="card"><div class="card-title">미결제 주문</div>
-    ${unpaid.map(o=>`<div class="unpaid-row">
-      ${mono(o.id)}<span>${o.customerName}</span><span>수령: ${o.pickup}</span>
-      <strong style="color:#e05555">₩${o.total.toLocaleString()}</strong>
-      <button class="pay-btn" onclick="openAddPaymentFor('${o.id}','${o.total}')">결제 입력</button>
-    </div>`).join('')}
-  </div>`:''}`;
-}
+  ${unpaid.length?`<div class="card"><div class="card-title">${sl('미결제 주문','未払い注文')}</div>${unpaid.map(o=>`<div class="unpaid-row">${mono(o.id)}<span>${o.customer_name}</span><span>${sl('수령','受取')}: ${o.pickup}</span><strong style="color:var(--red)">₩${o.total.toLocaleString()}</strong><button class="pay-btn" onclick="openAddPaymentFor('${o.id}','${o.total}')">+ ${sl('결제 입력','決済入力')}</button></div>`).join('')}</div>`:''}`;}
 
-// ==================== 경비 관리 ====================
-function renderExpenses(cat='전체'){
-  const total=DB.expenses.reduce((s,e)=>s+e.amount,0);
-  const filtered=cat==='전체'?DB.expenses:DB.expenses.filter(e=>e.category===cat);
+// ── EXPENSES ──
+function renderExpenses(cat){
+  const c=cat||'전체',total=DB.expenses.reduce((s,e)=>s+e.amount,0);
+  const filtered=c==='전체'?DB.expenses:DB.expenses.filter(e=>e.category===c);
   document.getElementById('main-content').innerHTML=`
-  <div class="sec-head"><h2>🧾 경비 관리</h2><button class="add-btn" onclick="openAddExpense()">+ 경비 추가</button></div>
+  <div class="sec-head"><h2 class="sec-title">🧾 ${sl('경비 관리','経費管理')}</h2><button class="add-btn" onclick="openAddExpense()">+ ${sl('경비 추가','経費追加')}</button></div>
   <div class="toolbar">
-    <select class="sel" onchange="renderExpenses(this.value)">
-      <option value="전체" ${cat==='전체'?'selected':''}>전체</option>
-      ${EXPENSE_CATS.map(c=>`<option value="${c}" ${cat===c?'selected':''}>${c}</option>`).join('')}
-    </select>
-    <div style="font-size:15px;font-weight:700;color:#c8832a;margin-left:auto">이번 달 합계: ₩${total.toLocaleString()}</div>
+    <select class="sel" onchange="renderExpenses(this.value)"><option value="전체" ${c==='전체'?'selected':''}>${sl('전체','全て')}</option>${ECATS().map(x=>`<option value="${x}" ${c===x?'selected':''}>${x}</option>`).join('')}</select>
+    <div style="font-size:14px;font-weight:700;color:var(--gold);margin-left:auto">${sl('이번 달 합계','今月合計')}: ₩${total.toLocaleString()}</div>
   </div>
   <div class="exp-grid">
-    ${filtered.map(e=>`
-    <div class="exp-card">
-      <div class="exp-cat">${e.category}</div>
-      <div class="exp-item">${e.item}</div>
-      <div style="font-size:12px;color:#999;margin-bottom:2px">🏪 ${e.vendor}</div>
-      <div style="font-size:12px;color:#bbb;margin-bottom:8px">📅 ${e.date}</div>
-      <div class="exp-amt">₩${e.amount.toLocaleString()}</div>
-      <button class="del-btn" onclick="deleteExpense('${e.id}')">✕</button>
-    </div>`).join('')}
-  </div>`;
-}
-function deleteExpense(id){if(confirm('삭제하시겠습니까?')){DB.expenses=DB.expenses.filter(e=>e.id!==id);saveDB();renderExpenses();}}
+    ${filtered.length===0?`<div class="card" style="text-align:center;color:var(--gray);padding:32px">${sl('경비가 없습니다','経費がありません')}</div>`:''}
+    ${filtered.map(e=>`<div class="exp-card"><div class="exp-cat">${e.category}</div><div class="exp-item">${e.item}</div><div style="font-size:11px;color:#aaa;margin-bottom:2px">🏪 ${e.vendor}</div><div style="font-size:11px;color:#ccc;margin-bottom:7px">📅 ${e.date}</div><div class="exp-amt">₩${e.amount.toLocaleString()}</div><button class="del-x" onclick="delExpense('${e.id}')">✕</button></div>`).join('')}
+  </div>`;}
+async function delExpense(id){if(!confirm(sl('삭제하시겠습니까?','削除しますか？')))return;try{setStatus('saving');await api.del('expenses',id);DB.expenses=DB.expenses.filter(e=>e.id!==id);setStatus('saved');renderExpenses('전체');updateHeader();toast(sl('삭제되었습니다','削除しました'));}catch(e){toast('⚠️ '+e.message);}}
 
-// ==================== 모달 ====================
-function openModal(title,body,actions){
-  document.getElementById('modal-title').textContent=title;
-  document.getElementById('modal-body').innerHTML=body;
-  document.getElementById('modal-actions').innerHTML=actions;
-  document.getElementById('modal-overlay').style.display='flex';
-}
-function closeModal(){document.getElementById('modal-overlay').style.display='none';}
-
-function itemsHTML(items){
-  return items.map((it,i)=>`
-  <div style="display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap;align-items:center">
-    <select class="sel-sm" id="item-name-${i}">
-      ${PRODUCTS.map(p=>`<option ${p===it.name?'selected':''}>${p}</option>`).join('')}
-    </select>
-    <input class="inp" style="width:60px" type="number" id="item-qty-${i}" value="${it.qty}"/>
-    <span style="font-size:12px;color:#888">개</span>
-    <input class="inp" style="width:80px" type="number" id="item-price-${i}" value="${it.price}"/>
-    <span style="font-size:12px;color:#888">원/개</span>
-    <button class="del-btn-sm" onclick="removeItem(${i})">✕</button>
-  </div>`).join('');
-}
-
-let tmpItems=[{name:PRODUCTS[0],qty:1,price:2500}];
-function openAddOrder(){
-  tmpItems=[{name:PRODUCTS[0],qty:1,price:2500}];
-  openModal('신규 주문 등록',addOrderBody(),'<button class="cancel-btn" onclick="closeModal()">취소</button><button class="submit-btn" onclick="submitOrder()">저장하기</button>');
-}
-function addOrderBody(){
-  const total=tmpItems.reduce((s,i)=>s+i.qty*i.price,0);
-  return `<div class="form-col">
-    <div><label class="lbl">고객명</label><input class="inp" id="f-name"/></div>
-    <div><label class="lbl">수령일</label><input class="inp" type="date" id="f-pickup"/></div>
-    <div><label class="lbl">비고</label><input class="inp" id="f-note"/></div>
-    <div><label class="lbl">상품</label><div id="items-area">${itemsHTML(tmpItems)}</div>
-      <div style="font-size:13px;color:#c8832a;font-weight:700;margin:4px 0">합계: ₩${total.toLocaleString()}</div>
-      <button class="link-btn" onclick="addItem()">+ 상품 추가</button>
+// ── SETTINGS ──
+function renderSettings(){
+  document.getElementById('main-content').innerHTML=`
+  <div class="sec-head"><h2 class="sec-title">⚙️ ${sl('설정','設定')}</h2></div>
+  <div class="notif-card">
+    <div class="notif-title">💬 ${sl('카카오톡 알림 설정','カカオトーク通知設定')}</div>
+    <div class="notif-desc">${sl('카카오 오픈빌더 Webhook URL을 입력하면 주문 접수·결제 완료 시 자동으로 알림을 보냅니다.','カカオオープンビルダーのWebhook URLを入力すると、注文受付・決済完了時に自動通知を送ります。')}</div>
+    <div><label class="lbl">Webhook URL</label><input class="inp" id="k-url" placeholder="https://..." value="${kakaoWebhook}"/></div>
+    <div style="display:flex;gap:8px;margin-top:10px">
+      <button class="submit-btn" onclick="saveKakao()">${sl('저장','保存')}</button>
+      <button class="edit-btn" onclick="testKakao()">${sl('테스트 전송','テスト送信')}</button>
+      ${kakaoWebhook?`<button class="del-btn-sm" onclick="clearKakao()">${sl('삭제','削除')}</button>`:''}
     </div>
-  </div>`;
-}
-function syncItems(){
-  tmpItems=tmpItems.map((_,i)=>({
-    name:document.getElementById('item-name-'+i)?.value||PRODUCTS[0],
-    qty:Number(document.getElementById('item-qty-'+i)?.value||1),
-    price:Number(document.getElementById('item-price-'+i)?.value||2500),
-  }));
-}
-function addItem(){syncItems();tmpItems.push({name:PRODUCTS[0],qty:1,price:2500});document.getElementById('modal-body').innerHTML=addOrderBody();}
+  </div>
+  <div class="card"><div class="card-title">${sl('데이터 관리','データ管理')}</div>
+    <p style="font-size:13px;color:var(--gray);margin-bottom:12px;line-height:1.7">✅ ${sl('Supabase 클라우드 DB에 연결되어 있습니다. 모든 기기에서 실시간 공유됩니다.','Supabase クラウドDBに接続されています。全端末でリアルタイム共有されます。')}</p>
+    <button class="edit-btn" onclick="exportData()">📥 ${sl('데이터 내보내기','データ書き出し')}</button>
+  </div>
+  <div class="card"><div class="card-title">${sl('언어 설정','言語設定')}</div>
+    <div style="display:flex;gap:10px">
+      <button class="edit-btn" style="${LANG==='ko'?'background:var(--cream);font-weight:700':''}" onclick="if(LANG!=='ko')toggleLang()">🇰🇷 한국어</button>
+      <button class="edit-btn" style="${LANG==='ja'?'background:var(--cream);font-weight:700':''}" onclick="if(LANG!=='ja')toggleLang()">🇯🇵 日本語</button>
+    </div>
+  </div>`;}
+function saveKakao(){kakaoWebhook=document.getElementById('k-url').value.trim();localStorage.setItem('kakao_webhook',kakaoWebhook);toast(sl('✓ 저장되었습니다','✓ 保存しました'));renderSettings();}
+async function testKakao(){const url=document.getElementById('k-url').value.trim();if(!url){toast(sl('URL을 입력해주세요','URLを入力してください'));return;}kakaoWebhook=url;await sendKakao(sl('테스트 메시지입니다 🍡','テストメッセージです 🍡'));toast(sl('✓ 전송했습니다','✓ 送信しました'));}
+function clearKakao(){kakaoWebhook='';localStorage.removeItem('kakao_webhook');toast(sl('삭제되었습니다','削除しました'));renderSettings();}
+function exportData(){const a=document.createElement('a');a.href='data:application/json;charset=utf-8,'+encodeURIComponent(JSON.stringify(DB,null,2));a.download='tteok_backup_'+new Date().toISOString().slice(0,10)+'.json';a.click();toast(sl('✓ 내보내기 완료','✓ 書き出し完了'));}
+
+// ── MODALS ──
+function openModal(title,body,actions){document.getElementById('modal-title').textContent=title;document.getElementById('modal-body').innerHTML=body;document.getElementById('modal-actions').innerHTML=actions;document.getElementById('modal-overlay').style.display='flex';}
+function closeModal(){document.getElementById('modal-overlay').style.display='none';}
+function syncItems(){tmpItems=tmpItems.map((_,i)=>({name:document.getElementById('iname-'+i)?.value||PRODS()[0],qty:Number(document.getElementById('iqty-'+i)?.value||1),price:Number(document.getElementById('iprice-'+i)?.value||2500)}));}
+function itemsHTML(){const total=tmpItems.reduce((s,i)=>s+i.qty*i.price,0);return `<div id="items-area">${tmpItems.map((it,i)=>`<div style="display:flex;gap:5px;margin-bottom:6px;flex-wrap:wrap;align-items:center"><select class="sel-sm" id="iname-${i}">${PRODS().map(p=>`<option ${p===it.name?'selected':''}>${p}</option>`).join('')}</select><input class="inp" style="width:55px" type="number" id="iqty-${i}" value="${it.qty}"/><span style="font-size:11px;color:var(--gray)">${sl('개','個')}</span><input class="inp" style="width:75px" type="number" id="iprice-${i}" value="${it.price}"/><span style="font-size:11px;color:var(--gray)">${sl('원/개','円/個')}</span><button class="del-btn-sm" onclick="removeItem(${i})">✕</button></div>`).join('')}</div><div style="font-size:12px;color:var(--gold);font-weight:700;margin:4px 0">${sl('합계','合計')}: ₩${total.toLocaleString()}</div><button class="link-btn" onclick="addItem()">+ ${sl('상품 추가','商品追加')}</button>`;}
+function addOrderBody(){return `<div class="form-col"><div><label class="lbl">${sl('고객명','顧客名')}</label><input class="inp" id="f-name"/></div><div><label class="lbl">${sl('수령일','受取日')}</label><input class="inp" type="date" id="f-pickup"/></div><div><label class="lbl">${sl('비고','備考')}</label><input class="inp" id="f-note"/></div><div><label class="lbl">${sl('상품','商品')}</label>${itemsHTML()}</div></div>`;}
+function addItem(){syncItems();tmpItems.push({name:PRODS()[0],qty:1,price:2500});document.getElementById('modal-body').innerHTML=addOrderBody();}
 function removeItem(i){syncItems();tmpItems.splice(i,1);document.getElementById('modal-body').innerHTML=addOrderBody();}
-function submitOrder(){
-  syncItems();
-  const name=document.getElementById('f-name').value;
-  const pickup=document.getElementById('f-pickup').value;
-  const note=document.getElementById('f-note').value;
-  if(!name||!pickup){alert('고객명과 수령일을 입력해주세요.');return;}
-  const total=tmpItems.reduce((s,i)=>s+i.qty*i.price,0);
-  DB.orders.push({id:nextId(DB.orders,'ORD'),customerName:name,items:tmpItems,total,pickup,status:'pending',paid:false,note});
-  saveDB();closeModal();renderOrders();updateHeader();
-}
-
-function openViewOrder(id){
-  const o=DB.orders.find(x=>x.id===id);
-  if(!o)return;
-  openModal('주문 상세',`
-    <div style="font-size:14px;line-height:2.2">
-      <p><b>주문번호:</b> ${o.id}</p>
-      <p><b>고객명:</b> ${o.customerName}</p>
-      <p><b>수령일:</b> ${o.pickup}</p>
-      <p><b>상품:</b></p>
-      ${o.items.map(it=>`<p style="padding-left:16px">• ${it.name} × ${it.qty}개 = ₩${(it.qty*it.price).toLocaleString()}</p>`).join('')}
-      <p><b>합계:</b> ₩${o.total.toLocaleString()}</p>
-      <p><b>비고:</b> ${o.note||'없음'}</p>
-      <p><b>결제:</b> ${o.paid?'✓ 완료':'미결제'}</p>
-    </div>`,'<button class="cancel-btn" onclick="closeModal()">닫기</button>');
-}
-
-function openAddCustomer(){
-  openModal('신규 고객 등록',`
-    <div class="form-col">
-      <div><label class="lbl">성명</label><input class="inp" id="f-cname"/></div>
-      <div><label class="lbl">전화번호</label><input class="inp" id="f-phone" placeholder="010-0000-0000"/></div>
-      <div><label class="lbl">이메일</label><input class="inp" id="f-email" type="email"/></div>
-      <div><label class="lbl">주소</label><input class="inp" id="f-addr"/></div>
-      <div><label class="lbl">메모</label><input class="inp" id="f-cnote"/></div>
-    </div>`,
-    '<button class="cancel-btn" onclick="closeModal()">취소</button><button class="submit-btn" onclick="submitCustomer()">저장하기</button>');
-}
-function submitCustomer(){
-  const name=document.getElementById('f-cname').value;
-  if(!name){alert('성명을 입력해주세요.');return;}
-  DB.customers.push({id:nextId(DB.customers,'C'),name,phone:document.getElementById('f-phone').value,email:document.getElementById('f-email').value,address:document.getElementById('f-addr').value,note:document.getElementById('f-cnote').value,totalOrders:0,totalSpent:0});
-  saveDB();closeModal();renderCustomers();
-}
-
-function openEditCustomer(id){
-  const c=DB.customers.find(x=>x.id===id);
-  if(!c)return;
-  openModal('고객 정보 수정',`
-    <div class="form-col">
-      <div><label class="lbl">성명</label><input class="inp" id="f-cname" value="${c.name}"/></div>
-      <div><label class="lbl">전화번호</label><input class="inp" id="f-phone" value="${c.phone}"/></div>
-      <div><label class="lbl">이메일</label><input class="inp" id="f-email" value="${c.email}"/></div>
-      <div><label class="lbl">주소</label><input class="inp" id="f-addr" value="${c.address}"/></div>
-      <div><label class="lbl">메모</label><input class="inp" id="f-cnote" value="${c.note}"/></div>
-    </div>`,
-    `<button class="cancel-btn" onclick="closeModal()">취소</button><button class="submit-btn" onclick="submitEditCustomer('${id}')">저장하기</button>`);
-}
-function submitEditCustomer(id){
-  DB.customers=DB.customers.map(c=>c.id===id?{...c,name:document.getElementById('f-cname').value,phone:document.getElementById('f-phone').value,email:document.getElementById('f-email').value,address:document.getElementById('f-addr').value,note:document.getElementById('f-cnote').value}:c);
-  saveDB();closeModal();renderCustomers();
-}
-
-function openAddPayment(orderId='',amount=''){
-  openModal('결제 입력',`
-    <div class="form-col">
-      <div><label class="lbl">주문번호</label><input class="inp" id="f-oid" value="${orderId}"/></div>
-      <div><label class="lbl">금액 (₩)</label><input class="inp" id="f-amt" type="number" value="${amount}"/></div>
-      <div><label class="lbl">결제 수단</label><select class="inp sel" id="f-method">${METHODS.map(m=>`<option>${m}</option>`).join('')}</select></div>
-      <div><label class="lbl">날짜</label><input class="inp" id="f-date" type="date" value="${new Date().toISOString().slice(0,10)}"/></div>
-    </div>`,
-    '<button class="cancel-btn" onclick="closeModal()">취소</button><button class="submit-btn" onclick="submitPayment()">저장하기</button>');
-}
+function openAddOrder(){tmpItems=[{name:PRODS()[0],qty:1,price:2500}];openModal(sl('신규 주문 등록','新規注文登録'),addOrderBody(),`<button class="cancel-btn" onclick="closeModal()">${sl('취소','キャンセル')}</button><button class="submit-btn" onclick="submitOrder()">${sl('저장하기','保存する')}</button>`);}
+async function submitOrder(){syncItems();const name=document.getElementById('f-name').value.trim(),pickup=document.getElementById('f-pickup').value,note=document.getElementById('f-note').value.trim();if(!name||!pickup){toast(sl('고객명과 수령일을 입력해주세요','顧客名と受取日を入力してください'));return;}const total=tmpItems.reduce((s,i)=>s+i.qty*i.price,0),newO={id:nextId(),customer_name:name,items:tmpItems,total,pickup,status:'pending',paid:false,note};try{setStatus('saving');const res=await api.post('orders',newO);DB.orders.unshift(res[0]||newO);setStatus('saved');closeModal();renderOrders('','all');updateHeader();toast(sl('✓ 주문이 등록되었습니다','✓ 注文を登録しました'));await sendKakao(`${sl('신규 주문 접수','新規注文受付')}\n${sl('고객','顧客')}: ${name}\n${sl('수령일','受取日')}: ${pickup}\n${sl('합계','合計')}: ₩${total.toLocaleString()}`);}catch(e){toast('⚠️ '+e.message);}}
+function openViewOrder(id){const o=DB.orders.find(x=>x.id===id);if(!o)return;openModal(sl('주문 상세','注文詳細'),`<div style="font-size:13px;line-height:2.2"><p><b>${sl('주문번호','注文番号')}:</b> ${o.id}</p><p><b>${sl('고객명','顧客名')}:</b> ${o.customer_name}</p><p><b>${sl('수령일','受取日')}:</b> ${o.pickup}</p><p><b>${sl('상품','商品')}:</b></p>${(o.items||[]).map(it=>`<p style="padding-left:14px">• ${it.name} × ${it.qty}${sl('개','個')} = ₩${(it.qty*it.price).toLocaleString()}</p>`).join('')}<p><b>${sl('합계','合計')}:</b> ₩${o.total.toLocaleString()}</p><p><b>${sl('비고','備考')}:</b> ${o.note||'-'}</p><p><b>${sl('결제','決済')}:</b> ${o.paid?sl('✓ 완료','✓ 完了'):sl('미결제','未払い')}</p></div>`,`<button class="cancel-btn" onclick="closeModal()">${sl('닫기','閉じる')}</button><button class="print-btn" onclick="printReceipt('${o.id}')">🖨 ${sl('영수증 출력','領収書印刷')}</button>`);}
+function openAddCustomer(){openModal(sl('신규 고객 등록','新規顧客登録'),`<div class="form-col"><div><label class="lbl">${sl('성명','氏名')}</label><input class="inp" id="f-cname"/></div><div><label class="lbl">${sl('전화번호','電話番号')}</label><input class="inp" id="f-phone" placeholder="010-0000-0000"/></div><div><label class="lbl">${sl('이메일','メール')}</label><input class="inp" id="f-email" type="email"/></div><div><label class="lbl">${sl('주소','住所')}</label><input class="inp" id="f-addr"/></div><div><label class="lbl">${sl('메모','メモ')}</label><input class="inp" id="f-cnote"/></div></div>`,`<button class="cancel-btn" onclick="closeModal()">${sl('취소','キャンセル')}</button><button class="submit-btn" onclick="submitCustomer()">${sl('저장하기','保存する')}</button>`);}
+async function submitCustomer(){const name=document.getElementById('f-cname').value.trim();if(!name){toast(sl('성명을 입력해주세요','氏名を入力してください'));return;}const newC={id:nextId(),name,phone:document.getElementById('f-phone').value,email:document.getElementById('f-email').value,address:document.getElementById('f-addr').value,note:document.getElementById('f-cnote').value,total_orders:0,total_spent:0};try{setStatus('saving');const res=await api.post('customers',newC);DB.customers.unshift(res[0]||newC);setStatus('saved');closeModal();renderCustomers('');toast(sl('✓ 등록되었습니다','✓ 登録しました'));}catch(e){toast('⚠️ '+e.message);}}
+function openEditCustomer(id){const c=DB.customers.find(x=>x.id===id);if(!c)return;openModal(sl('고객 정보 수정','顧客情報編集'),`<div class="form-col"><div><label class="lbl">${sl('성명','氏名')}</label><input class="inp" id="f-cname" value="${c.name}"/></div><div><label class="lbl">${sl('전화번호','電話番号')}</label><input class="inp" id="f-phone" value="${c.phone}"/></div><div><label class="lbl">${sl('이메일','メール')}</label><input class="inp" id="f-email" value="${c.email}"/></div><div><label class="lbl">${sl('주소','住所')}</label><input class="inp" id="f-addr" value="${c.address}"/></div><div><label class="lbl">${sl('메모','メモ')}</label><input class="inp" id="f-cnote" value="${c.note}"/></div></div>`,`<button class="cancel-btn" onclick="closeModal()">${sl('취소','キャンセル')}</button><button class="submit-btn" onclick="submitEditCustomer('${id}')">${sl('저장하기','保存する')}</button>`);}
+async function submitEditCustomer(id){const updated={name:document.getElementById('f-cname').value,phone:document.getElementById('f-phone').value,email:document.getElementById('f-email').value,address:document.getElementById('f-addr').value,note:document.getElementById('f-cnote').value};try{setStatus('saving');await api.patch('customers',id,updated);DB.customers=DB.customers.map(c=>c.id===id?{...c,...updated}:c);setStatus('saved');closeModal();renderCustomers('');toast(sl('✓ 수정되었습니다','✓ 更新しました'));}catch(e){toast('⚠️ '+e.message);}}
+function openAddPayment(orderId,amount){openModal(sl('결제 입력','決済入力'),`<div class="form-col"><div><label class="lbl">${sl('주문번호','注文番号')}</label><input class="inp" id="f-oid" value="${orderId||''}"/></div><div><label class="lbl">${sl('금액 (₩)','金額 (₩)')}</label><input class="inp" id="f-amt" type="number" value="${amount||''}"/></div><div><label class="lbl">${sl('결제 수단','決済手段')}</label><select class="inp sel" id="f-method">${METHS().map(m=>`<option>${m}</option>`).join('')}</select></div><div><label class="lbl">${sl('날짜','日付')}</label><input class="inp" id="f-date" type="date" value="${new Date().toISOString().slice(0,10)}"/></div></div>`,`<button class="cancel-btn" onclick="closeModal()">${sl('취소','キャンセル')}</button><button class="submit-btn" onclick="submitPayment()">${sl('저장하기','保存する')}</button>`);}
 function openAddPaymentFor(id,amt){openAddPayment(id,amt);}
-function submitPayment(){
-  const oid=document.getElementById('f-oid').value;
-  const amt=Number(document.getElementById('f-amt').value);
-  if(!oid||!amt){alert('주문번호와 금액을 입력해주세요.');return;}
-  DB.payments.push({id:nextId(DB.payments,'PAY'),orderId:oid,amount:amt,method:document.getElementById('f-method').value,date:document.getElementById('f-date').value,status:'완료'});
-  DB.orders=DB.orders.map(o=>o.id===oid?{...o,paid:true}:o);
-  saveDB();closeModal();renderPayments();updateHeader();
-}
+async function submitPayment(){const oid=document.getElementById('f-oid').value.trim(),amt=Number(document.getElementById('f-amt').value);if(!oid||!amt){toast(sl('주문번호와 금액을 입력해주세요','注文番号と金額を入力してください'));return;}const newP={id:nextId(),order_id:oid,amount:amt,method:document.getElementById('f-method').value,date:document.getElementById('f-date').value,status:'완료'};try{setStatus('saving');const res=await api.post('payments',newP);DB.payments.unshift(res[0]||newP);await api.patch('orders',oid,{paid:true});DB.orders=DB.orders.map(o=>o.id===oid?{...o,paid:true}:o);setStatus('saved');closeModal();renderPayments();updateHeader();toast(sl('✓ 결제가 등록되었습니다','✓ 決済を登録しました'));await sendKakao(`${sl('결제 완료','支払完了')}\n${sl('주문','注文')}: ${oid}\n${sl('금액','金額')}: ₩${amt.toLocaleString()}`);}catch(e){toast('⚠️ '+e.message);}}
+function openAddExpense(){openModal(sl('경비 추가','経費追加'),`<div class="form-col"><div><label class="lbl">${sl('카테고리','カテゴリ')}</label><select class="inp sel" id="f-cat">${ECATS().map(c=>`<option>${c}</option>`).join('')}</select></div><div><label class="lbl">${sl('품목명','品目名')}</label><input class="inp" id="f-item"/></div><div><label class="lbl">${sl('금액 (₩)','金額 (₩)')}</label><input class="inp" id="f-eamt" type="number"/></div><div><label class="lbl">${sl('납품업체','仕入先')}</label><input class="inp" id="f-vendor"/></div><div><label class="lbl">${sl('날짜','日付')}</label><input class="inp" id="f-edate" type="date" value="${new Date().toISOString().slice(0,10)}"/></div></div>`,`<button class="cancel-btn" onclick="closeModal()">${sl('취소','キャンセル')}</button><button class="submit-btn" onclick="submitExpense()">${sl('저장하기','保存する')}</button>`);}
+async function submitExpense(){const item=document.getElementById('f-item').value.trim(),amt=Number(document.getElementById('f-eamt').value);if(!item||!amt){toast(sl('품목명과 금액을 입력해주세요','品目名と金額を入力してください'));return;}const newE={id:nextId(),category:document.getElementById('f-cat').value,item,amount:amt,vendor:document.getElementById('f-vendor').value,date:document.getElementById('f-edate').value};try{setStatus('saving');const res=await api.post('expenses',newE);DB.expenses.unshift(res[0]||newE);setStatus('saved');closeModal();renderExpenses('전체');updateHeader();toast(sl('✓ 경비가 등록되었습니다','✓ 経費を登録しました'));}catch(e){toast('⚠️ '+e.message);}}
 
-function openAddExpense(){
-  openModal('경비 추가',`
-    <div class="form-col">
-      <div><label class="lbl">카테고리</label><select class="inp sel" id="f-cat">${EXPENSE_CATS.map(c=>`<option>${c}</option>`).join('')}</select></div>
-      <div><label class="lbl">품목명</label><input class="inp" id="f-item"/></div>
-      <div><label class="lbl">금액 (₩)</label><input class="inp" id="f-eamt" type="number"/></div>
-      <div><label class="lbl">납품업체</label><input class="inp" id="f-vendor"/></div>
-      <div><label class="lbl">날짜</label><input class="inp" id="f-edate" type="date" value="${new Date().toISOString().slice(0,10)}"/></div>
-    </div>`,
-    '<button class="cancel-btn" onclick="closeModal()">취소</button><button class="submit-btn" onclick="submitExpense()">저장하기</button>');
-}
-function submitExpense(){
-  const item=document.getElementById('f-item').value;
-  const amt=Number(document.getElementById('f-eamt').value);
-  if(!item||!amt){alert('품목명과 금액을 입력해주세요.');return;}
-  DB.expenses.push({id:nextId(DB.expenses,'EXP'),category:document.getElementById('f-cat').value,item,amount:amt,vendor:document.getElementById('f-vendor').value,date:document.getElementById('f-edate').value});
-  saveDB();closeModal();renderExpenses();updateHeader();
-}
-
-// ==================== 초기화 ====================
-updateHeader();
-renderDashboard();
+// ── INIT ──
+document.body.classList.toggle('ja',LANG==='ja');
+document.getElementById('html-root').lang=LANG;
+if(LANG==='ja'){document.getElementById('logo-text').textContent='トック屋管理システム';document.querySelector('.lang-btn').textContent='🌐 한국어';document.querySelectorAll('.nav-l').forEach(el=>{el.textContent=el.dataset.ja;});document.getElementById('h-rev-l').textContent='今月売上';document.getElementById('h-exp-l').textContent='今月経費';document.getElementById('h-unp-l').textContent='未払い';}
+loadAll();
 </script>
 </body>
 </html>
