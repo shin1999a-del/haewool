@@ -217,7 +217,7 @@ const KR_HOLIDAYS={'2026-01-01':'신정','2026-01-28':'설날 연휴','2026-01-2
 const LUNAR_FEST={'2026-01-29':'정월 초하루','2026-02-17':'정월 대보름','2026-05-15':'사월 초파일','2026-09-25':'추석 (음8/15)'};
 function PRODS(){return['인절미','찰떡','백설기','송편','꿀떡','약식','경단','화전','수리취떡','시루떡','가래떡','떡국떡'];}
 function ECATS(){return['원재료','포장재','공과금','인건비','설비','기타'];}
-function METHS(){return['현금','카드','카카오페이','토스','계좌이체','기타'];}
+function METHS(){return['현금','카드','카카오페이','토스','계좌이체','입금','기타'];}
 function sl(ko,ja){return LANG==='ko'?ko:ja;}
 function slStatus(s){return STATUS_MAP[s]?STATUS_MAP[s][LANG]:s;}
 function badge(s){const m=STATUS_MAP[s]||{[LANG]:s,color:'#888',bg:'#eee'};return `<span class="badge" style="background:${m.bg};color:${m.color};border:1px solid ${m.color}44">${slStatus(s)}</span>`;}
@@ -262,50 +262,57 @@ function renderDashboard(){
   </div>`;}
 
 // ── ORDERS ──
+function ordersHTML(s,f){
+  const filtered=DB.orders.filter(o=>(f==='all'||o.status===f)&&(o.customer_name.includes(s)||o.id.includes(s))).sort((a,b)=>a.pickup.localeCompare(b.pickup));
+  return `${filtered.length===0?`<div class="card" style="text-align:center;color:var(--gray);padding:32px">${sl('주문이 없습니다','注文がありません')}</div>`:''}
+  ${filtered.map(o=>`
+  <div class="order-card" style="border-left-color:${STATUS_MAP[o.status]?.color||'#ccc'}">
+    <div class="order-top">
+      <div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap">${mono(o.id)} ${badge(o.status)} ${!o.paid?`<span class="unpaid-badge">${sl('미결제','未払い')}</span>`:''}</div>
+      <span style="font-size:11px;color:var(--gray)">🗓 ${o.pickup}</span>
+    </div>
+    <div class="order-name">${o.customer_name}</div>
+    <div class="item-tags">${(o.items||[]).map(it=>`<span class="itag">${it.name} ×${it.qty}</span>`).join('')}</div>
+    ${o.note?`<div class="order-note">📝 ${o.note}</div>`:''}
+    <div class="order-bot">
+      <strong style="color:var(--gold)">₩${o.total.toLocaleString()}</strong>
+      <div style="display:flex;gap:5px;flex-wrap:wrap">
+        <select class="sel-sm" onchange="updateStatus('${o.id}',this.value)">
+          ${Object.entries(STATUS_MAP).map(([k,v])=>`<option value="${k}" ${o.status===k?'selected':''}>${v[LANG]}</option>`).join('')}
+        </select>
+        ${!o.paid?`<button class="pay-btn" onclick="markPaid('${o.id}')">${sl('결제 완료','支払完了')}</button>`:''}
+        <button class="print-btn" onclick="printReceipt('${o.id}')">🖨 ${sl('영수증','領収書')}</button>
+        <button class="edit-btn" onclick="openViewOrder('${o.id}')">${sl('상세','詳細')}</button>
+        <button class="del-btn-sm" onclick="delOrder('${o.id}')">${sl('삭제','削除')}</button>
+      </div>
+    </div>
+  </div>`).join('')}`;
+}
+function refreshOrderList(){
+  const s=document.getElementById('ord-s')?.value||'';
+  const f=document.getElementById('ord-f')?.value||'all';
+  const el=document.getElementById('order-list');
+  if(el) el.innerHTML=ordersHTML(s,f);
+}
 function renderOrders(search,filter){
   const s=search||'',f=filter||'all';
-  const filtered=DB.orders.filter(o=>(f==='all'||o.status===f)&&(o.customer_name.includes(s)||o.id.includes(s))).sort((a,b)=>a.pickup.localeCompare(b.pickup));
   document.getElementById('main-content').innerHTML=`
   <div class="sec-head"><h2 class="sec-title">📋 ${sl('예약 주문 관리','予約注文管理')}</h2><button class="add-btn" onclick="openAddOrder()">+ ${sl('신규 주문','新規注文')}</button></div>
   <div class="toolbar">
     <div class="search-wrap">
-      <input id="ord-s" placeholder="${sl('고객명·주문번호 검색...','顧客名・注文番号検索...')}" value="${s}" oninput="renderOrders(this.value,document.getElementById('ord-f').value)"/>
-      <button class="search-clear" onclick="document.getElementById('ord-s').value='';renderOrders('',document.getElementById('ord-f').value)">×</button>
+      <input id="ord-s" placeholder="${sl('고객명·주문번호 검색...','顧客名・注文番号検索...')}" value="${s}" oninput="refreshOrderList()"/>
+      <button class="search-clear" onclick="document.getElementById('ord-s').value='';refreshOrderList()">×</button>
     </div>
-    <select class="sel" id="ord-f" onchange="renderOrders(document.getElementById('ord-s').value,this.value)">
+    <select class="sel" id="ord-f" onchange="refreshOrderList()">
       <option value="all" ${f==='all'?'selected':''}>${sl('전체 상태','全状態')}</option>
       ${Object.entries(STATUS_MAP).map(([k,v])=>`<option value="${k}" ${f===k?'selected':''}>${v[LANG]}</option>`).join('')}
     </select>
   </div>
-  <div class="order-grid">
-    ${filtered.length===0?`<div class="card" style="text-align:center;color:var(--gray);padding:32px">${sl('주문이 없습니다','注文がありません')}</div>`:''}
-    ${filtered.map(o=>`
-    <div class="order-card" style="border-left-color:${STATUS_MAP[o.status]?.color||'#ccc'}">
-      <div class="order-top">
-        <div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap">${mono(o.id)} ${badge(o.status)} ${!o.paid?`<span class="unpaid-badge">${sl('미결제','未払い')}</span>`:''}</div>
-        <span style="font-size:11px;color:var(--gray)">🗓 ${o.pickup}</span>
-      </div>
-      <div class="order-name">${o.customer_name}</div>
-      <div class="item-tags">${(o.items||[]).map(it=>`<span class="itag">${it.name} ×${it.qty}</span>`).join('')}</div>
-      ${o.note?`<div class="order-note">📝 ${o.note}</div>`:''}
-      <div class="order-bot">
-        <strong style="color:var(--gold)">₩${o.total.toLocaleString()}</strong>
-        <div style="display:flex;gap:5px;flex-wrap:wrap">
-          <select class="sel-sm" onchange="updateStatus('${o.id}',this.value)">
-            ${Object.entries(STATUS_MAP).map(([k,v])=>`<option value="${k}" ${o.status===k?'selected':''}>${v[LANG]}</option>`).join('')}
-          </select>
-          ${!o.paid?`<button class="pay-btn" onclick="markPaid('${o.id}')">${sl('결제 완료','支払完了')}</button>`:''}
-          <button class="print-btn" onclick="printReceipt('${o.id}')">🖨 ${sl('영수증','領収書')}</button>
-          <button class="edit-btn" onclick="openViewOrder('${o.id}')">${sl('상세','詳細')}</button>
-          <button class="del-btn-sm" onclick="delOrder('${o.id}')">${sl('삭제','削除')}</button>
-        </div>
-      </div>
-    </div>`).join('')}
-  </div>`;}
+  <div class="order-grid" id="order-list">${ordersHTML(s,f)}</div>`;}
 
-async function updateStatus(id,status){try{setStatus('saving');await api.patch('orders',id,{status});DB.orders=DB.orders.map(o=>o.id===id?{...o,status}:o);setStatus('saved');await sendKakao(`${sl('주문 상태 변경','注文状態変更')}\n${id} → ${slStatus(status)}`);const s=document.getElementById('ord-s')?.value||'',f=document.getElementById('ord-f')?.value||'all';renderOrders(s,f);}catch(e){toast('⚠️ '+e.message);}}
-async function markPaid(id){try{setStatus('saving');await api.patch('orders',id,{paid:true});DB.orders=DB.orders.map(o=>o.id===id?{...o,paid:true}:o);setStatus('saved');updateHeader();const o=DB.orders.find(x=>x.id===id);await sendKakao(`${sl('결제 완료','支払完了')}\n${o?.customer_name} / ₩${o?.total?.toLocaleString()}`);renderOrders('','all');toast(sl('✓ 결제 완료','✓ 支払完了'));}catch(e){toast('⚠️ '+e.message);}}
-async function delOrder(id){if(!confirm(sl('삭제하시겠습니까?','削除しますか？')))return;try{setStatus('saving');await api.del('orders',id);DB.orders=DB.orders.filter(o=>o.id!==id);setStatus('saved');updateHeader();renderOrders('','all');toast(sl('삭제되었습니다','削除しました'));}catch(e){toast('⚠️ '+e.message);}}
+async function updateStatus(id,status){try{setStatus('saving');await api.patch('orders',id,{status});DB.orders=DB.orders.map(o=>o.id===id?{...o,status}:o);setStatus('saved');await sendKakao(`${sl('주문 상태 변경','注文状態変更')}\n${id} → ${slStatus(status)}`);refreshOrderList();}catch(e){toast('⚠️ '+e.message);}}
+async function markPaid(id){try{setStatus('saving');await api.patch('orders',id,{paid:true});DB.orders=DB.orders.map(o=>o.id===id?{...o,paid:true}:o);setStatus('saved');updateHeader();const o=DB.orders.find(x=>x.id===id);await sendKakao(`${sl('결제 완료','支払完了')}\n${o?.customer_name} / ₩${o?.total?.toLocaleString()}`);refreshOrderList();toast(sl('✓ 결제 완료','✓ 支払完了'));}catch(e){toast('⚠️ '+e.message);}}
+async function delOrder(id){if(!confirm(sl('삭제하시겠습니까?','削除しますか？')))return;try{setStatus('saving');await api.del('orders',id);DB.orders=DB.orders.filter(o=>o.id!==id);setStatus('saved');updateHeader();refreshOrderList();toast(sl('삭제되었습니다','削除しました'));}catch(e){toast('⚠️ '+e.message);}}
 
 function printReceipt(id){const o=DB.orders.find(x=>x.id===id);if(!o)return;const w=window.open('','_blank','width=400,height=600');w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>body{font-family:'Noto Sans KR',sans-serif;padding:20px;max-width:320px;margin:0 auto}h2{text-align:center;font-size:18px;margin-bottom:4px}.sub{text-align:center;font-size:11px;color:#888;margin-bottom:16px}hr{border:none;border-top:1px dashed #ccc;margin:12px 0}.row{display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px}.total{font-size:16px;font-weight:700}.footer{text-align:center;font-size:10px;color:#aaa;margin-top:16px}@media print{button{display:none}}</style></head><body><h2>🍡 떡방앗간</h2><div class="sub">${sl('영수증','領収書')}</div><hr/><div class="row"><span>${sl('주문번호','注文番号')}</span><span>${o.id}</span></div><div class="row"><span>${sl('고객명','顧客名')}</span><span>${o.customer_name}</span></div><div class="row"><span>${sl('수령일','受取日')}</span><span>${o.pickup}</span></div><hr/>${(o.items||[]).map(it=>`<div class="row"><span>${it.name} ×${it.qty}</span><span>₩${(it.qty*it.price).toLocaleString()}</span></div>`).join('')}<hr/><div class="row total"><span>${sl('합계','合計')}</span><span>₩${o.total.toLocaleString()}</span></div><div class="row"><span>${sl('결제','決済')}</span><span>${o.paid?sl('완료','完了'):sl('미결제','未払い')}</span></div>${o.note?`<div class="row"><span>${sl('비고','備考')}</span><span>${o.note}</span></div>`:''}<hr/><div class="footer">${new Date().toLocaleString('ko-KR')}<br>${sl('감사합니다 🍡','ありがとうございます 🍡')}</div><br><button onclick="window.print()" style="width:100%;padding:10px;background:#2a1208;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:14px">${sl('인쇄하기','印刷する')}</button></body></html>`);w.document.close();}
 
@@ -356,21 +363,28 @@ function calNext(){if(calMonth===11){calYear++;calMonth=0;}else calMonth++;calSe
 function calSel(ds){calSelected=calSelected===ds?null:ds;renderCalendar();}
 
 // ── CUSTOMERS ──
+function customersHTML(s){
+  const filtered=DB.customers.filter(c=>c.name.includes(s)||c.phone.includes(s));
+  return `${filtered.length===0?`<div class="card" style="text-align:center;color:var(--gray);padding:32px">${sl('고객이 없습니다','顧客がいません')}</div>`:''}
+  ${filtered.map(c=>`<div class="cust-card"><div class="avatar">${c.name[0]}</div><div style="flex:1"><div class="cust-name">${c.name}</div><div class="cust-detail">📞 ${c.phone}</div><div class="cust-detail">✉️ ${c.email}</div><div class="cust-detail">📍 ${c.address}</div>${c.note?`<div class="cust-note">⭐ ${c.note}</div>`:''}<div class="cust-stats"><span>${sl('주문','注文')} <strong>${c.total_orders}${sl('회','回')}</strong></span><span>${sl('누적','累計')} <strong>₩${c.total_spent.toLocaleString()}</strong></span></div></div><div style="display:flex;flex-direction:column;gap:4px"><button class="edit-btn" onclick="openEditCustomer('${c.id}')">${sl('편집','編集')}</button><button class="del-btn-sm" onclick="delCustomer('${c.id}')">${sl('삭제','削除')}</button></div></div>`).join('')}`;
+}
+function refreshCustList(){
+  const s=document.getElementById('cust-s')?.value||'';
+  const el=document.getElementById('cust-list');
+  if(el) el.innerHTML=customersHTML(s);
+}
 function renderCustomers(search){
-  const s=search||'',filtered=DB.customers.filter(c=>c.name.includes(s)||c.phone.includes(s));
+  const s=search||'';
   document.getElementById('main-content').innerHTML=`
   <div class="sec-head"><h2 class="sec-title">👥 ${sl('고객 관리','顧客管理')}</h2><button class="add-btn" onclick="openAddCustomer()">+ ${sl('신규 고객','新規顧客')}</button></div>
   <div class="toolbar">
     <div class="search-wrap">
-      <input id="cust-s" placeholder="${sl('이름·전화번호 검색...','氏名・電話番号検索...')}" value="${s}" oninput="renderCustomers(this.value)"/>
-      <button class="search-clear" onclick="document.getElementById('cust-s').value='';renderCustomers('')">×</button>
+      <input id="cust-s" placeholder="${sl('이름·전화번호 검색...','氏名・電話番号検索...')}" value="${s}" oninput="refreshCustList()"/>
+      <button class="search-clear" onclick="document.getElementById('cust-s').value='';refreshCustList()">×</button>
     </div>
   </div>
-  <div class="cust-grid">
-    ${filtered.length===0?`<div class="card" style="text-align:center;color:var(--gray);padding:32px">${sl('고객이 없습니다','顧客がいません')}</div>`:''}
-    ${filtered.map(c=>`<div class="cust-card"><div class="avatar">${c.name[0]}</div><div style="flex:1"><div class="cust-name">${c.name}</div><div class="cust-detail">📞 ${c.phone}</div><div class="cust-detail">✉️ ${c.email}</div><div class="cust-detail">📍 ${c.address}</div>${c.note?`<div class="cust-note">⭐ ${c.note}</div>`:''}<div class="cust-stats"><span>${sl('주문','注文')} <strong>${c.total_orders}${sl('회','回')}</strong></span><span>${sl('누적','累計')} <strong>₩${c.total_spent.toLocaleString()}</strong></span></div></div><div style="display:flex;flex-direction:column;gap:4px"><button class="edit-btn" onclick="openEditCustomer('${c.id}')">${sl('편집','編集')}</button><button class="del-btn-sm" onclick="delCustomer('${c.id}')">${sl('삭제','削除')}</button></div></div>`).join('')}
-  </div>`;}
-async function delCustomer(id){if(!confirm(sl('삭제하시겠습니까?','削除しますか？')))return;try{setStatus('saving');await api.del('customers',id);DB.customers=DB.customers.filter(c=>c.id!==id);setStatus('saved');renderCustomers('');toast(sl('삭제되었습니다','削除しました'));}catch(e){toast('⚠️ '+e.message);}}
+  <div class="cust-grid" id="cust-list">${customersHTML(s)}</div>`;}
+async function delCustomer(id){if(!confirm(sl('삭제하시겠습니까?','削除しますか？')))return;try{setStatus('saving');await api.del('customers',id);DB.customers=DB.customers.filter(c=>c.id!==id);setStatus('saved');refreshCustList();toast(sl('삭제되었습니다','削除しました'));}catch(e){toast('⚠️ '+e.message);}}
 
 // ── PAYMENTS ──
 function renderPayments(){
@@ -381,8 +395,8 @@ function renderPayments(){
   <div class="sec-head"><h2 class="sec-title">💳 ${sl('결제 관리','決済管理')}</h2><button class="add-btn" onclick="openAddPayment()">+ ${sl('결제 입력','決済入力')}</button></div>
   <div class="kpi-grid">${kpiCard('💰',sl('총 결제액','総決済額'),'₩'+total.toLocaleString(),DB.payments.length+sl('건','件'),'#2e7d5a')}${Object.entries(byM).map(([m,v])=>kpiCard('💳',m,'₩'+v.toLocaleString(),sl('결제 수단별','決済手段別'),'#1565a8')).join('')}</div>
   <div class="card"><div class="card-title">${sl('결제 내역','決済履歴')}</div>
-    <table><thead><tr><th>${sl('결제ID','決済ID')}</th><th>${sl('주문번호','注文番号')}</th><th>${sl('금액','金額')}</th><th>${sl('결제 수단','決済手段')}</th><th>${sl('날짜','日付')}</th><th>${sl('상태','状態')}</th></tr></thead><tbody>
-    ${DB.payments.map(p=>`<tr class="trow"><td>${mono(p.id)}</td><td>${mono(p.order_id)}</td><td>₩${p.amount.toLocaleString()}</td><td>${p.method}</td><td>${p.date}</td><td style="color:#2e7d5a;font-weight:600">✓ ${p.status}</td></tr>`).join('')}
+    <table><thead><tr><th>${sl('결제ID','決済ID')}</th><th>${sl('주문번호','注文番号')}</th><th>${sl('금액','金額')}</th><th>${sl('결제 수단','決済手段')}</th><th>${sl('날짜','日付')}</th><th>${sl('상태','状態')}</th><th></th></tr></thead><tbody>
+    ${DB.payments.map(p=>`<tr class="trow"><td>${mono(p.id)}</td><td>${mono(p.order_id)}</td><td>₩${p.amount.toLocaleString()}</td><td>${p.method}</td><td>${p.date}</td><td style="color:#2e7d5a;font-weight:600">✓ ${p.status}</td><td><button class="del-btn-sm" onclick="delPayment('${p.id}')">삭제</button></td></tr>`).join('')}
     </tbody></table>
   </div>
   ${unpaid.length?`<div class="card"><div class="card-title">${sl('미결제 주문','未払い注文')}</div>${unpaid.map(o=>`<div class="unpaid-row">${mono(o.id)}<span>${o.customer_name}</span><span>${sl('수령','受取')}: ${o.pickup}</span><strong style="color:var(--red)">₩${o.total.toLocaleString()}</strong><button class="pay-btn" onclick="openAddPaymentFor('${o.id}','${o.total}')">+ ${sl('결제 입력','決済入力')}</button></div>`).join('')}</div>`:''}`;}
@@ -437,11 +451,93 @@ function openModal(title,body,actions){document.getElementById('modal-title').te
 function closeModal(){document.getElementById('modal-overlay').style.display='none';}
 function syncItems(){tmpItems=tmpItems.map((_,i)=>({name:document.getElementById('iname-'+i)?.value||PRODS()[0],qty:Number(document.getElementById('iqty-'+i)?.value||1),price:Number(document.getElementById('iprice-'+i)?.value||2500)}));}
 function itemsHTML(){const total=tmpItems.reduce((s,i)=>s+i.qty*i.price,0);return `<div id="items-area">${tmpItems.map((it,i)=>`<div style="display:flex;gap:5px;margin-bottom:6px;flex-wrap:wrap;align-items:center"><select class="sel-sm" id="iname-${i}">${PRODS().map(p=>`<option ${p===it.name?'selected':''}>${p}</option>`).join('')}</select><input class="inp" style="width:55px" type="number" id="iqty-${i}" value="${it.qty}"/><span style="font-size:11px;color:var(--gray)">${sl('개','個')}</span><input class="inp" style="width:75px" type="number" id="iprice-${i}" value="${it.price}"/><span style="font-size:11px;color:var(--gray)">${sl('원/개','円/個')}</span><button class="del-btn-sm" onclick="removeItem(${i})">✕</button></div>`).join('')}</div><div style="font-size:12px;color:var(--gold);font-weight:700;margin:4px 0">${sl('합계','合計')}: ₩${total.toLocaleString()}</div><button class="link-btn" onclick="addItem()">+ ${sl('상품 추가','商品追加')}</button>`;}
-function addOrderBody(){return `<div class="form-col"><div><label class="lbl">${sl('고객명','顧客名')}</label><input class="inp" id="f-name"/></div><div><label class="lbl">${sl('수령일','受取日')}</label><input class="inp" type="date" id="f-pickup"/></div><div><label class="lbl">${sl('비고','備考')}</label><input class="inp" id="f-note"/></div><div><label class="lbl">${sl('상품','商品')}</label>${itemsHTML()}</div></div>`;}
+function custSuggestHTML(){
+  return `<div id="cust-suggest" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid var(--border);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.12);z-index:999;max-height:180px;overflow-y:auto"></div>`;
+}
+function showCustSuggest(){
+  const q=document.getElementById('f-name').value.trim();
+  const box=document.getElementById('cust-suggest');
+  if(!box)return;
+  if(!q){box.style.display='none';return;}
+  const hits=DB.customers.filter(c=>c.name.includes(q)||c.phone.slice(-4).includes(q));
+  if(!hits.length){box.style.display='none';return;}
+  box.innerHTML=hits.map(c=>`<div onclick="selectCust('${c.id}')" style="padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--border);font-size:13px;" onmouseover="this.style.background='#fff8ef'" onmouseout="this.style.background=''">${c.name} <span style="color:var(--gray);font-size:11px">${c.phone}</span></div>`).join('');
+  box.style.display='block';
+}
+function selectCust(id){
+  const c=DB.customers.find(x=>x.id===id);
+  if(!c)return;
+  document.getElementById('f-name').value=c.name;
+  document.getElementById('f-phone-hidden').value=c.phone;
+  const box=document.getElementById('cust-suggest');
+  if(box)box.style.display='none';
+  const tag=document.getElementById('cust-selected-tag');
+  if(tag){tag.textContent='✓ '+c.name+' ('+c.phone+')';tag.style.display='inline-block';}
+}
+function addOrderBody(){
+  return `<div class="form-col">
+  <div style="position:relative">
+    <label class="lbl">${sl('고객명 또는 전화번호 끝 4자리','顧客名または電話番号下4桁')}</label>
+    <input class="inp" id="f-name" placeholder="${sl('입력하면 고객 후보가 나타납니다','入力すると候補が表示されます')}" oninput="showCustSuggest()" autocomplete="off"/>
+    <input type="hidden" id="f-phone-hidden"/>
+    <span id="cust-selected-tag" style="display:none;font-size:11px;color:var(--green);background:#e8f5e9;padding:2px 8px;border-radius:4px;margin-top:4px;"></span>
+    ${custSuggestHTML()}
+  </div>
+  <div><label class="lbl">${sl('수령일','受取日')}</label><input class="inp" type="date" id="f-pickup"/></div>
+  <div>
+    <label class="lbl">${sl('결제 방법','決済方法')}</label>
+    <select class="inp sel" id="f-pay-method">
+      <option value="">${sl('-- 나중에 입력 --','-- 後で入力 --')}</option>
+      ${METHS().map(m=>`<option>${m}</option>`).join('')}
+    </select>
+  </div>
+  <div><label class="lbl">${sl('비고','備考')}</label><input class="inp" id="f-note"/></div>
+  <div><label class="lbl">${sl('상품','商品')}</label>${itemsHTML()}</div>
+  </div>`;
+}
 function addItem(){syncItems();tmpItems.push({name:PRODS()[0],qty:1,price:2500});document.getElementById('modal-body').innerHTML=addOrderBody();}
 function removeItem(i){syncItems();tmpItems.splice(i,1);document.getElementById('modal-body').innerHTML=addOrderBody();}
 function openAddOrder(){tmpItems=[{name:PRODS()[0],qty:1,price:2500}];openModal(sl('신규 주문 등록','新規注文登録'),addOrderBody(),`<button class="cancel-btn" onclick="closeModal()">${sl('취소','キャンセル')}</button><button class="submit-btn" onclick="submitOrder()">${sl('저장하기','保存する')}</button>`);}
-async function submitOrder(){syncItems();const name=document.getElementById('f-name').value.trim(),pickup=document.getElementById('f-pickup').value,note=document.getElementById('f-note').value.trim();if(!name||!pickup){toast(sl('고객명과 수령일을 입력해주세요','顧客名と受取日を入力してください'));return;}const total=tmpItems.reduce((s,i)=>s+i.qty*i.price,0),newO={id:nextId(),customer_name:name,items:tmpItems,total,pickup,status:'pending',paid:false,note};try{setStatus('saving');const res=await api.post('orders',newO);DB.orders.unshift(res[0]||newO);setStatus('saved');closeModal();renderOrders('','all');updateHeader();toast(sl('✓ 주문이 등록되었습니다','✓ 注文を登録しました'));await sendKakao(`${sl('신규 주문 접수','新規注文受付')}\n${sl('고객','顧客')}: ${name}\n${sl('수령일','受取日')}: ${pickup}\n${sl('합계','合計')}: ₩${total.toLocaleString()}`);}catch(e){toast('⚠️ '+e.message);}}
+async function submitOrder(){
+  syncItems();
+  const name=document.getElementById('f-name').value.trim();
+  const pickup=document.getElementById('f-pickup').value;
+  const note=document.getElementById('f-note').value.trim();
+  const payMethod=document.getElementById('f-pay-method')?.value||'';
+  const phone=document.getElementById('f-phone-hidden')?.value||'';
+  if(!name||!pickup){toast(sl('고객명과 수령일을 입력해주세요','顧客名と受取日を入力してください'));return;}
+  const total=tmpItems.reduce((s,i)=>s+i.qty*i.price,0);
+  const newO={id:nextId(),customer_name:name,items:tmpItems,total,pickup,status:'pending',paid:false,note};
+  try{
+    setStatus('saving');
+    const res=await api.post('orders',newO);
+    const savedOrder=res[0]||newO;
+    DB.orders.unshift(savedOrder);
+    // 顧客が未登録なら自動登録
+    const existCust=DB.customers.find(c=>c.name===name);
+    if(!existCust&&name){
+      const newC={id:nextId(),name,phone,email:'',address:'',note:'',total_orders:1,total_spent:total};
+      try{const cr=await api.post('customers',newC);DB.customers.unshift(cr[0]||newC);}catch(e){}
+    } else if(existCust){
+      // 既存顧客の累計更新
+      const upd={total_orders:(existCust.total_orders||0)+1,total_spent:(existCust.total_spent||0)+total};
+      try{await api.patch('customers',existCust.id,upd);DB.customers=DB.customers.map(c=>c.id===existCust.id?{...c,...upd}:c);}catch(e){}
+    }
+    // 決済方法が選択されていたら自動で決済も登録
+    if(payMethod){
+      const newP={id:nextId(),order_id:savedOrder.id,amount:total,method:payMethod,date:new Date().toISOString().slice(0,10),status:'완료'};
+      try{
+        const pr=await api.post('payments',newP);
+        DB.payments.unshift(pr[0]||newP);
+        await api.patch('orders',savedOrder.id,{paid:true});
+        DB.orders=DB.orders.map(o=>o.id===savedOrder.id?{...o,paid:true}:o);
+      }catch(e){}
+    }
+    setStatus('saved');closeModal();renderOrders('','all');updateHeader();
+    toast(sl('✓ 주문이 등록되었습니다','✓ 注文を登録しました'));
+    await sendKakao(`${sl('신규 주문 접수','新規注文受付')}\n${sl('고객','顧客')}: ${name}\n${sl('수령일','受取日')}: ${pickup}\n${sl('합계','合計')}: ₩${total.toLocaleString()}${payMethod?'\n'+sl('결제','決済')+': '+payMethod:''}`);
+  }catch(e){toast('⚠️ '+e.message);}
+}
 function openViewOrder(id){const o=DB.orders.find(x=>x.id===id);if(!o)return;openModal(sl('주문 상세','注文詳細'),`<div style="font-size:13px;line-height:2.2"><p><b>${sl('주문번호','注文番号')}:</b> ${o.id}</p><p><b>${sl('고객명','顧客名')}:</b> ${o.customer_name}</p><p><b>${sl('수령일','受取日')}:</b> ${o.pickup}</p><p><b>${sl('상품','商品')}:</b></p>${(o.items||[]).map(it=>`<p style="padding-left:14px">• ${it.name} × ${it.qty}${sl('개','個')} = ₩${(it.qty*it.price).toLocaleString()}</p>`).join('')}<p><b>${sl('합계','合計')}:</b> ₩${o.total.toLocaleString()}</p><p><b>${sl('비고','備考')}:</b> ${o.note||'-'}</p><p><b>${sl('결제','決済')}:</b> ${o.paid?sl('✓ 완료','✓ 完了'):sl('미결제','未払い')}</p></div>`,`<button class="cancel-btn" onclick="closeModal()">${sl('닫기','閉じる')}</button><button class="print-btn" onclick="printReceipt('${o.id}')">🖨 ${sl('영수증 출력','領収書印刷')}</button>`);}
 function openAddCustomer(){openModal(sl('신규 고객 등록','新規顧客登録'),`<div class="form-col"><div><label class="lbl">${sl('성명','氏名')}</label><input class="inp" id="f-cname"/></div><div><label class="lbl">${sl('전화번호','電話番号')}</label><input class="inp" id="f-phone" placeholder="010-0000-0000"/></div><div><label class="lbl">${sl('이메일','メール')}</label><input class="inp" id="f-email" type="email"/></div><div><label class="lbl">${sl('주소','住所')}</label><input class="inp" id="f-addr"/></div><div><label class="lbl">${sl('메모','メモ')}</label><input class="inp" id="f-cnote"/></div></div>`,`<button class="cancel-btn" onclick="closeModal()">${sl('취소','キャンセル')}</button><button class="submit-btn" onclick="submitCustomer()">${sl('저장하기','保存する')}</button>`);}
 async function submitCustomer(){const name=document.getElementById('f-cname').value.trim();if(!name){toast(sl('성명을 입력해주세요','氏名を入力してください'));return;}const newC={id:nextId(),name,phone:document.getElementById('f-phone').value,email:document.getElementById('f-email').value,address:document.getElementById('f-addr').value,note:document.getElementById('f-cnote').value,total_orders:0,total_spent:0};try{setStatus('saving');const res=await api.post('customers',newC);DB.customers.unshift(res[0]||newC);setStatus('saved');closeModal();renderCustomers('');toast(sl('✓ 등록되었습니다','✓ 登録しました'));}catch(e){toast('⚠️ '+e.message);}}
@@ -449,6 +545,7 @@ function openEditCustomer(id){const c=DB.customers.find(x=>x.id===id);if(!c)retu
 async function submitEditCustomer(id){const updated={name:document.getElementById('f-cname').value,phone:document.getElementById('f-phone').value,email:document.getElementById('f-email').value,address:document.getElementById('f-addr').value,note:document.getElementById('f-cnote').value};try{setStatus('saving');await api.patch('customers',id,updated);DB.customers=DB.customers.map(c=>c.id===id?{...c,...updated}:c);setStatus('saved');closeModal();renderCustomers('');toast(sl('✓ 수정되었습니다','✓ 更新しました'));}catch(e){toast('⚠️ '+e.message);}}
 function openAddPayment(orderId,amount){openModal(sl('결제 입력','決済入力'),`<div class="form-col"><div><label class="lbl">${sl('주문번호','注文番号')}</label><input class="inp" id="f-oid" value="${orderId||''}"/></div><div><label class="lbl">${sl('금액 (₩)','金額 (₩)')}</label><input class="inp" id="f-amt" type="number" value="${amount||''}"/></div><div><label class="lbl">${sl('결제 수단','決済手段')}</label><select class="inp sel" id="f-method">${METHS().map(m=>`<option>${m}</option>`).join('')}</select></div><div><label class="lbl">${sl('날짜','日付')}</label><input class="inp" id="f-date" type="date" value="${new Date().toISOString().slice(0,10)}"/></div></div>`,`<button class="cancel-btn" onclick="closeModal()">${sl('취소','キャンセル')}</button><button class="submit-btn" onclick="submitPayment()">${sl('저장하기','保存する')}</button>`);}
 function openAddPaymentFor(id,amt){openAddPayment(id,amt);}
+async function delPayment(id){if(!confirm(sl('삭제하시겠습니까?','削除しますか？')))return;try{setStatus('saving');await api.del('payments',id);DB.payments=DB.payments.filter(p=>p.id!==id);setStatus('saved');renderPayments();updateHeader();toast(sl('삭제되었습니다','削除しました'));}catch(e){toast('⚠️ '+e.message);}}
 async function submitPayment(){const oid=document.getElementById('f-oid').value.trim(),amt=Number(document.getElementById('f-amt').value);if(!oid||!amt){toast(sl('주문번호와 금액을 입력해주세요','注文番号と金額を入力してください'));return;}const newP={id:nextId(),order_id:oid,amount:amt,method:document.getElementById('f-method').value,date:document.getElementById('f-date').value,status:'완료'};try{setStatus('saving');const res=await api.post('payments',newP);DB.payments.unshift(res[0]||newP);await api.patch('orders',oid,{paid:true});DB.orders=DB.orders.map(o=>o.id===oid?{...o,paid:true}:o);setStatus('saved');closeModal();renderPayments();updateHeader();toast(sl('✓ 결제가 등록되었습니다','✓ 決済を登録しました'));await sendKakao(`${sl('결제 완료','支払完了')}\n${sl('주문','注文')}: ${oid}\n${sl('금액','金額')}: ₩${amt.toLocaleString()}`);}catch(e){toast('⚠️ '+e.message);}}
 function openAddExpense(){openModal(sl('경비 추가','経費追加'),`<div class="form-col"><div><label class="lbl">${sl('카테고리','カテゴリ')}</label><select class="inp sel" id="f-cat">${ECATS().map(c=>`<option>${c}</option>`).join('')}</select></div><div><label class="lbl">${sl('품목명','品目名')}</label><input class="inp" id="f-item"/></div><div><label class="lbl">${sl('금액 (₩)','金額 (₩)')}</label><input class="inp" id="f-eamt" type="number"/></div><div><label class="lbl">${sl('납품업체','仕入先')}</label><input class="inp" id="f-vendor"/></div><div><label class="lbl">${sl('날짜','日付')}</label><input class="inp" id="f-edate" type="date" value="${new Date().toISOString().slice(0,10)}"/></div></div>`,`<button class="cancel-btn" onclick="closeModal()">${sl('취소','キャンセル')}</button><button class="submit-btn" onclick="submitExpense()">${sl('저장하기','保存する')}</button>`);}
 async function submitExpense(){const item=document.getElementById('f-item').value.trim(),amt=Number(document.getElementById('f-eamt').value);if(!item||!amt){toast(sl('품목명과 금액을 입력해주세요','品目名と金額を入力してください'));return;}const newE={id:nextId(),category:document.getElementById('f-cat').value,item,amount:amt,vendor:document.getElementById('f-vendor').value,date:document.getElementById('f-edate').value};try{setStatus('saving');const res=await api.post('expenses',newE);DB.expenses.unshift(res[0]||newE);setStatus('saved');closeModal();renderExpenses('전체');updateHeader();toast(sl('✓ 경비가 등록되었습니다','✓ 経費を登録しました'));}catch(e){toast('⚠️ '+e.message);}}
