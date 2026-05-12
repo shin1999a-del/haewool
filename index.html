@@ -208,7 +208,7 @@ body.ja .modal-title{font-family:'Noto Serif JP',serif}
 </div>
 <script>
 const SUPABASE_URL='https://adkfwhkneptmndzgrsfq.supabase.co';
-const SUPABASE_KEY='sb_publishable_QLsQShr2Sjw3iOQCfd-KRA_QywsT1t_';
+const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFka2Z3aGtuZXB0bW5kemdyc2ZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzMTA4MzAsImV4cCI6MjA5Mzg4NjgzMH0.sYmgBSGGVMWWxzNo6qa9f2eTM1tfNG1ULrrH3jyRhJA';
 async function sb(method,table,body,id,extra){
   const url=`${SUPABASE_URL}/rest/v1/${table}${id?`?id=eq.${id}`:extra||''}`;
   const res=await fetch(url,{method,headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`,'Content-Type':'application/json','Prefer':method==='POST'?'return=representation':''},body:body?JSON.stringify(body):null});
@@ -537,77 +537,69 @@ function selectCust(id){
   if(tag){tag.textContent='✓ '+c.name+' ('+c.phone+')';tag.style.display='inline-block';}
 }
 function addOrderBody(){
-  return `<div class="form-col">
-  <div style="position:relative">
-    <label class="lbl">${sl('고객명 또는 전화번호 끝 4자리','顧客名または電話番号下4桁')}</label>
-    <input class="inp" id="f-name" placeholder="${sl('입력하면 고객 후보가 나타납니다','入力すると候補が表示されます')}" oninput="showCustSuggest()" autocomplete="off"/>
-    <input type="hidden" id="f-phone-hidden"/>
-    <span id="cust-selected-tag" style="display:none;font-size:11px;color:var(--green);background:#e8f5e9;padding:2px 8px;border-radius:4px;margin-top:4px;"></span>
-    ${custSuggestHTML()}
-  </div>
-  <div><label class="lbl">${sl('수령일 및 시간','受取日時')}</label><input class="inp" type="datetime-local" id="f-pickup"/></div>
-  <div>
-    <label class="lbl">${sl('수령 방법','受取方法')}</label>
-    <select class="inp sel" id="f-delivery" onchange="toggleDeliveryAddr()">
-      <option value="방문수령">${sl('🏪 방문수령','🏪 店頭受取')}</option>
-      <option value="배달">${sl('🚚 배달','🚚 配達')}</option>
-    </select>
-  </div>
-  <div id="f-addr-wrap" style="display:none">
-    <label class="lbl">${sl('배달 주소','配達住所')}</label>
-    <input class="inp" id="f-delivery-addr" placeholder="${sl('주소를 입력하세요','住所を入力してください')}"/>
-  </div>
-  <div>
-    <label class="lbl">${sl('결제 방법','決済方法')}</label>
-    <select class="inp sel" id="f-pay-method">
-      <option value="">${sl('-- 나중에 입력 --','-- 後で入力 --')}</option>
-      ${METHS().map(m=>`<option>${m}</option>`).join('')}
-    </select>
-  </div>
-  <div><label class="lbl">${sl('비고','備考')}</label><input class="inp" id="f-note"/></div>
-  <div><label class="lbl">${sl('상품','商品')}</label>${itemsHTML()}</div>
-  </div>`;
+  const methOpts='<option value="">'+sl('-- 나중에 입력 --','-- 後で入力 --')+'</option>'+METHS().map(m=>'<option>'+m+'</option>').join('');
+  return '<div class="form-col">'
+    +'<div style="position:relative">'
+    +'<label class="lbl">'+sl('고객명 또는 전화번호 끝 4자리','顧客名または電話番号下4桁')+'</label>'
+    +'<input class="inp" id="f-name" placeholder="'+sl('입력하면 고객 후보가 나타납니다','入力すると候補が表示されます')+'" oninput="showCustSuggest()" autocomplete="off"/>'
+    +'<input type="hidden" id="f-phone-hidden"/>'
+    +'<span id="cust-selected-tag" style="display:none;font-size:11px;color:var(--green);background:#e8f5e9;padding:2px 8px;border-radius:4px;margin-top:4px;"></span>'
+    +'<div id="cust-suggest" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid var(--border);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.12);z-index:999;max-height:180px;overflow-y:auto"></div>'
+    +'</div>'
+    +'<div><label class="lbl">'+sl('수령일 및 시간','受取日時')+'</label>'
+    +'<input class="inp" type="datetime-local" id="f-pickup"/></div>'
+    +'<div><label class="lbl">'+sl('수령 방법','受取方法')+'</label>'
+    +'<select class="inp sel" id="f-delivery" onchange="toggleDeliveryAddr()">'
+    +'<option value="방문수령">'+sl('🏪 방문수령','🏪 店頭受取')+'</option>'
+    +'<option value="배달">'+sl('🚚 배달','🚚 配達')+'</option>'
+    +'</select></div>'
+    +'<div id="f-addr-wrap" style="display:none">'
+    +'<label class="lbl">'+sl('배달 주소','配達住所')+'</label>'
+    +'<input class="inp" id="f-delivery-addr" placeholder="'+sl('주소를 입력하세요','住所を入力してください')+'"/></div>'
+    +'<div><label class="lbl">'+sl('결제 방법','決済方法')+'</label>'
+    +'<select class="inp sel" id="f-pay-method">'+methOpts+'</select></div>'
+    +'<div><label class="lbl">'+sl('비고','備考')+'</label>'
+    +'<input class="inp" id="f-note"/></div>'
+    +'<div><label class="lbl">'+sl('상품','商品')+'</label>'+itemsHTML()+'</div>'
+    +'</div>';
 }
 
 function editOrderBody(o){
   tmpItems=JSON.parse(JSON.stringify(o.items||[]));
-  const pickupVal=o.pickup||\'\';
-  return `<div class="form-col">
-  <div style="position:relative">
-    <label class="lbl">${sl('고객명','顧客名')}</label>
-    <input class="inp" id="f-name" value="${o.customer_name}" oninput="showCustSuggest()" autocomplete="off"/>
-    <input type="hidden" id="f-phone-hidden"/>
-    <span id="cust-selected-tag" style="display:none;font-size:11px;color:var(--green);background:#e8f5e9;padding:2px 8px;border-radius:4px;margin-top:4px;"></span>
-    ${custSuggestHTML()}
-  </div>
-  <div><label class="lbl">${sl('수령일 및 시간','受取日時')}</label><input class="inp" type="datetime-local" id="f-pickup" value="${o.pickup||''}"/></div>
-  <div>
-    <label class="lbl">${sl('수령 방법','受取方法')}</label>
-    <select class="inp sel" id="f-delivery" onchange="toggleDeliveryAddr()">
-      <option value="방문수령" ${(o.delivery_type||'방문수령')==='방문수령'?'selected':''}>${sl('🏪 방문수령','🏪 店頭受取')}</option>
-      <option value="배달" ${o.delivery_type==='배달'?'selected':''}>${sl('🚚 배달','🚚 配達')}</option>
-    </select>
-  </div>
-  <div id="f-addr-wrap" style="display:${o.delivery_type==='배달'?'block':'none'}">
-    <label class="lbl">${sl('배달 주소','配達住所')}</label>
-    <input class="inp" id="f-delivery-addr" value="${o.delivery_addr||''}"/>
-  </div>
-  <div>
-    <label class="lbl">${sl('상태','状態')}</label>
-    <select class="inp sel" id="f-status">
-      ${Object.entries(STATUS_MAP).map(([k,v])=>`<option value="${k}" ${o.status===k?'selected':''}>${v[LANG]}</option>`).join('')}
-    </select>
-  </div>
-  <div>
-    <label class="lbl">${sl('결제 상태','決済状態')}</label>
-    <select class="inp sel" id="f-paid">
-      <option value="false" ${!o.paid?'selected':''}>${sl('미결제','未払い')}</option>
-      <option value="true" ${o.paid?'selected':''}>${sl('결제 완료','支払完了')}</option>
-    </select>
-  </div>
-  <div><label class="lbl">${sl('비고','備考')}</label><input class="inp" id="f-note" value="${o.note||''}"/></div>
-  <div><label class="lbl">${sl('상품','商品')}</label>${itemsHTML()}</div>
-  </div>`;
+  const pv=o.pickup||'';
+  const dt=o.delivery_type||'방문수령';
+  const da=o.delivery_addr||'';
+  const on=o.note||'';
+  const statusOpts=Object.entries(STATUS_MAP).map(([k,v])=>'<option value="'+k+'" '+(o.status===k?'selected':'')+'>'+v[LANG]+'</option>').join('');
+  return '<div class="form-col">'
+    +'<div style="position:relative">'
+    +'<label class="lbl">'+sl('고객명','顧客名')+'</label>'
+    +'<input class="inp" id="f-name" value="'+o.customer_name+'" oninput="showCustSuggest()" autocomplete="off"/>'
+    +'<input type="hidden" id="f-phone-hidden"/>'
+    +'<span id="cust-selected-tag" style="display:none;font-size:11px;color:var(--green);background:#e8f5e9;padding:2px 8px;border-radius:4px;margin-top:4px;"></span>'
+    +'<div id="cust-suggest" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid var(--border);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.12);z-index:999;max-height:180px;overflow-y:auto"></div>'
+    +'</div>'
+    +'<div><label class="lbl">'+sl('수령일 및 시간','受取日時')+'</label>'
+    +'<input class="inp" type="datetime-local" id="f-pickup" value="'+pv+'"/></div>'
+    +'<div><label class="lbl">'+sl('수령 방법','受取方法')+'</label>'
+    +'<select class="inp sel" id="f-delivery" onchange="toggleDeliveryAddr()">'
+    +'<option value="방문수령" '+(dt==='방문수령'?'selected':'')+'>'+sl('🏪 방문수령','🏪 店頭受取')+'</option>'
+    +'<option value="배달" '+(dt==='배달'?'selected':'')+'>'+sl('🚚 배달','🚚 配達')+'</option>'
+    +'</select></div>'
+    +'<div id="f-addr-wrap" style="display:'+(dt==='배달'?'block':'none')+'">'
+    +'<label class="lbl">'+sl('배달 주소','配達住所')+'</label>'
+    +'<input class="inp" id="f-delivery-addr" value="'+da+'"/></div>'
+    +'<div><label class="lbl">'+sl('상태','状態')+'</label>'
+    +'<select class="inp sel" id="f-status">'+statusOpts+'</select></div>'
+    +'<div><label class="lbl">'+sl('결제 상태','決済状態')+'</label>'
+    +'<select class="inp sel" id="f-paid">'
+    +'<option value="false" '+(o.paid?'':'selected')+'>'+sl('미결제','未払い')+'</option>'
+    +'<option value="true" '+(o.paid?'selected':'')+'>'+sl('결제 완료','支払完了')+'</option>'
+    +'</select></div>'
+    +'<div><label class="lbl">'+sl('비고','備考')+'</label>'
+    +'<input class="inp" id="f-note" value="'+on+'"/></div>'
+    +'<div><label class="lbl">'+sl('상품','商品')+'</label>'+itemsHTML()+'</div>'
+    +'</div>';
 }
 function openEditOrder(id){
   const o=DB.orders.find(x=>x.id===id);if(!o)return;
