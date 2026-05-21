@@ -1,0 +1,188 @@
+name: 毎朝7時 ヘルスチェック & 自動修正
+
+on:
+  schedule:
+    - cron: '0 22 * * *'   # 22:00 UTC = 07:00 JST
+  workflow_dispatch:         # 手動実行も可能
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  health-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      # ── 1. チェックアウト ──────────────────────────────────────────
+      - name: Checkout (main)
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # ── 2. サイト疎通確認 ──────────────────────────────────────────
+      - name: サイト疎通確認
+        id: site
+        run: |
+          echo "🔍 https://haewool.vercel.app/ を確認中..."
+          HTTP_CODE=$(curl -s -o /tmp/response.html \
+            -w "%{http_code}" \
+            --max-time 30 \
+            --retry 3 \
+            --retry-delay 5 \
+            https://haewool.vercel.app/)
+
+          echo "http_code=$HTTP_CODE" >> $GITHUB_OUTPUT
+
+          if [ "$HTTP_CODE" = "200" ]; then
+            echo "site_ok=true"  >> $GITHUB_OUTPUT
+            echo "✅ HTTP $HTTP_CODE — サイト正常"
+          else
+            echo "site_ok=false" >> $GITHUB_OUTPUT
+            echo "❌ HTTP $HTTP_CODE — サイト異常"
+          fi
+
+      # ── 3. コンテンツ検証 ──────────────────────────────────────────
+      - name: コンテンツ検証
+        id: content
+        if: steps.site.outputs.site_ok == 'true'
+        run: |
+          ISSUES=""
+
+          check() {
+            if ! grep -q "$1" /tmp/response.html; then
+              ISSUES="${ISSUES}|$2"
+              echo "⚠️  見つかりません: $2"
+            else
+              echo "✅ OK: $2"
+            fi
+          }
+
+          check "해울떡 관리 시스템"  "タイトル (해울떡 관리 시스템)"
+          check "SUPABASE_URL"         "Supabase 設定"
+          check "KR_HOLIDAYS"          "祝日データ"
+          check "showTab"              "ナビゲーション関数"
+          check "SUPABASE_KEY"         "Supabase キー"
+
+          if [ -z "$ISSUES" ]; then
+            echo "content_ok=true"  >> $GITHUB_OUTPUT
+            echo "✅ コンテンツ検証 すべてパス"
+          else
+            echo "content_ok=false" >> $GITHUB_OUTPUT
+            echo "issues=${ISSUES#|}" >> $GITHUB_OUTPUT
+            echo "❌ コンテンツ検証 失敗: ${ISSUES#|}"
+          fi
+
+      # ── 4. 祝日データ自動更新 ──────────────────────────────────────
+      - name: 祝日データ確認 & 自動更新
+        id: holidays
+        run: |
+          node scripts/update-holidays.js
+
+          if git diff --quiet -- index.html; then
+            echo "updated=false" >> $GITHUB_OUTPUT
+            echo "✅ 祝日データは最新です"
+          else
+            echo "updated=true" >> $GITHUB_OUTPUT
+            echo "📅 祝日データを更新しました:"
+            git diff -- index.html | head -30
+          fi
+
+      # ── 5. 変更をコミット & プッシュ ───────────────────────────────
+      - name: 変更をコミット & プッシュ
+        if: steps.holidays.outputs.updated == 'true'
+        run: |
+          YEAR=$(date +%Y -d "next year")
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "fix: ${YEAR}年の祝日データを自動更新 [health-check bot]"
+          git push origin main
+          echo "🚀 main にプッシュしました → Vercel 自動デプロイ開始"
+
+      # ── 6. サマリー ────────────────────────────────────────────────
+      - name: ヘルスチェック サマリー
+        if: always()
+        run: |
+          JST=$(TZ=Asia/Tokyo date '+%Y-%m-%d %H:%M JST')
+          echo ""
+          echo "======================================"
+          echo "  🍡 해울떡 ヘルスチェック結果"
+          echo "  ${JST}"
+          echo "======================================"
+          echo "  サイト疎通   : ${{ steps.site.outputs.site_ok == 'true' && '✅ 正常' || '❌ 異常' }}"
+          echo "  HTTP ステータス: ${{ steps.site.outputs.http_code }}"
+          echo "  コンテンツ   : ${{ steps.content.outputs.content_ok != 'false' && '✅ 正常' || '⚠️  異常' }}"
+          echo "  祝日データ更新: ${{ steps.holidays.outputs.updated == 'true' && '📅 更新済' || '✅ 最新' }}"
+          echo "======================================"
+
+      # ── 7. 異常時は Issue を作成 ──────────────────────────────────
+      - name: 異常 Issue を作成
+        if: >
+          always() &&
+          (steps.site.outputs.site_ok == 'false' ||
+           steps.content.outputs.content_ok == 'false')
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const tz  = 'Asia/Tokyo';
+            const now = new Date();
+            const jst = now.toLocaleString('ja-JP', { timeZone: tz });
+
+            const siteOk    = '${{ steps.site.outputs.site_ok }}'    === 'true';
+            const contentOk = '${{ steps.content.outputs.content_ok }}' !== 'false';
+            const httpCode  = '${{ steps.site.outputs.http_code }}';
+            const issues    = '${{ steps.content.outputs.issues }}';
+
+            let body = `## 🚨 毎朝7時の自動ヘルスチェックで問題を検出\n\n`;
+            body += `**検査日時**: ${jst}\n`;
+            body += `**URL**: https://haewool.vercel.app/\n\n`;
+
+            if (!siteOk) {
+              body += `### ❌ サイトにアクセスできません\n`;
+              body += `- HTTP ステータス: \`${httpCode}\`\n`;
+              body += `- Vercel のデプロイ状況と Supabase の接続を確認してください。\n\n`;
+            }
+
+            if (!contentOk) {
+              body += `### ⚠️ コンテンツ検証エラー\n`;
+              const list = issues.split('|').filter(Boolean);
+              list.forEach(i => { body += `- ${i}\n`; });
+              body += `\nページに必要な要素が見つかりませんでした。\n\n`;
+            }
+
+            body += `---\n`;
+            body += `*GitHub Actions の自動ヘルスチェックが作成しました*\n`;
+            body += `*ワークフロー: [ログを確認](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})*`;
+
+            // 同じ日に重複 Issue を作らない
+            const dateStr = now.toLocaleDateString('ja-JP', { timeZone: tz });
+            const title   = `[ヘルスチェック] サイト異常検出 - ${dateStr}`;
+
+            const existing = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo:  context.repo.repo,
+              state: 'open',
+              labels: 'health-check',
+            });
+
+            const alreadyOpen = existing.data.some(i => i.title === title);
+            if (!alreadyOpen) {
+              await github.rest.issues.create({
+                owner:  context.repo.owner,
+                repo:   context.repo.repo,
+                title:  title,
+                body:   body,
+                labels: ['health-check', 'bug'],
+              });
+              console.log('Issue を作成しました:', title);
+            } else {
+              console.log('同日の Issue がすでに存在します。スキップします。');
+            }
