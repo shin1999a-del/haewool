@@ -252,60 +252,63 @@ async function sendKakao(msg){if(!kakaoWebhook)return;try{await fetch(kakaoWebho
 
 // ── DASHBOARD ──
 function renderDashboard(){
-  const rev=DB.payments.filter(p=>p.status==='완료').reduce((s,p)=>s+p.amount,0),exp=DB.expenses.reduce((s,e)=>s+e.amount,0),profit=rev-exp;
+  const rev=DB.payments.filter(p=>p.status==='완료').reduce((s,p)=>s+p.amount,0);
+  const exp=DB.expenses.reduce((s,e)=>s+e.amount,0);
+  const profit=rev-exp;
   const sc={};DB.orders.forEach(o=>{sc[o.status]=(sc[o.status]||0)+1;});
   const ec={};DB.expenses.forEach(e=>{ec[e.category]=(ec[e.category]||0)+e.amount;});
   const upcoming=DB.orders.filter(o=>o.status!=='done').sort((a,b)=>a.pickup.localeCompare(b.pickup)).slice(0,6);
-  document.getElementById('main-content').innerHTML=`
-  <div class="sec-head"><h2 class="sec-title">📊 ${sl('대시보드','ダッシュボード')}</h2></div>
-  <div class="kpi-grid">
-    ${kpiCard('💰',sl('이번 달 매출','今月売上'),'₩'+rev.toLocaleString(),DB.payments.length+sl('건 결제','件の決済'),'#c8832a')}
-    ${kpiCard('🧾',sl('이번 달 경비','今月経費'),'₩'+exp.toLocaleString(),DB.expenses.length+sl('건 지출','件の支出'),'#e05555')}
-    ${kpiCard('📈',sl('순이익','純利益'),'₩'+profit.toLocaleString(),profit>=0?sl('흑자 ▲','黒字 ▲'):sl('적자 ▼','赤字 ▼'),profit>=0?'#2e7d5a':'#e05555')}
-    ${kpiCard('👥',sl('등록 고객 수','登録顧客数'),DB.customers.length+sl('명','名'),sl('누적 고객','累計顧客'),'#1565a8')}
-  </div>
-  <div class="dash-row">
-    <div class="card"><div class="card-title">${sl('주문 현황','注文状況')}</div>
-      ${Object.entries(STATUS_MAP).map(([k,v])=>`<div class="bar-row"><div class="dot" style="background:${v.color}"></div><div class="bar-label">${v[LANG]}</div><div class="bar-count">${sc[k]||0}${sl('건','件')}</div><div class="bar-track"><div class="bar-fill" style="width:${((sc[k]||0)/Math.max(DB.orders.length,1)*100)}%;background:${v.color}"></div></div></div>`).join('')}
-    </div>
-    <div class="card"><div class="card-title">${sl('경비 카테고리별','経費カテゴリ別')}</div>
-      ${Object.entries(ec).map(([c,a])=>`<div class="bar-row"><div class="bar-label">${c}</div><div class="bar-count" style="width:80px">₩${a.toLocaleString()}</div><div class="bar-track"><div class="bar-fill" style="width:${(a/Math.max(exp,1)*100)}%;background:#e05555"></div></div></div>`).join('')}
-    </div>
-  </div>
-  <div class="card"><div class="card-head"><div class="card-title" style="margin-bottom:0">${sl('다가오는 예약 주문','直近の予約注文')}</div></div>
-    <table><thead><tr><th>${sl('주문번호','注文番号')}</th><th>${sl('고객명','顧客名')}</th><th>${sl('수령일','受取日')}</th><th>${sl('금액','金額')}</th><th>${sl('상태','状態')}</th><th>${sl('결제','決済')}</th></tr></thead><tbody>
-    ${upcoming.map(o=>`<tr class="trow"><td>${mono(o.id)}</td><td>${o.customer_name}</td><td>${o.pickup}</td><td>₩${o.total.toLocaleString()}</td><td>${badge(o.status)}</td><td style="color:${o.paid?'#2e7d5a':'#e05555'};font-weight:600">${o.paid?sl('✓ 완료','✓ 完了'):sl('미결제','未払い')}</td></tr>`).join('')}
-    </tbody></table>
-  </div>`;}
 
-// ── ORDERS ──
-function ordersHTML(s,f){
-  const filtered=DB.orders.filter(o=>(f==='all'||o.status===f)&&(o.customer_name.includes(s)||o.id.includes(s))).sort((a,b)=>a.pickup.localeCompare(b.pickup));
-  return `${filtered.length===0?`<div class="card" style="text-align:center;color:var(--gray);padding:32px">${sl('주문이 없습니다','注文がありません')}</div>`:''}
-  ${filtered.map(o=>`
-  <div class="order-card" style="border-left-color:${STATUS_MAP[o.status]?.color||'#ccc'}">
-    <div class="order-top">
-      <div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap">${mono(o.id)} ${badge(o.status)} ${!o.paid?`<span class="unpaid-badge">${sl('미결제','未払い')}</span>`:''}</div>
-      <span style="font-size:11px;color:var(--gray)">🗓 ${fmtDT(o.pickup)}</span>
-    </div>
-    <div class="order-name">${o.customer_name}</div>
-    <div class="item-tags">${(o.items||[]).map(it=>`<span class="itag">${it.name} ×${it.qty}</span>`).join('')}</div>
-    ${o.note?`<div class="order-note">📝 ${o.note}</div>`:''}
-    ${(o.file_urls&&o.file_urls.length)?filesHTML(o.file_urls):''}
-    <div class="order-bot">
-      <strong style="color:var(--gold)">₩${o.total.toLocaleString()}</strong>
-      <div style="display:flex;gap:5px;flex-wrap:wrap">
-        <select class="sel-sm" onchange="updateStatus('${o.id}',this.value)">
-          ${Object.entries(STATUS_MAP).map(([k,v])=>`<option value="${k}" ${o.status===k?'selected':''}>${v[LANG]}</option>`).join('')}
-        </select>
-        ${!o.paid?`<button class="pay-btn" onclick="markPaid('${o.id}')">${sl('결제 완료','支払完了')}</button>`:''}
-        <button class="print-btn" onclick="printReceipt('${o.id}')">🖨 ${sl('영수증','領収書')}</button>
-        <button class="edit-btn" onclick="openViewOrder('${o.id}')">${sl('상세','詳細')}</button><button class="edit-btn" style="background:#e3f2fd;color:#1565a8" onclick="openEditOrder('${o.id}')">${sl('수정','修正')}</button>
-        <button class="del-btn-sm" onclick="delOrder('${o.id}')">${sl('삭제','削除')}</button>
-      </div>
-    </div>
-  </div>`).join('')}`;
+  const statusBars=Object.entries(STATUS_MAP).map(([k,v])=>
+    '<div class="bar-row">'
+    +'<div class="dot" style="background:'+v.color+'"></div>'
+    +'<div class="bar-label">'+v[LANG]+'</div>'
+    +'<div class="bar-count">'+(sc[k]||0)+sl('건','件')+'</div>'
+    +'<div class="bar-track"><div class="bar-fill" style="width:'+((sc[k]||0)/Math.max(DB.orders.length,1)*100)+'%;background:'+v.color+'"></div></div>'
+    +'</div>'
+  ).join('');
+
+  const expBars=Object.entries(ec).map(([cat,amt])=>
+    '<div class="bar-row">'
+    +'<div class="bar-label">'+cat+'</div>'
+    +'<div class="bar-count" style="width:80px">₩'+amt.toLocaleString()+'</div>'
+    +'<div class="bar-track"><div class="bar-fill" style="width:'+(amt/Math.max(exp,1)*100)+'%;background:#e05555"></div></div>'
+    +'</div>'
+  ).join('');
+
+  const upcomingRows=upcoming.map(o=>
+    '<tr class="trow">'
+    +'<td><code class="mono">'+o.id+'</code></td>'
+    +'<td>'+o.customer_name+'</td>'
+    +'<td>'+fmtDT(o.pickup)+'</td>'
+    +'<td>₩'+o.total.toLocaleString()+'</td>'
+    +'<td>'+badge(o.status)+'</td>'
+    +'<td style="color:'+(o.paid?'#2e7d5a':'#e05555')+';font-weight:600">'+(o.paid?sl('✓ 완료','✓ 完了'):sl('미결제','未払い'))+'</td>'
+    +'</tr>'
+  ).join('');
+
+  document.getElementById('main-content').innerHTML=
+    '<div class="sec-head"><h2 class="sec-title">📊 '+sl('대시보드','ダッシュボード')+'</h2></div>'
+    +'<div class="kpi-grid">'
+    +kpiCard('💰',sl('이번 달 매출','今月売上'),'₩'+rev.toLocaleString(),DB.payments.length+sl('건 결제','件の決済'),'#c8832a')
+    +kpiCard('🧾',sl('이번 달 경비','今月経費'),'₩'+exp.toLocaleString(),DB.expenses.length+sl('건 지출','件の支出'),'#e05555')
+    +kpiCard('📈',sl('순이익','純利益'),'₩'+profit.toLocaleString(),profit>=0?sl('흑자 ▲','黒字 ▲'):sl('적자 ▼','赤字 ▼'),profit>=0?'#2e7d5a':'#e05555')
+    +kpiCard('👥',sl('등록 고객 수','登録顧客数'),DB.customers.length+sl('명','名'),sl('누적 고객','累計顧客'),'#1565a8')
+    +'</div>'
+    +'<div class="dash-row">'
+    +'<div class="card"><div class="card-title">'+sl('주문 현황','注文状況')+'</div>'+statusBars+'</div>'
+    +'<div class="card"><div class="card-title">'+sl('경비 카테고리별','経費カテゴリ別')+'</div>'+expBars+'</div>'
+    +'</div>'
+    +'<div class="card">'
+    +'<div class="card-head"><div class="card-title" style="margin-bottom:0">'+sl('다가오는 예약 주문','直近の予約注文')+'</div></div>'
+    +'<table><thead><tr>'
+    +'<th>'+sl('주문번호','注文番号')+'</th><th>'+sl('고객명','顧客名')+'</th>'
+    +'<th>'+sl('수령일','受取日')+'</th><th>'+sl('금액','金額')+'</th>'
+    +'<th>'+sl('상태','状態')+'</th><th>'+sl('결제','決済')+'</th>'
+    +'</tr></thead><tbody>'+upcomingRows+'</tbody></table>'
+    +'</div>';
 }
+// ── ORDERS ──
 function refreshOrderList(){
   const s=document.getElementById('ord-s')?.value||'';
   const f=document.getElementById('ord-f')?.value||'all';
@@ -314,20 +317,20 @@ function refreshOrderList(){
 }
 function renderOrders(search,filter){
   const s=search||'',f=filter||'all';
-  document.getElementById('main-content').innerHTML=`
-  <div class="sec-head"><h2 class="sec-title">📋 ${sl('예약 주문 관리','予約注文管理')}</h2><button class="add-btn" onclick="openAddOrder()">+ ${sl('신규 주문','新規注文')}</button></div>
-  <div class="toolbar">
-    <div class="search-wrap">
-      <input id="ord-s" placeholder="${sl('고객명·주문번호 검색...','顧客名・注文番号検索...')}" value="${s}" oninput="refreshOrderList()"/>
-      <button class="search-clear" onclick="document.getElementById('ord-s').value='';refreshOrderList()">×</button>
-    </div>
-    <select class="sel" id="ord-f" onchange="refreshOrderList()">
-      <option value="all" ${f==='all'?'selected':''}>${sl('전체 상태','全状態')}</option>
-      ${Object.entries(STATUS_MAP).map(([k,v])=>`<option value="${k}" ${f===k?'selected':''}>${v[LANG]}</option>`).join('')}
-    </select>
-  </div>
-  <div class="order-grid" id="order-list">${ordersHTML(s,f)}</div>`;}
-
+  const statusOpts='<option value="all" '+(f==='all'?'selected':'')+'>'+sl('전체 상태','全状態')+'</option>'
+    +Object.entries(STATUS_MAP).map(([k,v])=>'<option value="'+k+'" '+(f===k?'selected':'')+'>'+v[LANG]+'</option>').join('');
+  document.getElementById('main-content').innerHTML=
+    '<div class="sec-head"><h2 class="sec-title">📋 '+sl('예약 주문 관리','予約注文管理')+'</h2>'
+    +'<button class="add-btn" onclick="openAddOrder()">+ '+sl('신규 주문','新規注文')+'</button></div>'
+    +'<div class="toolbar">'
+    +'<div class="search-wrap">'
+    +'<input id="ord-s" placeholder="'+sl('고객명·주문번호 검색...','顧客名・注文番号検索...')+'" value="'+s+'" oninput="refreshOrderList()"/>'
+    +'<button class="search-clear" onclick="document.getElementById('ord-s').value='';refreshOrderList()">×</button>'
+    +'</div>'
+    +'<select class="sel" id="ord-f" onchange="refreshOrderList()">'+statusOpts+'</select>'
+    +'</div>'
+    +'<div class="order-grid" id="order-list">'+ordersHTML(s,f)+'</div>';
+}
 async function updateStatus(id,status){try{setStatus('saving');await api.patch('orders',id,{status});DB.orders=DB.orders.map(o=>o.id===id?{...o,status}:o);setStatus('saved');await sendKakao(`${sl('주문 상태 변경','注文状態変更')}\n${id} → ${slStatus(status)}`);refreshOrderList();}catch(e){toast('⚠️ '+e.message);}}
 async function markPaid(id){try{setStatus('saving');await api.patch('orders',id,{paid:true});DB.orders=DB.orders.map(o=>o.id===id?{...o,paid:true}:o);setStatus('saved');updateHeader();const o=DB.orders.find(x=>x.id===id);await sendKakao(`${sl('결제 완료','支払完了')}\n${o?.customer_name} / ₩${o?.total?.toLocaleString()}`);refreshOrderList();toast(sl('✓ 결제 완료','✓ 支払完了'));}catch(e){toast('⚠️ '+e.message);}}
 async function delOrder(id){if(!confirm(sl('삭제하시겠습니까?','削除しますか？')))return;try{setStatus('saving');await api.del('orders',id);DB.orders=DB.orders.filter(o=>o.id!==id);setStatus('saved');updateHeader();refreshOrderList();toast(sl('삭제되었습니다','削除しました'));}catch(e){toast('⚠️ '+e.message);}}
@@ -338,44 +341,67 @@ function printReceipt(id){const o=DB.orders.find(x=>x.id===id);if(!o)return;cons
 function renderCalendar(){
   const DAYS=LANG==='ko'?['일','월','화','수','목','금','토']:['日','月','火','水','木','金','土'];
   const MONTHS=LANG==='ko'?['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월']:['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
-  const fd=new Date(calYear,calMonth,1).getDay(),dim=new Date(calYear,calMonth+1,0).getDate();
+  const fd=new Date(calYear,calMonth,1).getDay();
+  const dim=new Date(calYear,calMonth+1,0).getDate();
   const todayStr=new Date().toISOString().slice(0,10);
-  const byDate={};DB.orders.forEach(o=>{const dk=(o.pickup||'').slice(0,10);if(!byDate[dk])byDate[dk]=[];byDate[dk].push(o);});
+  const byDate={};
+  DB.orders.forEach(o=>{const dk=(o.pickup||'').slice(0,10);if(!byDate[dk])byDate[dk]=[];byDate[dk].push(o);});
+
   let cells='';
-  for(let i=0;i<fd;i++)cells+=`<div class="cal-empty"></div>`;
+  for(let i=0;i<fd;i++) cells+='<div class="cal-empty"></div>';
   for(let d=1;d<=dim;d++){
-    const ds=`${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    const hol=KR_HOLIDAYS[ds]||'',lunar=LUNAR_FEST[ds]||'',orders=byDate[ds]||[],isToday=ds===todayStr;
-    const isSun=(fd+d-1)%7===0,isSat=(fd+d-1)%7===6,isSel=calSelected===ds;
-    const lun=getLunar(ds),dc=hol?'#e05555':isSun?'#e05555':isSat?'#1565a8':'var(--dark)';
-    cells+=`<div class="cal-cell" style="background:${isSel?'#fff3e0':isToday?'#e8f5e9':'#fff'};border:${isToday?'2px solid #2e7d5a':isSel?'2px solid #c8832a':'1px solid var(--border)'}" onclick="calSel('${ds}')">
-      <div class="cal-date" style="color:${dc};font-weight:${isToday?700:500}">${d}${isToday?`<span style="font-size:7px;background:#2e7d5a;color:#fff;border-radius:2px;padding:0 2px;margin-left:2px">${sl('오늘','今日')}</span>`:''}</div>
-      <div class="lunar-date">${sl('음','陰')} ${lun.m}/${lun.d}</div>
-      ${hol?`<div class="hol-tag">${hol}</div>`:''}${lunar&&!hol?`<div class="lunar-tag">${lunar}</div>`:''}
-      ${orders.slice(0,2).map(o=>`<div class="cal-dot" style="background:${STATUS_MAP[o.status]?.color||'#888'}22;color:${STATUS_MAP[o.status]?.color||'#888'}">${o.customer_name}</div>`).join('')}
-      ${orders.length>2?`<div style="font-size:7px;color:var(--gray)">+${orders.length-2}${sl('건','件')}</div>`:''}
-    </div>`;
+    const ds=calYear+'-'+String(calMonth+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    const hol=KR_HOLIDAYS[ds]||'';
+    const lunar=LUNAR_FEST[ds]||'';
+    const orders=byDate[ds]||[];
+    const isToday=ds===todayStr;
+    const isSun=(fd+d-1)%7===0;
+    const isSat=(fd+d-1)%7===6;
+    const isSel=calSelected===ds;
+    const lun=getLunar(ds);
+    const dc=hol?'#e05555':isSun?'#e05555':isSat?'#1565a8':'var(--dark)';
+    const bg=isSel?'#fff3e0':isToday?'#e8f5e9':'#fff';
+    const border=isToday?'2px solid #2e7d5a':isSel?'2px solid #c8832a':'1px solid var(--border)';
+    const todayBadge=isToday?'<span style="font-size:7px;background:#2e7d5a;color:#fff;border-radius:2px;padding:0 2px;margin-left:2px">'+sl('오늘','今日')+'</span>':'';
+    const holTag=hol?'<div class="hol-tag">'+hol+'</div>':'';
+    const lunarTag=(lunar&&!hol)?'<div class="lunar-tag">'+lunar+'</div>':'';
+    const orderDots=orders.slice(0,2).map(o=>'<div class="cal-dot" style="background:'+(STATUS_MAP[o.status]?.color||'#888')+'22;color:'+(STATUS_MAP[o.status]?.color||'#888')+'">'+o.customer_name+'</div>').join('');
+    const moreDots=orders.length>2?'<div style="font-size:7px;color:var(--gray)">+'+( orders.length-2)+sl('건','件')+'</div>':'';
+    cells+='<div class="cal-cell" style="background:'+bg+';border:'+border+'" onclick="calSel(''+ds+')">'
+      +'<div class="cal-date" style="color:'+dc+';font-weight:'+(isToday?700:500)+'">'+d+todayBadge+'</div>'
+      +'<div class="lunar-date">'+sl('음','陰')+' '+lun.m+'/'+lun.d+'</div>'
+      +holTag+lunarTag+orderDots+moreDots
+      +'</div>';
   }
+
   const selO=calSelected?byDate[calSelected]||[]:[];
-  document.getElementById('main-content').innerHTML=`
-  <div class="sec-head"><h2 class="sec-title">📅 ${sl('주문 캘린더','注文カレンダー')}</h2><button class="add-btn" onclick="openAddOrder()">+ ${sl('신규 주문','新規注文')}</button></div>
-  <div class="legend-row">
-    <div class="legend-item"><div class="legend-dot" style="background:#e05555"></div>${sl('공휴일','祝日')}</div>
-    <div class="legend-item"><div class="legend-dot" style="background:#7b1fa2"></div>${sl('음력 명절','旧暦節句')}</div>
-    <div class="legend-item"><div class="legend-dot" style="background:#2e7d5a"></div>${sl('오늘','今日')}</div>
-  </div>
-  <div class="cal-wrap">
-    <div class="cal-hdr">
-      <button class="cal-nav" onclick="calPrev()">‹</button>
-      <span class="cal-title">${calYear}${sl('년 ','年')}${MONTHS[calMonth]}</span>
-      <button class="cal-nav" onclick="calNext()">›</button>
-    </div>
-    <div class="cal-grid">
-      ${DAYS.map((d,i)=>`<div class="cal-dh" style="color:${i===0?'#e05555':i===6?'#1565a8':'#666'}">${d}</div>`).join('')}
-      ${cells}
-    </div>
-    ${calSelected&&selO.length?`<div class="cal-detail"><div class="card-title">${calSelected} ${sl('주문 목록','注文一覧')}</div>${selO.map(o=>`<div class="cal-detail-row">${mono(o.id)}<span>${o.customer_name}</span><span>${(o.items||[]).map(it=>it.name+'×'+it.qty).join(', ')}</span>${badge(o.status)}<strong style="color:var(--gold)">₩${o.total.toLocaleString()}</strong><button class="print-btn" onclick="printReceipt('${o.id}')">🖨</button></div>`).join('')}</div>`:''}
-  </div>`;}
+  const selDetail=calSelected&&selO.length
+    ?'<div class="cal-detail"><div class="card-title">'+calSelected+' '+sl('주문 목록','注文一覧')+'</div>'
+      +selO.map(o=>'<div class="cal-detail-row"><code class="mono">'+o.id+'</code><span>'+o.customer_name+'</span><span>'+(o.items||[]).map(it=>it.name+'×'+it.qty).join(', ')+'</span>'+badge(o.status)+'<strong style="color:var(--gold)">₩'+o.total.toLocaleString()+'</strong><button class="print-btn" onclick="printReceipt(''+o.id+'')">🖨</button></div>').join('')
+      +'</div>'
+    :'';
+
+  const dayHeads=DAYS.map((d,i)=>'<div class="cal-dh" style="color:'+(i===0?'#e05555':i===6?'#1565a8':'#666')+'">'+d+'</div>').join('');
+  const legends=[
+    ['#e05555',sl('공휴일','祝日')],
+    ['#7b1fa2',sl('음력 명절','旧暦節句')],
+    ['#2e7d5a',sl('오늘','今日')]
+  ].map(([col,lbl])=>'<div class="legend-item"><div class="legend-dot" style="background:'+col+'"></div>'+lbl+'</div>').join('');
+
+  document.getElementById('main-content').innerHTML=
+    '<div class="sec-head"><h2 class="sec-title">📅 '+sl('주문 캘린더','注文カレンダー')+'</h2>'
+    +'<button class="add-btn" onclick="openAddOrder()">+ '+sl('신규 주문','新規注文')+'</button></div>'
+    +'<div class="legend-row">'+legends+'</div>'
+    +'<div class="cal-wrap">'
+    +'<div class="cal-hdr">'
+    +'<button class="cal-nav" onclick="calPrev()">‹</button>'
+    +'<span class="cal-title">'+calYear+sl('년 ','年')+MONTHS[calMonth]+'</span>'
+    +'<button class="cal-nav" onclick="calNext()">›</button>'
+    +'</div>'
+    +'<div class="cal-grid">'+dayHeads+cells+'</div>'
+    +selDetail
+    +'</div>';
+}
 function calPrev(){if(calMonth===0){calYear--;calMonth=11;}else calMonth--;calSelected=null;renderCalendar();}
 function calNext(){if(calMonth===11){calYear++;calMonth=0;}else calMonth++;calSelected=null;renderCalendar();}
 function calSel(ds){calSelected=calSelected===ds?null:ds;renderCalendar();}
@@ -383,8 +409,27 @@ function calSel(ds){calSelected=calSelected===ds?null:ds;renderCalendar();}
 // ── CUSTOMERS ──
 function customersHTML(s){
   const filtered=DB.customers.filter(c=>c.name.includes(s)||c.phone.includes(s));
-  return `${filtered.length===0?`<div class="card" style="text-align:center;color:var(--gray);padding:32px">${sl('고객이 없습니다','顧客がいません')}</div>`:''}
-  ${filtered.map(c=>`<div class="cust-card"><div class="avatar">${c.name[0]}</div><div style="flex:1"><div class="cust-name">${c.name}</div><div class="cust-detail">📞 ${c.phone} ${c.phone?`<button class="sms-btn" onclick="openSMS('${c.phone}','')">💬 ${sl('문자','SMS')}</button>`:''}</div><div class="cust-detail">✉️ ${c.email}</div><div class="cust-detail">📍 ${c.address} ${c.address?`<button class="map-btn" onclick="openNaverMap('${c.address}')">🗺 ${sl('지도','地図')}</button>`:''}</div>${c.note?`<div class="cust-note">⭐ ${c.note}</div>`:''}<div class="cust-stats"><span>${sl('주문','注文')} <strong>${c.total_orders}${sl('회','回')}</strong></span><span>${sl('누적','累計')} <strong>₩${c.total_spent.toLocaleString()}</strong></span></div></div><div style="display:flex;flex-direction:column;gap:4px"><button class="edit-btn" onclick="openEditCustomer('${c.id}')">${sl('편집','編集')}</button><button class="edit-btn" style="background:#e3f2fd;color:#1565a8" onclick="openCustHistory('${c.id}')">${sl('주문이력','注文履歴')}</button><button class="del-btn-sm" onclick="delCustomer('${c.id}')">${sl('삭제','削除')}</button></div></div>`).join('')}`;
+  if(!filtered.length) return '<div class="card" style="text-align:center;color:var(--gray);padding:32px">'+sl('고객이 없습니다','顧客がいません')+'</div>';
+  return filtered.map(c=>{
+    const smsBtn=c.phone?'<button class="sms-btn" onclick="openSMS(''+c.phone+'','')">💬 '+sl('문자','SMS')+'</button>':'';
+    const mapBtn=c.address?'<button class="map-btn" onclick="openNaverMap(''+c.address+'')">🗺 '+sl('지도','地図')+'</button>':'';
+    const noteEl=c.note?'<div class="cust-note">⭐ '+c.note+'</div>':'';
+    return '<div class="cust-card">'
+      +'<div class="avatar">'+c.name[0]+'</div>'
+      +'<div style="flex:1">'
+      +'<div class="cust-name">'+c.name+'</div>'
+      +'<div class="cust-detail">📞 '+c.phone+' '+smsBtn+'</div>'
+      +'<div class="cust-detail">✉️ '+c.email+'</div>'
+      +'<div class="cust-detail">📍 '+c.address+' '+mapBtn+'</div>'
+      +noteEl
+      +'<div class="cust-stats"><span>'+sl('주문','注文')+' <strong>'+c.total_orders+sl('회','回')+'</strong></span><span>'+sl('누적','累計')+' <strong>₩'+c.total_spent.toLocaleString()+'</strong></span></div>'
+      +'</div>'
+      +'<div style="display:flex;flex-direction:column;gap:4px">'
+      +'<button class="edit-btn" onclick="openEditCustomer(''+c.id+'')">'+sl('편집','編集')+'</button>'
+      +'<button class="edit-btn" style="background:#e3f2fd;color:#1565a8" onclick="openCustHistory(''+c.id+'')">'+sl('주문이력','注文履歴')+'</button>'
+      +'<button class="del-btn-sm" onclick="delCustomer(''+c.id+'')">'+sl('삭제','削除')+'</button>'
+      +'</div></div>';
+  }).join('');
 }
 function refreshCustList(){
   const s=document.getElementById('cust-s')?.value||'';
@@ -393,15 +438,15 @@ function refreshCustList(){
 }
 function renderCustomers(search){
   const s=search||'';
-  document.getElementById('main-content').innerHTML=`
-  <div class="sec-head"><h2 class="sec-title">👥 ${sl('고객 관리','顧客管理')}</h2><button class="add-btn" onclick="openAddCustomer()">+ ${sl('신규 고객','新規顧客')}</button></div>
-  <div class="toolbar">
-    <div class="search-wrap">
-      <input id="cust-s" placeholder="${sl('이름·전화번호 검색...','氏名・電話番号検索...')}" value="${s}" oninput="refreshCustList()"/>
-      <button class="search-clear" onclick="document.getElementById('cust-s').value='';refreshCustList()">×</button>
-    </div>
-  </div>
-  <div class="cust-grid" id="cust-list">${customersHTML(s)}</div>`;}
+  document.getElementById('main-content').innerHTML=
+    '<div class="sec-head"><h2 class="sec-title">👥 '+sl('고객 관리','顧客管理')+'</h2>'
+    +'<button class="add-btn" onclick="openAddCustomer()">+ '+sl('신규 고객','新規顧客')+'</button></div>'
+    +'<div class="toolbar"><div class="search-wrap">'
+    +'<input id="cust-s" placeholder="'+sl('이름·전화번호 검색...','氏名・電話番号検索...')+'" value="'+s+'" oninput="refreshCustList()"/>'
+    +'<button class="search-clear" onclick="document.getElementById('cust-s').value='';refreshCustList()">×</button>'
+    +'</div></div>'
+    +'<div class="cust-grid" id="cust-list">'+customersHTML(s)+'</div>';
+}
 async function delCustomer(id){if(!confirm(sl('삭제하시겠습니까?','削除しますか？')))return;try{setStatus('saving');await api.del('customers',id);DB.customers=DB.customers.filter(c=>c.id!==id);setStatus('saved');refreshCustList();toast(sl('삭제되었습니다','削除しました'));}catch(e){toast('⚠️ '+e.message);}}
 
 // ── PAYMENTS ──
@@ -409,67 +454,103 @@ function renderPayments(){
   const total=DB.payments.filter(p=>p.status==='완료').reduce((s,p)=>s+p.amount,0);
   const byM={};DB.payments.forEach(p=>{byM[p.method]=(byM[p.method]||0)+p.amount;});
   const unpaid=DB.orders.filter(o=>!o.paid);
-  document.getElementById('main-content').innerHTML=`
-  <div class="sec-head"><h2 class="sec-title">💳 ${sl('결제 관리','決済管理')}</h2><button class="add-btn" onclick="openAddPayment()">+ ${sl('결제 입력','決済入力')}</button></div>
-  <div class="kpi-grid">${kpiCard('💰',sl('총 결제액','総決済額'),'₩'+total.toLocaleString(),DB.payments.length+sl('건','件'),'#2e7d5a')}${Object.entries(byM).map(([m,v])=>kpiCard('💳',m,'₩'+v.toLocaleString(),sl('결제 수단별','決済手段別'),'#1565a8')).join('')}</div>
-  <div class="card"><div class="card-title">${sl('결제 내역','決済履歴')}</div>
-    <table><thead><tr><th>${sl('결제ID','決済ID')}</th><th>${sl('주문번호','注文番号')}</th><th>${sl('금액','金額')}</th><th>${sl('결제 수단','決済手段')}</th><th>${sl('날짜','日付')}</th><th>${sl('상태','状態')}</th><th></th></tr></thead><tbody>
-    ${DB.payments.map(p=>`<tr class="trow"><td>${mono(p.id)}</td><td>${mono(p.order_id)}</td><td>₩${p.amount.toLocaleString()}</td><td>${p.method}</td><td>${p.date}</td><td style="color:#2e7d5a;font-weight:600">✓ ${p.status}</td><td><button class="del-btn-sm" onclick="delPayment('${p.id}')">삭제</button></td></tr>`).join('')}
-    </tbody></table>
-  </div>
-  ${unpaid.length?`<div class="card"><div class="card-title">${sl('미결제 주문','未払い注文')}</div>${unpaid.map(o=>`<div class="unpaid-row">${mono(o.id)}<span>${o.customer_name}</span><span>${sl('수령','受取')}: ${o.pickup}</span><strong style="color:var(--red)">₩${o.total.toLocaleString()}</strong><button class="pay-btn" onclick="openAddPaymentFor('${o.id}','${o.total}')">+ ${sl('결제 입력','決済入力')}</button></div>`).join('')}</div>`:''}`;}
-
+  const kpis=kpiCard('💰',sl('총 결제액','総決済額'),'₩'+total.toLocaleString(),DB.payments.length+sl('건','件'),'#2e7d5a')
+    +Object.entries(byM).map(([m,v])=>kpiCard('💳',m,'₩'+v.toLocaleString(),sl('결제 수단별','決済手段別'),'#1565a8')).join('');
+  const rows=DB.payments.map(p=>
+    '<tr class="trow"><td><code class="mono">'+p.id+'</code></td><td><code class="mono">'+p.order_id+'</code></td>'
+    +'<td>₩'+p.amount.toLocaleString()+'</td><td>'+p.method+'</td><td>'+p.date+'</td>'
+    +'<td style="color:#2e7d5a;font-weight:600">✓ '+p.status+'</td>'
+    +'<td><button class="del-btn-sm" onclick="delPayment(''+p.id+'')">'+sl('삭제','削除')+'</button></td>'
+    +'</tr>'
+  ).join('');
+  const unpaidRows=unpaid.map(o=>
+    '<div class="unpaid-row"><code class="mono">'+o.id+'</code><span>'+o.customer_name+'</span>'
+    +'<span>'+sl('수령','受取')+': '+fmtDT(o.pickup)+'</span>'
+    +'<strong style="color:var(--red)">₩'+o.total.toLocaleString()+'</strong>'
+    +'<button class="pay-btn" onclick="openAddPaymentFor(''+o.id+'',''+o.total+'')">+ '+sl('결제 입력','決済入力')+'</button>'
+    +'</div>'
+  ).join('');
+  document.getElementById('main-content').innerHTML=
+    '<div class="sec-head"><h2 class="sec-title">💳 '+sl('결제 관리','決済管理')+'</h2>'
+    +'<button class="add-btn" onclick="openAddPayment()">+ '+sl('결제 입력','決済入力')+'</button></div>'
+    +'<div class="kpi-grid">'+kpis+'</div>'
+    +'<div class="card"><div class="card-title">'+sl('결제 내역','決済履歴')+'</div>'
+    +'<table><thead><tr>'
+    +'<th>'+sl('결제ID','決済ID')+'</th><th>'+sl('주문번호','注文番号')+'</th>'
+    +'<th>'+sl('금액','金額')+'</th><th>'+sl('결제 수단','決済手段')+'</th>'
+    +'<th>'+sl('날짜','日付')+'</th><th>'+sl('상태','状態')+'</th><th></th>'
+    +'</tr></thead><tbody>'+rows+'</tbody></table></div>'
+    +(unpaid.length?'<div class="card"><div class="card-title">'+sl('미결제 주문','未払い注文')+'</div>'+unpaidRows+'</div>':'');
+}
 // ── EXPENSES ──
 function renderExpenses(cat){
-  const c=cat||'전체',total=DB.expenses.reduce((s,e)=>s+e.amount,0);
-  const filtered=c==='전체'?DB.expenses:DB.expenses.filter(e=>e.category===c);
-  document.getElementById('main-content').innerHTML=`
-  <div class="sec-head"><h2 class="sec-title">🧾 ${sl('경비 관리','経費管理')}</h2><button class="add-btn" onclick="openAddExpense()">+ ${sl('경비 추가','経費追加')}</button></div>
-  <div class="toolbar">
-    <select class="sel" onchange="renderExpenses(this.value)"><option value="전체" ${c==='전체'?'selected':''}>${sl('전체','全て')}</option>${ECATS().map(x=>`<option value="${x}" ${c===x?'selected':''}>${x}</option>`).join('')}</select>
-    <div style="font-size:14px;font-weight:700;color:var(--gold);margin-left:auto">${sl('이번 달 합계','今月合計')}: ₩${total.toLocaleString()}</div>
-  </div>
-  <div class="exp-grid">
-    ${filtered.length===0?`<div class="card" style="text-align:center;color:var(--gray);padding:32px">${sl('경비가 없습니다','経費がありません')}</div>`:''}
-    ${filtered.map(e=>`<div class="exp-card"><div class="exp-cat">${e.category}</div><div class="exp-item">${e.item}</div><div style="font-size:11px;color:#aaa;margin-bottom:2px">🏪 ${e.vendor}</div><div style="font-size:11px;color:#ccc;margin-bottom:7px">📅 ${e.date}</div><div class="exp-amt">₩${e.amount.toLocaleString()}</div><button class="del-x" onclick="delExpense('${e.id}')">✕</button></div>`).join('')}
-  </div>`;}
+  const cv=cat||'전체';
+  const total=DB.expenses.reduce((s,e)=>s+e.amount,0);
+  const filtered=cv==='전체'?DB.expenses:DB.expenses.filter(e=>e.category===cv);
+  const catOpts='<option value="전체" '+(cv==='전체'?'selected':'')+'>'+sl('전체','全て')+'</option>'
+    +ECATS().map(x=>'<option value="'+x+'" '+(cv===x?'selected':'')+'>'+x+'</option>').join('');
+  const cards=filtered.length===0
+    ?'<div class="card" style="text-align:center;color:var(--gray);padding:32px">'+sl('경비가 없습니다','経費がありません')+'</div>'
+    :filtered.map(e=>
+      '<div class="exp-card">'
+      +'<div class="exp-cat">'+e.category+'</div>'
+      +'<div class="exp-item">'+e.item+'</div>'
+      +'<div style="font-size:11px;color:#aaa;margin-bottom:2px">🏪 '+e.vendor+'</div>'
+      +'<div style="font-size:11px;color:#ccc;margin-bottom:7px">📅 '+e.date+'</div>'
+      +'<div class="exp-amt">₩'+e.amount.toLocaleString()+'</div>'
+      +'<button class="del-x" onclick="delExpense(''+e.id+'')">✕</button>'
+      +'</div>'
+    ).join('');
+  document.getElementById('main-content').innerHTML=
+    '<div class="sec-head"><h2 class="sec-title">🧾 '+sl('경비 관리','経費管理')+'</h2>'
+    +'<button class="add-btn" onclick="openAddExpense()">+ '+sl('경비 추가','経費追加')+'</button></div>'
+    +'<div class="toolbar">'
+    +'<select class="sel" onchange="renderExpenses(this.value)">'+catOpts+'</select>'
+    +'<div style="font-size:14px;font-weight:700;color:var(--gold);margin-left:auto">'+sl('이번 달 합계','今月合計')+': ₩'+total.toLocaleString()+'</div>'
+    +'</div>'
+    +'<div class="exp-grid">'+cards+'</div>';
+}
 async function delExpense(id){if(!confirm(sl('삭제하시겠습니까?','削除しますか？')))return;try{setStatus('saving');await api.del('expenses',id);DB.expenses=DB.expenses.filter(e=>e.id!==id);setStatus('saved');renderExpenses('전체');updateHeader();toast(sl('삭제되었습니다','削除しました'));}catch(e){toast('⚠️ '+e.message);}}
 
 // ── SETTINGS ──
 function renderSettings(){
-  document.getElementById('main-content').innerHTML=`
-  <div class="sec-head"><h2 class="sec-title">⚙️ ${sl('설정','設定')}</h2></div>
-  <div class="notif-card">
-    <div class="notif-title">💬 ${sl('카카오톡 알림 설정','カカオトーク通知設定')}</div>
-    <div class="notif-desc">${sl('카카오 오픈빌더 Webhook URL을 입력하면 주문 접수·결제 완료 시 자동으로 알림을 보냅니다.','カカオオープンビルダーのWebhook URLを入力すると、注文受付・決済完了時に自動通知を送ります。')}</div>
-    <div><label class="lbl">Webhook URL</label><input class="inp" id="k-url" placeholder="https://..." value="${kakaoWebhook}"/></div>
-    <div style="display:flex;gap:8px;margin-top:10px">
-      <button class="submit-btn" onclick="saveKakao()">${sl('저장','保存')}</button>
-      <button class="edit-btn" onclick="testKakao()">${sl('테스트 전송','テスト送信')}</button>
-      ${kakaoWebhook?`<button class="del-btn-sm" onclick="clearKakao()">${sl('삭제','削除')}</button>`:''}
-    </div>
-  </div>
-  <div class="card"><div class="card-title">${sl('데이터 관리','データ管理')}</div>
-    <p style="font-size:13px;color:var(--gray);margin-bottom:12px;line-height:1.7">✅ ${sl('Supabase 클라우드 DB에 연결되어 있습니다. 모든 기기에서 실시간 공유됩니다.','Supabase クラウドDBに接続されています。全端末でリアルタイム共有されます。')}</p>
-    <button class="edit-btn" onclick="exportData()">📥 ${sl('데이터 내보내기','データ書き出し')}</button>
-  </div>
-  <div class="card"><div class="card-title">${sl('언어 설정','言語設定')}</div>
-    <div style="display:flex;gap:10px">
-      <button class="edit-btn" style="${LANG==='ko'?'background:var(--cream);font-weight:700':''}" onclick="if(LANG!=='ko')toggleLang()">🇰🇷 한국어</button>
-      <button class="edit-btn" style="${LANG==='ja'?'background:var(--cream);font-weight:700':''}" onclick="if(LANG!=='ja')toggleLang()">🇯🇵 日本語</button>
-    </div>
-  </div>
-  <div class="notif-card">
-    <div class="notif-title">🏦 ${sl('입금 안내 은행 정보','振込案内 銀行情報')}</div>
-    <div class="notif-desc">${sl('입금 결제 시 자동으로 안내 메시지에 포함됩니다.','振込決済時に案内メッセージに自動で含まれます。')}</div>
-    ${(()=>{const b=getBankInfo();return `
-    <div class="form-col">
-      <div><label class="lbl">${sl('은행명','銀行名')}</label><input class="inp" id="b-bank" placeholder="${sl('예: 국민은행','例: 国民銀行')}" value="${b.bank||''}"/></div>
-      <div><label class="lbl">${sl('계좌번호','口座番号')}</label><input class="inp" id="b-account" placeholder="000-0000-0000-00" value="${b.account||''}"/></div>
-      <div><label class="lbl">${sl('예금주','口座名義')}</label><input class="inp" id="b-holder" value="${b.holder||''}"/></div>
-    </div>
-    <button class="submit-btn" style="margin-top:10px" onclick="saveBankInfo()">${sl('저장','保存')}</button>`;})()}
-  </div>`;}
+  const b=getBankInfo();
+  const kakaoSection='<div class="notif-card">'
+    +'<div class="notif-title">💬 '+sl('카카오톡 알림 설정','カカオトーク通知設定')+'</div>'
+    +'<div class="notif-desc">'+sl('카카오 오픈빌더 Webhook URL을 입력하면 주문 접수·결제 완료 시 자동으로 알림을 보냅니다.','カカオオープンビルダーのWebhook URLを入力すると、注文受付・決済完了時に自動通知を送ります。')+'</div>'
+    +'<div><label class="lbl">Webhook URL</label><input class="inp" id="k-url" placeholder="https://..." value="'+kakaoWebhook+'"/></div>'
+    +'<div style="display:flex;gap:8px;margin-top:10px">'
+    +'<button class="submit-btn" onclick="saveKakao()">'+sl('저장','保存')+'</button>'
+    +'<button class="edit-btn" onclick="testKakao()">'+sl('테스트 전송','テスト送信')+'</button>'
+    +(kakaoWebhook?'<button class="del-btn-sm" onclick="clearKakao()">'+sl('삭제','削除')+'</button>':'')
+    +'</div></div>';
+
+  const bankSection='<div class="notif-card">'
+    +'<div class="notif-title">🏦 '+sl('입금 안내 은행 정보','振込案内 銀行情報')+'</div>'
+    +'<div class="notif-desc">'+sl('입금 결제 시 자동으로 안내 메시지에 포함됩니다.','振込決済時に案内メッセージに自動で含まれます。')+'</div>'
+    +'<div class="form-col">'
+    +'<div><label class="lbl">'+sl('은행명','銀行名')+'</label><input class="inp" id="b-bank" placeholder="'+sl('예: 국민은행','例: 国民銀行')+'" value="'+(b.bank||'')+'"/></div>'
+    +'<div><label class="lbl">'+sl('계좌번호','口座番号')+'</label><input class="inp" id="b-account" placeholder="000-0000-0000-00" value="'+(b.account||'')+'"/></div>'
+    +'<div><label class="lbl">'+sl('예금주','口座名義')+'</label><input class="inp" id="b-holder" value="'+(b.holder||'')+'"/></div>'
+    +'</div>'
+    +'<button class="submit-btn" style="margin-top:10px" onclick="saveBankInfo()">'+sl('저장','保存')+'</button>'
+    +'</div>';
+
+  const dataSection='<div class="card"><div class="card-title">'+sl('데이터 관리','データ管理')+'</div>'
+    +'<p style="font-size:13px;color:var(--gray);margin-bottom:12px;line-height:1.7">✅ '+sl('Supabase 클라우드 DB에 연결되어 있습니다. 모든 기기에서 실시간 공유됩니다.','Supabase クラウドDBに接続されています。全端末でリアルタイム共有されます。')+'</p>'
+    +'<button class="edit-btn" onclick="exportData()">📥 '+sl('데이터 내보내기','データ書き出し')+'</button>'
+    +'</div>';
+
+  const langSection='<div class="card"><div class="card-title">'+sl('언어 설정','言語設定')+'</div>'
+    +'<div style="display:flex;gap:10px">'
+    +'<button class="edit-btn" style="'+(LANG==='ko'?'background:var(--cream);font-weight:700':'')+'" onclick="if(LANG!=='ko')toggleLang()">🇰🇷 한국어</button>'
+    +'<button class="edit-btn" style="'+(LANG==='ja'?'background:var(--cream);font-weight:700':'')+'" onclick="if(LANG!=='ja')toggleLang()">🇯🇵 日本語</button>'
+    +'</div></div>';
+
+  document.getElementById('main-content').innerHTML=
+    '<div class="sec-head"><h2 class="sec-title">⚙️ '+sl('설정','設定')+'</h2></div>'
+    +kakaoSection+bankSection+dataSection+langSection;
+}
 function saveKakao(){kakaoWebhook=document.getElementById('k-url').value.trim();localStorage.setItem('kakao_webhook',kakaoWebhook);toast(sl('✓ 저장되었습니다','✓ 保存しました'));renderSettings();}
 function saveBankInfo(){
   const info={bank:document.getElementById('b-bank').value,account:document.getElementById('b-account').value,holder:document.getElementById('b-holder').value};
@@ -645,8 +726,8 @@ function editOrderBody(o){
 function openEditOrder(id){
   const o=DB.orders.find(x=>x.id===id);if(!o)return;
   openModal(sl('예약 수정','予約修正'),editOrderBody(o),
-    `<button class="cancel-btn" onclick="closeModal()">${sl('취소','キャンセル')}</button>
-     <button class="submit-btn" onclick="submitEditOrder('${id}')">${sl('저장하기','保存する')}</button>`);
+    '<button class="cancel-btn" onclick="closeModal()">'+sl('취소','キャンセル')+'</button>'
+     +'<button class="submit-btn" onclick="submitEditOrder(''+id+'')">'+sl('저장하기','保存する')+'</button>');
 }
 async function submitEditOrder(id){
   syncItems();
@@ -732,26 +813,30 @@ async function submitOrder(){
 function openViewOrder(id){
   const o=DB.orders.find(x=>x.id===id);if(!o)return;
   const cust=DB.customers.find(c=>c.name===o.customer_name);
-  openModal(sl('주문 상세','注文詳細'),`
-  <div style="font-size:13px;line-height:2.4">
-    <p><b>${sl('주문번호','注文番号')}:</b> ${o.id}</p>
-    <p><b>${sl('고객명','顧客名')}:</b> ${o.customer_name}
-      ${cust?.phone?`<button class="sms-btn" style="margin-left:6px" onclick="openSMSOrder('${o.id}')">💬 ${sl('문자','SMS')}</button>`:''}
-    </p>
-    ${cust?.phone?`<p><b>${sl('연락처','連絡先')}:</b> ${cust.phone}</p>`:''}
-    <p><b>${sl('수령일 및 시간','受取日時')}:</b> ${fmtDT(o.pickup)}</p>
-    <p><b>${sl('수령 방법','受取方法')}:</b> ${o.delivery_type==='배달'?sl('🚚 배달','🚚 配達'):sl('🏪 방문수령','🏪 店頭受取')}</p>
-    ${o.delivery_addr?`<p><b>${sl('배달 주소','配達住所')}:</b> ${o.delivery_addr} <button class="map-btn" onclick="openNaverMap('${o.delivery_addr}')">🗺 ${sl('지도','地図')}</button></p>`:''}
-    <p><b>${sl('상품','商品')}:</b></p>
-    ${(o.items||[]).map(it=>`<p style="padding-left:14px">• ${it.name} × ${it.qty}${sl('개','個')} = ₩${(it.qty*it.price).toLocaleString()}</p>`).join('')}
-    <p><b>${sl('합계','合計')}:</b> ₩${o.total.toLocaleString()}</p>
-    <p><b>${sl('비고','備考')}:</b> ${o.note||'-'}</p>
-    ${o.file_urls&&o.file_urls.length?'<p><b>'+sl('첨부 파일','添付ファイル')+':</b></p>'+filesHTML(o.file_urls):''}
-    <p><b>${sl('결제','決済')}:</b> ${o.paid?sl('✓ 완료','✓ 完了'):sl('미결제','未払い')}</p>
-    ${!o.paid?(()=>{const b=getBankInfo();return b.bank?`<div class="bank-box">🏦 ${sl('입금 안내','振込案内')}<br>${b.bank} ${b.account} (${b.holder})<br>${sl('수령일까지 입금 부탁드립니다','受取日までにお振込ください')}</div>`:''})():''}
-  </div>`,
-  `<button class="cancel-btn" onclick="closeModal()">${sl('닫기','閉じる')}</button>
-   <button class="print-btn" onclick="printReceipt('${o.id}')">🖨 ${sl('영수증 출력','領収書印刷')}</button>`);
+  const b=getBankInfo();
+  const smsBtn=cust?.phone?'<button class="sms-btn" style="margin-left:6px" onclick="openSMSOrder(''+o.id+'')">💬 '+sl('문자','SMS')+'</button>':'';
+  const phoneRow=cust?.phone?'<p><b>'+sl('연락처','連絡先')+':</b> '+cust.phone+'</p>':'';
+  const addrRow=o.delivery_addr?'<p><b>'+sl('배달 주소','配達住所')+':</b> '+o.delivery_addr+' <button class="map-btn" onclick="openNaverMap(''+o.delivery_addr+'')">🗺 '+sl('지도','地図')+'</button></p>':'';
+  const itemRows=(o.items||[]).map(it=>'<p style="padding-left:14px">• '+it.name+' × '+it.qty+sl('개','個')+' = ₩'+(it.qty*it.price).toLocaleString()+'</p>').join('');
+  const noteRow=o.note?'<p><b>'+sl('비고','備考')+':</b> '+o.note+'</p>':'';
+  const fileRow=(o.file_urls&&o.file_urls.length)?'<p><b>'+sl('첨부 파일','添付ファイル')+':</b></p>'+filesHTML(o.file_urls):'';
+  const bankBox=(!o.paid&&b.bank)?'<div class="bank-box">🏦 '+sl('입금 안내','振込案内')+'<br>'+b.bank+' '+b.account+' ('+b.holder+')<br>'+sl('수령일까지 입금 부탁드립니다','受取日までにお振込ください')+'</div>':'';
+  const body='<div style="font-size:13px;line-height:2.4">'
+    +'<p><b>'+sl('주문번호','注文番号')+':</b> '+o.id+'</p>'
+    +'<p><b>'+sl('고객명','顧客名')+':</b> '+o.customer_name+smsBtn+'</p>'
+    +phoneRow
+    +'<p><b>'+sl('수령일 및 시간','受取日時')+':</b> '+fmtDT(o.pickup)+'</p>'
+    +'<p><b>'+sl('수령 방법','受取方法')+':</b> '+(o.delivery_type==='배달'?sl('🚚 배달','🚚 配達'):sl('🏪 방문수령','🏪 店頭受取'))+'</p>'
+    +addrRow
+    +'<p><b>'+sl('상품','商品')+':</b></p>'+itemRows
+    +'<p><b>'+sl('합계','合計')+':</b> ₩'+o.total.toLocaleString()+'</p>'
+    +noteRow+fileRow
+    +'<p><b>'+sl('결제','決済')+':</b> '+(o.paid?sl('✓ 완료','✓ 完了'):sl('미결제','未払い'))+'</p>'
+    +bankBox
+    +'</div>';
+  const actions='<button class="cancel-btn" onclick="closeModal()">'+sl('닫기','閉じる')+'</button>'
+    +'<button class="print-btn" onclick="printReceipt(''+o.id+'')">🖨 '+sl('영수증 출력','領収書印刷')+'</button>';
+  openModal(sl('주문 상세','注文詳細'),body,actions);
 }
 function openAddCustomer(){openModal(sl('신규 고객 등록','新規顧客登録'),`<div class="form-col"><div><label class="lbl">${sl('성명','氏名')}</label><input class="inp" id="f-cname"/></div><div><label class="lbl">${sl('전화번호','電話番号')}</label><input class="inp" id="f-phone" placeholder="010-0000-0000"/></div><div><label class="lbl">${sl('이메일','メール')}</label><input class="inp" id="f-email" type="email"/></div><div><label class="lbl">${sl('주소','住所')}</label><input class="inp" id="f-addr"/></div><div><label class="lbl">${sl('메모','メモ')}</label><input class="inp" id="f-cnote"/></div></div>`,`<button class="cancel-btn" onclick="closeModal()">${sl('취소','キャンセル')}</button><button class="submit-btn" onclick="submitCustomer()">${sl('저장하기','保存する')}</button>`);}
 async function submitCustomer(){const name=document.getElementById('f-cname').value.trim();if(!name){toast(sl('성명을 입력해주세요','氏名を入力してください'));return;}const newC={id:nextId(),name,phone:document.getElementById('f-phone').value,email:document.getElementById('f-email').value,address:document.getElementById('f-addr').value,note:document.getElementById('f-cnote').value,total_orders:0,total_spent:0};try{setStatus('saving');const res=await api.post('customers',newC);DB.customers.unshift(res[0]||newC);setStatus('saved');closeModal();renderCustomers('');toast(sl('✓ 등록되었습니다','✓ 登録しました'));}catch(e){toast('⚠️ '+e.message);}}
