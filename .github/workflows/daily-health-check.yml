@@ -68,7 +68,7 @@ jobs:
           check "해울떡 관리 시스템"  "タイトル (해울떡 관리 시스템)"
           check "SUPABASE_URL"         "Supabase 設定"
           check "KR_HOLIDAYS"          "祝日データ"
-          check "showTab"              "ナビゲーション関数"
+          check "function go("         "ナビゲーション関数"
           check "SUPABASE_KEY"         "Supabase キー"
 
           if [ -z "$ISSUES" ]; then

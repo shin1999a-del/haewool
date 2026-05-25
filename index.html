@@ -181,14 +181,14 @@ td{padding:9px 10px;vertical-align:middle}
   </div>
 </div>
 <script>
-const SB_URL='https://adkfwhkneptmndzgrsfq.supabase.co';
-const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFka2Z3aGtuZXB0bW5kemdyc2ZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzMTA4MzAsImV4cCI6MjA5Mzg4NjgzMH0.sYmgBSGGVMWWxzNo6qa9f2eTM1tfNG1ULrrH3jyRhJA';
+const SUPABASE_URL='https://adkfwhkneptmndzgrsfq.supabase.co';
+const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFka2Z3aGtuZXB0bW5kemdyc2ZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzMTA4MzAsImV4cCI6MjA5Mzg4NjgzMH0.sYmgBSGGVMWWxzNo6qa9f2eTM1tfNG1ULrrH3jyRhJA';
 
 async function sb(method,table,body,id,q){
-  const url=SB_URL+'/rest/v1/'+table+(id?'?id=eq.'+id:(q||''));
+  const url=SUPABASE_URL+'/rest/v1/'+table+(id?'?id=eq.'+id:(q||''));
   const h={
-    'apikey':SB_KEY,
-    'Authorization':'Bearer '+SB_KEY,
+    'apikey':SUPABASE_KEY,
+    'Authorization':'Bearer '+SUPABASE_KEY,
     'Content-Type':'application/json',
     'Accept':'application/json'
   };
@@ -222,14 +222,14 @@ const SM={
   ready:    {ko:'수령가능',ja:'受取可',  color:'#7b1fa2',bg:'#f3e5f5'},
   done:     {ko:'완료',    ja:'完了',    color:'#666',   bg:'#f5f5f5'}
 };
-const HOLIDAYS={
+const KR_HOLIDAYS={
   '2026-01-01':'신정','2026-01-28':'설날 연휴','2026-01-29':'설날','2026-01-30':'설날 연휴',
   '2026-03-01':'삼일절','2026-05-05':'어린이날','2026-05-15':'부처님 오신 날',
   '2026-06-06':'현충일','2026-08-15':'광복절','2026-09-24':'추석 연휴',
   '2026-09-25':'추석','2026-09-26':'추석 연휴','2026-10-03':'개천절',
   '2026-10-09':'한글날','2026-12-25':'크리스마스'
 };
-const LUNAR_F={
+const LUNAR_FEST={
   '2026-01-29':'정월 초하루','2026-02-17':'정월 대보름',
   '2026-05-15':'사월 초파일','2026-09-25':'추석 (음8/15)'
 };
@@ -294,13 +294,13 @@ function filesHTML(urls){
 async function uploadFile(file){
   var ext=file.name.split('.').pop();
   var path='orders/'+Date.now()+'-'+Math.random().toString(36).slice(2)+'.'+ext;
-  var r=await fetch(SB_URL+'/storage/v1/object/order-files/'+path,{
+  var r=await fetch(SUPABASE_URL+'/storage/v1/object/order-files/'+path,{
     method:'POST',
-    headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':file.type},
+    headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':file.type},
     body:file
   });
   if(!r.ok)throw new Error(await r.text());
-  return SB_URL+'/storage/v1/object/public/order-files/'+path;
+  return SUPABASE_URL+'/storage/v1/object/public/order-files/'+path;
 }
 function openNaverMap(addr){
   if(!addr){toast(sl('주소가 없습니다','住所がありません'));return;}
@@ -339,22 +339,16 @@ async function sendKakao(msg){
 // ── LOAD ──
 async function loadAll(){
   setStatus('conn');
-  // 画面にデバッグ情報を表示
   var mc=document.getElementById('mc');
-  if(mc) mc.innerHTML='<div style="padding:20px;font-size:13px;color:#333">'
-    +'<p>🔄 Supabase에 연결 중...</p>'
-    +'<p style="color:#888;margin-top:8px">URL: '+SB_URL+'</p>'
+  if(mc) mc.innerHTML='<div style="padding:48px;text-align:center;color:#aaa">'
+    +'<div style="font-size:36px;margin-bottom:12px">🍡</div>'
+    +'<div style="font-size:14px">'+sl('데이터를 불러오는 중...','データを読み込み中...')+'</div>'
     +'</div>';
   try{
     var orders=await api.get('orders','?order=created_at.desc');
-    if(mc) mc.innerHTML+='<p style="padding:0 20px;color:#2e7d5a">✅ orders OK ('+orders.length+'건)</p>';
-    
     var customers=await api.get('customers','?order=created_at.desc');
-    if(mc) mc.innerHTML+='<p style="padding:0 20px;color:#2e7d5a">✅ customers OK</p>';
-    
     var payments=await api.get('payments','?order=created_at.desc');
     var expenses=await api.get('expenses','?order=created_at.desc');
-    
     DB={
       orders:orders.map(function(o){return Object.assign({},o,{items:o.items||[],file_urls:o.file_urls||[]});}),
       customers:customers,
@@ -364,12 +358,21 @@ async function loadAll(){
     setStatus('ok');updateHdr();go(TAB);
   }catch(e){
     setStatus('err');
-    var msg=e.message||'알 수 없는 오류';
-    if(mc) mc.innerHTML+='<div style="padding:20px;background:#ffeaea;margin:10px;border-radius:8px;font-size:12px">'
-      +'<p style="color:#e05555;font-weight:700">❌ 연결 오류</p>'
-      +'<p style="margin-top:8px;word-break:break-all">'+msg+'</p>'
+    var msg=e.message||sl('알 수 없는 오류','不明なエラー');
+    if(mc) mc.innerHTML='<div style="padding:24px;max-width:560px;margin:0 auto">'
+      +'<div style="background:#ffeaea;border-radius:12px;padding:20px;margin-bottom:16px">'
+      +'<p style="color:#e05555;font-weight:700;font-size:15px;margin-bottom:8px">❌ '+sl('데이터베이스 연결 오류','データベース接続エラー')+'</p>'
+      +'<p style="font-size:12px;color:#666;word-break:break-all;line-height:1.7">'+msg+'</p>'
+      +'</div>'
+      +'<div style="background:#fff8ef;border:1px solid #f0ddc8;border-radius:12px;padding:16px;font-size:12px;line-height:2;color:#2a1208">'
+      +'<p style="font-weight:700;margin-bottom:6px">'+sl('확인 사항','確認事項')+':</p>'
+      +'<p>① Supabase '+sl('대시보드 → Table Editor에서 4개 테이블(orders, customers, payments, expenses)이 생성되어 있는지 확인','ダッシュボード → Table Editorで4つのテーブルが作成されているか確認')+'</p>'
+      +'<p>② '+sl('Authentication → Policies에서 anon 사용자의 SELECT/INSERT/UPDATE/DELETE 정책이 설정되어 있는지 확인','Authentication → PoliciesでanonユーザーのSELECT/INSERT/UPDATE/DELETE ポリシーが設定されているか確認')+'</p>'
+      +'<p>③ '+sl('Settings → Network → Restrictions에서 IP 제한이 활성화되어 있는 경우 비활성화 또는 허용 IP 추가','Settings → Network → RestrictionsでIP制限が有効な場合は無効化するか許可IPを追加')+'</p>'
+      +'</div>'
+      +'<button class="add-btn" style="margin-top:16px" onclick="loadAll()">🔄 '+sl('다시 시도','再試行')+'</button>'
       +'</div>';
-    toast('⚠️ '+msg,6000);
+    toast('⚠️ '+sl('연결 오류. 화면의 안내를 확인하세요.','接続エラー。画面の案内を確認してください。'),6000);
   }
 }
 function updateHdr(){
@@ -702,7 +705,7 @@ function renderCal(){
   for(var i=0;i<fd;i++)cells+='<div class="cal-empty"></div>';
   for(var d=1;d<=dim;d++){
     var ds=calY+'-'+String(calM+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
-    var hol=HOLIDAYS[ds]||'',lun=LUNAR_F[ds]||'';
+    var hol=KR_HOLIDAYS[ds]||'',lun=LUNAR_FEST[ds]||'';
     var orders=byDate[ds]||[],isT=ds===tod;
     var isSun=(fd+d-1)%7===0,isSat=(fd+d-1)%7===6,isSel=calSel===ds;
     var lunar=getLunar(ds);
@@ -714,8 +717,7 @@ function renderCal(){
       return '<div class="cal-dot" style="background:'+(SM[o.status]?SM[o.status].color:'#888')+'22;color:'+(SM[o.status]?SM[o.status].color:'#888')+'">'+o.customer_name+'</div>';
     }).join('');
     var moreTag=orders.length>2?'<div style="font-size:7px;color:#888">+'+(orders.length-2)+sl('건','件')+'</div>':'';
-    // data-ds属性でonclickを安全に実装
-    cells+='<div class="cal-cell" style="background:'+bg+';border:'+bdr+'" data-ds="'+ds+'" onclick="cSel(this.getAttribute('data-ds'))">'
+    cells+='<div class="cal-cell" style="background:'+bg+';border:'+bdr+'" data-ds="'+ds+'" onclick="cSel(this.dataset.ds)">'
       +'<div class="cal-date" style="color:'+dc+';font-weight:'+(isT?700:500)+'">'+d+todBadge+'</div>'
       +'<div class="lunar">'+sl('음','陰')+' '+lunar.m+'/'+lunar.d+'</div>'
       +(hol?'<div class="hol-tag">'+hol+'</div>':'')
@@ -727,7 +729,7 @@ function renderCal(){
   var selDet=calSel&&selO.length
     ?'<div class="cal-detail"><div style="font-size:15px;font-weight:700;margin-bottom:14px">'+calSel+' '+sl('주문 목록','注文一覧')+'</div>'
       +selO.map(function(o){
-        return '<div class="cdrow">'+mn(o.id)+'<span>'+o.customer_name+'</span><span>'+(o.items||[]).map(function(it){return it.name+'×'+it.qty;}).join(', ')+'</span>'+badge(o.status)+'<strong style="color:#c8832a">₩'+o.total.toLocaleString()+'</strong><button class="print-b" onclick="printReceipt(''+o.id+'')">🖨</button></div>';
+        return '<div class="cdrow">'+mn(o.id)+'<span>'+o.customer_name+'</span><span>'+(o.items||[]).map(function(it){return it.name+'×'+it.qty;}).join(', ')+'</span>'+badge(o.status)+'<strong style="color:#c8832a">₩'+o.total.toLocaleString()+'</strong><button class="print-b" onclick="printReceipt(\''+o.id+'\')">🖨</button></div>';
       }).join('')+'</div>'
     :'';
   var dheads=DAYS.map(function(d,i){return '<div class="cal-dh" style="color:'+(i===0?'#e05555':i===6?'#1565a8':'#666')+'">'+d+'</div>';}).join('');
