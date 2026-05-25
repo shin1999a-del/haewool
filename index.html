@@ -221,8 +221,8 @@ let LANG=localStorage.getItem('tteok_lang')||'ko';
 let currentTab='dashboard',calYear=new Date().getFullYear(),calMonth=new Date().getMonth(),calSelected=null;
 let tmpItems=[],kakaoWebhook=localStorage.getItem('kakao_webhook')||'';
 const STATUS_MAP={pending:{ko:'접수중',ja:'受付中',color:'#c8832a',bg:'#fff3e0'},confirmed:{ko:'확인완료',ja:'確認済',color:'#2e7d5a',bg:'#e8f5e9'},preparing:{ko:'제조중',ja:'製造中',color:'#1565a8',bg:'#e3f2fd'},ready:{ko:'수령가능',ja:'受取可',color:'#7b1fa2',bg:'#f3e5f5'},done:{ko:'완료',ja:'完了',color:'#666',bg:'#f5f5f5'}};
-const KR_HOLIDAYS={'2026-01-01':'신정','2026-01-28':'설날 연휴','2026-01-29':'설날','2026-01-30':'설날 연휴','2026-03-01':'삼일절','2026-05-05':'어린이날','2026-05-15':'부처님 오신 날','2026-06-06':'현충일','2026-08-15':'광복절','2026-09-24':'추석 연휴','2026-09-25':'추석','2026-09-26':'추석 연휴','2026-10-03':'개천절','2026-10-09':'한글날','2026-12-25':'크리스마스','2027-01-01':'신정','2027-02-06':'설날 연휴','2027-02-07':'설날','2027-02-08':'설날 연휴','2027-03-01':'삼일절','2027-05-05':'어린이날','2027-05-13':'부처님 오신 날','2027-06-06':'현충일','2027-08-15':'광복절','2027-09-15':'추석 연휴','2027-09-16':'추석','2027-09-17':'추석 연휴','2027-10-03':'개천절','2027-10-09':'한글날','2027-12-25':'크리스마스'};
-const LUNAR_FEST={'2026-01-29':'정월 초하루','2026-02-17':'정월 대보름','2026-05-15':'사월 초파일','2026-09-25':'추석 (음8/15)','2027-02-07':'정월 초하루','2027-02-23':'정월 대보름','2027-05-13':'사월 초파일','2027-09-16':'추석 (음8/15)'};
+const KR_HOLIDAYS={'2026-01-01':'신정','2026-01-28':'설날 연휴','2026-01-29':'설날','2026-01-30':'설날 연휴','2026-03-01':'삼일절','2026-05-05':'어린이날','2026-05-15':'부처님 오신 날','2026-06-06':'현충일','2026-08-15':'광복절','2026-09-24':'추석 연휴','2026-09-25':'추석','2026-09-26':'추석 연휴','2026-10-03':'개천절','2026-10-09':'한글날','2026-12-25':'크리스마스'};
+const LUNAR_FEST={'2026-01-29':'정월 초하루','2026-02-17':'정월 대보름','2026-05-15':'사월 초파일','2026-09-25':'추석 (음8/15)'};
 
 function fmtDT(dt){
   if(!dt)return '-';
@@ -291,6 +291,7 @@ function ordersHTML(s,f){
     <div class="order-name">${o.customer_name}</div>
     <div class="item-tags">${(o.items||[]).map(it=>`<span class="itag">${it.name} ×${it.qty}</span>`).join('')}</div>
     ${o.note?`<div class="order-note">📝 ${o.note}</div>`:''}
+    ${(o.file_urls&&o.file_urls.length)?filesHTML(o.file_urls):''}
     <div class="order-bot">
       <strong style="color:var(--gold)">₩${o.total.toLocaleString()}</strong>
       <div style="display:flex;gap:5px;flex-wrap:wrap">
@@ -383,7 +384,7 @@ function calSel(ds){calSelected=calSelected===ds?null:ds;renderCalendar();}
 function customersHTML(s){
   const filtered=DB.customers.filter(c=>c.name.includes(s)||c.phone.includes(s));
   return `${filtered.length===0?`<div class="card" style="text-align:center;color:var(--gray);padding:32px">${sl('고객이 없습니다','顧客がいません')}</div>`:''}
-  ${filtered.map(c=>`<div class="cust-card"><div class="avatar">${c.name[0]}</div><div style="flex:1"><div class="cust-name">${c.name}</div><div class="cust-detail">📞 ${c.phone} ${c.phone?`<button class="sms-btn" onclick="openSMS('${c.phone}','')">💬 ${sl('문자','SMS')}</button>`:''}</div><div class="cust-detail">✉️ ${c.email}</div><div class="cust-detail">📍 ${c.address} ${c.address?`<button class="map-btn" onclick="openNaverMap('${c.address}')">🗺 ${sl('지도','地図')}</button>`:''}</div>${c.note?`<div class="cust-note">⭐ ${c.note}</div>`:''}<div class="cust-stats"><span>${sl('주문','注文')} <strong>${c.total_orders}${sl('회','回')}</strong></span><span>${sl('누적','累計')} <strong>₩${c.total_spent.toLocaleString()}</strong></span></div></div><div style="display:flex;flex-direction:column;gap:4px"><button class="edit-btn" onclick="openEditCustomer('${c.id}')">${sl('편집','編集')}</button><button class="del-btn-sm" onclick="delCustomer('${c.id}')">${sl('삭제','削除')}</button></div></div>`).join('')}`;
+  ${filtered.map(c=>`<div class="cust-card"><div class="avatar">${c.name[0]}</div><div style="flex:1"><div class="cust-name">${c.name}</div><div class="cust-detail">📞 ${c.phone} ${c.phone?`<button class="sms-btn" onclick="openSMS('${c.phone}','')">💬 ${sl('문자','SMS')}</button>`:''}</div><div class="cust-detail">✉️ ${c.email}</div><div class="cust-detail">📍 ${c.address} ${c.address?`<button class="map-btn" onclick="openNaverMap('${c.address}')">🗺 ${sl('지도','地図')}</button>`:''}</div>${c.note?`<div class="cust-note">⭐ ${c.note}</div>`:''}<div class="cust-stats"><span>${sl('주문','注文')} <strong>${c.total_orders}${sl('회','回')}</strong></span><span>${sl('누적','累計')} <strong>₩${c.total_spent.toLocaleString()}</strong></span></div></div><div style="display:flex;flex-direction:column;gap:4px"><button class="edit-btn" onclick="openEditCustomer('${c.id}')">${sl('편집','編集')}</button><button class="edit-btn" style="background:#e3f2fd;color:#1565a8" onclick="openCustHistory('${c.id}')">${sl('주문이력','注文履歴')}</button><button class="del-btn-sm" onclick="delCustomer('${c.id}')">${sl('삭제','削除')}</button></div></div>`).join('')}`;
 }
 function refreshCustList(){
   const s=document.getElementById('cust-s')?.value||'';
@@ -481,6 +482,34 @@ function clearKakao(){kakaoWebhook='';localStorage.removeItem('kakao_webhook');t
 function exportData(){const a=document.createElement('a');a.href='data:application/json;charset=utf-8,'+encodeURIComponent(JSON.stringify(DB,null,2));a.download='tteok_backup_'+new Date().toISOString().slice(0,10)+'.json';a.click();toast(sl('✓ 내보내기 완료','✓ 書き出し完了'));}
 
 
+
+// ── FILE UPLOAD (Supabase Storage) ──
+async function uploadFile(file){
+  const ext=file.name.split('.').pop();
+  const path='orders/'+Date.now()+'-'+Math.random().toString(36).slice(2)+'.'+ext;
+  const res=await fetch(SUPABASE_URL+'/storage/v1/object/order-files/'+path,{
+    method:'POST',
+    headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':file.type},
+    body:file
+  });
+  if(!res.ok){const e=await res.text();throw new Error(e);}
+  return SUPABASE_URL+'/storage/v1/object/public/order-files/'+path;
+}
+function getFileIcon(url){
+  if(!url)return '📎';
+  const ext=(url.split('.').pop()||'').toLowerCase();
+  if(['jpg','jpeg','png','gif','webp','heic'].includes(ext))return '🖼';
+  if(['pdf'].includes(ext))return '📄';
+  if(['mp4','mov'].includes(ext))return '🎬';
+  return '📎';
+}
+function filesHTML(urls){
+  if(!urls||!urls.length)return '';
+  return '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">'+
+    urls.map(u=>'<a href="'+u+'" target="_blank" style="display:inline-flex;align-items:center;gap:3px;padding:3px 8px;background:#f0f0f0;border-radius:6px;font-size:11px;color:#333;text-decoration:none">'+getFileIcon(u)+' '+decodeURIComponent(u.split('/').pop().slice(14))+'</a>').join('')+
+  '</div>';
+}
+
 // ── HELPERS: Naver Map / SMS / 입금 메시지 ──
 function naverMapUrl(addr){return 'https://map.naver.com/v5/search/'+encodeURIComponent(addr);}
 function openNaverMap(addr){if(!addr){toast(sl('주소가 없습니다','住所がありません'));return;}window.open(naverMapUrl(addr),'_blank');}
@@ -561,6 +590,12 @@ function addOrderBody(){
     +'<div><label class="lbl">'+sl('비고','備考')+'</label>'
     +'<input class="inp" id="f-note"/></div>'
     +'<div><label class="lbl">'+sl('상품','商品')+'</label>'+itemsHTML()+'</div>'
+    +'<div>'
+    +'<label class="lbl">'+sl('사진·파일 첨부','写真・ファイル添付')+'</label>'
+    +'<input type="file" id="f-files" multiple accept="image/*,.pdf,.mp4,.mov" style="width:100%;padding:8px;border:1px dashed var(--border);border-radius:9px;background:#fdf8f4;font-size:12px;color:var(--gray)"/>'
+    +'<div id="f-file-preview" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px"></div>'
+    +'<div style="font-size:10px;color:#bbb;margin-top:4px">'+sl('이미지·PDF·동영상 업로드 가능','画像・PDF・動画をアップロード可能')+'</div>'
+    +'</div>'
     +'</div>';
 }
 
@@ -599,6 +634,12 @@ function editOrderBody(o){
     +'<div><label class="lbl">'+sl('비고','備考')+'</label>'
     +'<input class="inp" id="f-note" value="'+on+'"/></div>'
     +'<div><label class="lbl">'+sl('상품','商品')+'</label>'+itemsHTML()+'</div>'
+    +'<div>'
+    +'<label class="lbl">'+sl('사진·파일 첨부','写真・ファイル添付')+'</label>'
+    +'<input type="file" id="f-files" multiple accept="image/*,.pdf,.mp4,.mov" style="width:100%;padding:8px;border:1px dashed var(--border);border-radius:9px;background:#fdf8f4;font-size:12px;color:var(--gray)"/>'
+    +'<div id="f-file-preview" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px"></div>'
+    +'<div style="font-size:10px;color:#bbb;margin-top:4px">'+sl('이미지·PDF·동영상 업로드 가능','画像・PDF・動画をアップロード可能')+'</div>'
+    +'</div>'
     +'</div>';
 }
 function openEditOrder(id){
@@ -647,7 +688,17 @@ async function submitOrder(){
   const deliveryAddr=document.getElementById('f-delivery-addr')?.value.trim()||'';
   if(!name||!pickup){toast(sl('고객명과 수령일을 입력해주세요','顧客名と受取日を入力してください'));return;}
   const total=tmpItems.reduce((s,i)=>s+i.qty*i.price,0);
-  const newO={id:nextId(),customer_name:name,items:tmpItems,total,pickup,status:'pending',paid:false,note,delivery_type:deliveryType,delivery_addr:deliveryAddr};
+  // ファイルアップロード
+  let fileUrls=[];
+  const fileInput=document.getElementById('f-files');
+  if(fileInput&&fileInput.files.length){
+    toast(sl('파일 업로드 중...','ファイルアップロード中...'),5000);
+    for(const file of fileInput.files){
+      try{const url=await uploadFile(file);fileUrls.push(url);}
+      catch(e){toast('⚠️ 파일 업로드 실패: '+file.name);}
+    }
+  }
+  const newO={id:nextId(),customer_name:name,items:tmpItems,total,pickup,status:'pending',paid:false,note,delivery_type:deliveryType,delivery_addr:deliveryAddr,file_urls:fileUrls};
   try{
     setStatus('saving');
     const res=await api.post('orders',newO);
@@ -695,6 +746,7 @@ function openViewOrder(id){
     ${(o.items||[]).map(it=>`<p style="padding-left:14px">• ${it.name} × ${it.qty}${sl('개','個')} = ₩${(it.qty*it.price).toLocaleString()}</p>`).join('')}
     <p><b>${sl('합계','合計')}:</b> ₩${o.total.toLocaleString()}</p>
     <p><b>${sl('비고','備考')}:</b> ${o.note||'-'}</p>
+    ${o.file_urls&&o.file_urls.length?'<p><b>'+sl('첨부 파일','添付ファイル')+':</b></p>'+filesHTML(o.file_urls):''}
     <p><b>${sl('결제','決済')}:</b> ${o.paid?sl('✓ 완료','✓ 完了'):sl('미결제','未払い')}</p>
     ${!o.paid?(()=>{const b=getBankInfo();return b.bank?`<div class="bank-box">🏦 ${sl('입금 안내','振込案内')}<br>${b.bank} ${b.account} (${b.holder})<br>${sl('수령일까지 입금 부탁드립니다','受取日までにお振込ください')}</div>`:''})():''}
   </div>`,
@@ -703,6 +755,41 @@ function openViewOrder(id){
 }
 function openAddCustomer(){openModal(sl('신규 고객 등록','新規顧客登録'),`<div class="form-col"><div><label class="lbl">${sl('성명','氏名')}</label><input class="inp" id="f-cname"/></div><div><label class="lbl">${sl('전화번호','電話番号')}</label><input class="inp" id="f-phone" placeholder="010-0000-0000"/></div><div><label class="lbl">${sl('이메일','メール')}</label><input class="inp" id="f-email" type="email"/></div><div><label class="lbl">${sl('주소','住所')}</label><input class="inp" id="f-addr"/></div><div><label class="lbl">${sl('메모','メモ')}</label><input class="inp" id="f-cnote"/></div></div>`,`<button class="cancel-btn" onclick="closeModal()">${sl('취소','キャンセル')}</button><button class="submit-btn" onclick="submitCustomer()">${sl('저장하기','保存する')}</button>`);}
 async function submitCustomer(){const name=document.getElementById('f-cname').value.trim();if(!name){toast(sl('성명을 입력해주세요','氏名を入力してください'));return;}const newC={id:nextId(),name,phone:document.getElementById('f-phone').value,email:document.getElementById('f-email').value,address:document.getElementById('f-addr').value,note:document.getElementById('f-cnote').value,total_orders:0,total_spent:0};try{setStatus('saving');const res=await api.post('customers',newC);DB.customers.unshift(res[0]||newC);setStatus('saved');closeModal();renderCustomers('');toast(sl('✓ 등록되었습니다','✓ 登録しました'));}catch(e){toast('⚠️ '+e.message);}}
+
+function openCustHistory(custId){
+  const cust=DB.customers.find(x=>x.id===custId);
+  if(!cust)return;
+  const orders=DB.orders.filter(o=>o.customer_name===cust.name).sort((a,b)=>b.pickup.localeCompare(a.pickup));
+  const totalAmt=orders.reduce((s,o)=>s+o.total,0);
+  const body='<div>'
+    +'<div style="display:flex;gap:16px;margin-bottom:14px;flex-wrap:wrap">'
+    +'<div style="background:#fff8ef;border-radius:8px;padding:10px 16px;text-align:center"><div style="font-size:18px;font-weight:700;color:#c8832a">'+orders.length+sl('건','件')+'</div><div style="font-size:11px;color:#888">'+sl('총 주문','総注文')+'</div></div>'
+    +'<div style="background:#e8f5e9;border-radius:8px;padding:10px 16px;text-align:center"><div style="font-size:18px;font-weight:700;color:#2e7d5a">₩'+totalAmt.toLocaleString()+'</div><div style="font-size:11px;color:#888">'+sl('누적 금액','累計金額')+'</div></div>'
+    +'</div>'
+    +(orders.length===0
+      ?'<p style="text-align:center;color:#aaa;padding:20px">'+sl('주문 내역이 없습니다','注文履歴がありません')+'</p>'
+      :orders.map(o=>'<div style="border:1px solid #f0ddc8;border-radius:10px;padding:12px;margin-bottom:8px">'
+        +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:4px">'
+        +'<div style="display:flex;gap:6px;align-items:center">'+badge(o.status)
+        +(o.delivery_type==='배달'?'<span style="font-size:10px;color:#1565a8">🚚</span>':'<span style="font-size:10px;color:#2e7d5a">🏪</span>')
+        +'</div>'
+        +'<span style="font-size:11px;color:#888">'+fmtDT(o.pickup)+'</span>'
+        +'</div>'
+        +'<div style="font-size:12px;color:#555;margin-bottom:4px">'+(o.items||[]).map(it=>it.name+' ×'+it.qty).join(' / ')+'</div>'
+        +(o.note?'<div style="font-size:11px;color:#aaa;margin-bottom:4px">📝 '+o.note+'</div>':'')
+        +(o.file_urls&&o.file_urls.length?filesHTML(o.file_urls):'')
+        +'<div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">'
+        +'<strong style="color:#c8832a">₩'+o.total.toLocaleString()+'</strong>'
+        +'<span style="font-size:11px;font-weight:600;color:'+(o.paid?'#2e7d5a':'#e05555')+'">'+( o.paid?sl('✓ 결제완료','✓ 支払済'):sl('미결제','未払い'))+'</span>'
+        +'</div>'
+        +'<button class="print-btn" style="margin-top:6px" onclick="printReceipt(''+o.id+'')">🖨 '+sl('영수증','領収書')+'</button>'
+        +'</div>'
+      ).join(''))
+    +'</div>';
+  openModal(sl('주문 이력','注文履歴')+' - '+cust.name, body,
+    '<button class="cancel-btn" onclick="closeModal()">'+sl('닫기','閉じる')+'</button>');
+}
+
 function openEditCustomer(id){const c=DB.customers.find(x=>x.id===id);if(!c)return;openModal(sl('고객 정보 수정','顧客情報編集'),`<div class="form-col"><div><label class="lbl">${sl('성명','氏名')}</label><input class="inp" id="f-cname" value="${c.name}"/></div><div><label class="lbl">${sl('전화번호','電話番号')}</label><input class="inp" id="f-phone" value="${c.phone}"/></div><div><label class="lbl">${sl('이메일','メール')}</label><input class="inp" id="f-email" value="${c.email}"/></div><div><label class="lbl">${sl('주소','住所')}</label><input class="inp" id="f-addr" value="${c.address}"/></div><div><label class="lbl">${sl('메모','メモ')}</label><input class="inp" id="f-cnote" value="${c.note}"/></div></div>`,`<button class="cancel-btn" onclick="closeModal()">${sl('취소','キャンセル')}</button><button class="submit-btn" onclick="submitEditCustomer('${id}')">${sl('저장하기','保存する')}</button>`);}
 async function submitEditCustomer(id){const updated={name:document.getElementById('f-cname').value,phone:document.getElementById('f-phone').value,email:document.getElementById('f-email').value,address:document.getElementById('f-addr').value,note:document.getElementById('f-cnote').value};try{setStatus('saving');await api.patch('customers',id,updated);DB.customers=DB.customers.map(c=>c.id===id?{...c,...updated}:c);setStatus('saved');closeModal();renderCustomers('');toast(sl('✓ 수정되었습니다','✓ 更新しました'));}catch(e){toast('⚠️ '+e.message);}}
 function openAddPayment(orderId,amount){openModal(sl('결제 입력','決済入力'),`<div class="form-col"><div><label class="lbl">${sl('주문번호','注文番号')}</label><input class="inp" id="f-oid" value="${orderId||''}"/></div><div><label class="lbl">${sl('금액 (₩)','金額 (₩)')}</label><input class="inp" id="f-amt" type="number" value="${amount||''}"/></div><div><label class="lbl">${sl('결제 수단','決済手段')}</label><select class="inp sel" id="f-method">${METHS().map(m=>`<option>${m}</option>`).join('')}</select></div><div><label class="lbl">${sl('날짜','日付')}</label><input class="inp" id="f-date" type="date" value="${new Date().toISOString().slice(0,10)}"/></div></div>`,`<button class="cancel-btn" onclick="closeModal()">${sl('취소','キャンセル')}</button><button class="submit-btn" onclick="submitPayment()">${sl('저장하기','保存する')}</button>`);}
