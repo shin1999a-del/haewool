@@ -186,11 +186,21 @@ const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZ
 
 async function sb(method,table,body,id,q){
   const url=SB_URL+'/rest/v1/'+table+(id?'?id=eq.'+id:(q||''));
-  const h={'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json'};
+  const h={
+    'apikey':SB_KEY,
+    'Authorization':'Bearer '+SB_KEY,
+    'Content-Type':'application/json',
+    'Accept':'application/json'
+  };
   if(method==='POST')h['Prefer']='return=representation';
-  const r=await fetch(url,{method,headers:h,body:body?JSON.stringify(body):null});
-  if(!r.ok)throw new Error(await r.text());
-  const t=await r.text();return t?JSON.parse(t):[];
+  if(method==='PATCH')h['Prefer']='return=minimal';
+  const r=await fetch(url,{method:method,headers:h,body:body?JSON.stringify(body):null});
+  if(!r.ok){
+    const errText=await r.text();
+    throw new Error(errText);
+  }
+  const t=await r.text();
+  return t?JSON.parse(t):[];
 }
 const api={
   get:(t,q)=>sb('GET',t,null,null,q||''),
@@ -330,18 +340,23 @@ async function sendKakao(msg){
 async function loadAll(){
   setStatus('conn');
   try{
-    var res=await Promise.all([
-      api.get('orders','?order=created_at.desc'),
-      api.get('customers','?order=created_at.desc'),
-      api.get('payments','?order=created_at.desc'),
-      api.get('expenses','?order=created_at.desc')
-    ]);
+    var orders=await api.get('orders','?order=created_at.desc');
+    var customers=await api.get('customers','?order=created_at.desc');
+    var payments=await api.get('payments','?order=created_at.desc');
+    var expenses=await api.get('expenses','?order=created_at.desc');
     DB={
-      orders:res[0].map(function(o){return Object.assign({},o,{items:o.items||[],file_urls:o.file_urls||[]});} ),
-      customers:res[1],payments:res[2],expenses:res[3]
+      orders:orders.map(function(o){return Object.assign({},o,{items:o.items||[],file_urls:o.file_urls||[]});}),
+      customers:customers,
+      payments:payments,
+      expenses:expenses
     };
     setStatus('ok');updateHdr();go(TAB);
-  }catch(e){setStatus('err');toast('⚠️ '+e.message,4000);}
+  }catch(e){
+    setStatus('err');
+    var msg=e.message||'알 수 없는 오류';
+    toast('⚠️ 연결 오류: '+msg,6000);
+    console.error('loadAll error:',e);
+  }
 }
 function updateHdr(){
   var rev=DB.payments.filter(function(p){return p.status==='완료';}).reduce(function(s,p){return s+p.amount;},0);
