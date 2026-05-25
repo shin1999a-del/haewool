@@ -4,10 +4,10 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>해울떡 관리 시스템</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet"/>
+<!-- fonts removed for debug -->
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Noto Sans KR',sans-serif;background:#fdf6ed;color:#2a1208;min-height:100vh}
+body{font-family:sans-serif;background:#fdf6ed;color:#2a1208;min-height:100vh}
 button{font-family:inherit;cursor:pointer}
 input,select,textarea{font-family:inherit}
 @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
@@ -339,11 +339,22 @@ async function sendKakao(msg){
 // ── LOAD ──
 async function loadAll(){
   setStatus('conn');
+  // 画面にデバッグ情報を表示
+  var mc=document.getElementById('mc');
+  if(mc) mc.innerHTML='<div style="padding:20px;font-size:13px;color:#333">'
+    +'<p>🔄 Supabase에 연결 중...</p>'
+    +'<p style="color:#888;margin-top:8px">URL: '+SB_URL+'</p>'
+    +'</div>';
   try{
     var orders=await api.get('orders','?order=created_at.desc');
+    if(mc) mc.innerHTML+='<p style="padding:0 20px;color:#2e7d5a">✅ orders OK ('+orders.length+'건)</p>';
+    
     var customers=await api.get('customers','?order=created_at.desc');
+    if(mc) mc.innerHTML+='<p style="padding:0 20px;color:#2e7d5a">✅ customers OK</p>';
+    
     var payments=await api.get('payments','?order=created_at.desc');
     var expenses=await api.get('expenses','?order=created_at.desc');
+    
     DB={
       orders:orders.map(function(o){return Object.assign({},o,{items:o.items||[],file_urls:o.file_urls||[]});}),
       customers:customers,
@@ -354,8 +365,11 @@ async function loadAll(){
   }catch(e){
     setStatus('err');
     var msg=e.message||'알 수 없는 오류';
-    toast('⚠️ 연결 오류: '+msg,6000);
-    console.error('loadAll error:',e);
+    if(mc) mc.innerHTML+='<div style="padding:20px;background:#ffeaea;margin:10px;border-radius:8px;font-size:12px">'
+      +'<p style="color:#e05555;font-weight:700">❌ 연결 오류</p>'
+      +'<p style="margin-top:8px;word-break:break-all">'+msg+'</p>'
+      +'</div>';
+    toast('⚠️ '+msg,6000);
   }
 }
 function updateHdr(){
@@ -694,21 +708,27 @@ function renderCal(){
     var lunar=getLunar(ds);
     var dc=hol?'#e05555':isSun?'#e05555':isSat?'#1565a8':'#2a1208';
     var bg=isSel?'#fff3e0':isT?'#e8f5e9':'#fff';
-    var border=isT?'2px solid #2e7d5a':isSel?'2px solid #c8832a':'1px solid #e8d4b8';
+    var bdr=isT?'2px solid #2e7d5a':isSel?'2px solid #c8832a':'1px solid #e8d4b8';
     var todBadge=isT?'<span style="font-size:7px;background:#2e7d5a;color:#fff;border-radius:2px;padding:0 2px;margin-left:2px">'+sl('오늘','今日')+'</span>':'';
-    cells+='<div class="cal-cell" style="background:'+bg+';border:'+border+'" onclick="cSel(\''+ds+\')">'
+    var orderDots=orders.slice(0,2).map(function(o){
+      return '<div class="cal-dot" style="background:'+(SM[o.status]?SM[o.status].color:'#888')+'22;color:'+(SM[o.status]?SM[o.status].color:'#888')+'">'+o.customer_name+'</div>';
+    }).join('');
+    var moreTag=orders.length>2?'<div style="font-size:7px;color:#888">+'+(orders.length-2)+sl('건','件')+'</div>':'';
+    // data-ds属性でonclickを安全に実装
+    cells+='<div class="cal-cell" style="background:'+bg+';border:'+bdr+'" data-ds="'+ds+'" onclick="cSel(this.getAttribute('data-ds'))">'
       +'<div class="cal-date" style="color:'+dc+';font-weight:'+(isT?700:500)+'">'+d+todBadge+'</div>'
       +'<div class="lunar">'+sl('음','陰')+' '+lunar.m+'/'+lunar.d+'</div>'
       +(hol?'<div class="hol-tag">'+hol+'</div>':'')
       +(lun&&!hol?'<div class="lun-tag">'+lun+'</div>':'')
-      +orders.slice(0,2).map(function(o){return '<div class="cal-dot" style="background:'+(SM[o.status]?.color||'#888')+'22;color:'+(SM[o.status]?.color||'#888')+'">'+o.customer_name+'</div>';}).join('')
-      +(orders.length>2?'<div style="font-size:7px;color:#888">+'+(orders.length-2)+sl('건','件')+'</div>':'')
+      +orderDots+moreTag
       +'</div>';
   }
   var selO=calSel?byDate[calSel]||[]:[];
   var selDet=calSel&&selO.length
     ?'<div class="cal-detail"><div style="font-size:15px;font-weight:700;margin-bottom:14px">'+calSel+' '+sl('주문 목록','注文一覧')+'</div>'
-      +selO.map(function(o){return '<div class="cdrow">'+mn(o.id)+'<span>'+o.customer_name+'</span><span>'+(o.items||[]).map(function(it){return it.name+'\xd7'+it.qty;}).join(', ')+'</span>'+badge(o.status)+'<strong style="color:#c8832a">\u20a9'+o.total.toLocaleString()+'</strong><button class="print-b" onclick="printReceipt(\''+o.id+'\')">🖨</button></div>';}).join('')+'</div>'
+      +selO.map(function(o){
+        return '<div class="cdrow">'+mn(o.id)+'<span>'+o.customer_name+'</span><span>'+(o.items||[]).map(function(it){return it.name+'×'+it.qty;}).join(', ')+'</span>'+badge(o.status)+'<strong style="color:#c8832a">₩'+o.total.toLocaleString()+'</strong><button class="print-b" onclick="printReceipt(''+o.id+'')">🖨</button></div>';
+      }).join('')+'</div>'
     :'';
   var dheads=DAYS.map(function(d,i){return '<div class="cal-dh" style="color:'+(i===0?'#e05555':i===6?'#1565a8':'#666')+'">'+d+'</div>';}).join('');
   document.getElementById('mc').innerHTML=
@@ -719,7 +739,9 @@ function renderCal(){
     +'<div class="lgi"><div class="lgd" style="background:#2e7d5a"></div>'+sl('오늘','今日')+'</div>'
     +'</div>'
     +'<div class="cal-wrap">'
-    +'<div class="cal-hdr"><button class="cal-nav" onclick="calPrev()">‹</button><span class="cal-title">'+calY+sl('년 ','年')+MONTHS[calM]+'</span><button class="cal-nav" onclick="calNext()">›</button></div>'
+    +'<div class="cal-hdr"><button class="cal-nav" onclick="calPrev()">&#8249;</button>'
+    +'<span class="cal-title">'+calY+sl('년 ','年')+MONTHS[calM]+'</span>'
+    +'<button class="cal-nav" onclick="calNext()">&#8250;</button></div>'
     +'<div class="cal-grid">'+dheads+cells+'</div>'
     +selDet+'</div>';
 }
