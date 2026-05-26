@@ -1,994 +1,818 @@
 <!DOCTYPE html>
-<html lang="ko" id="hr">
+<html lang="ja">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>해울떡 관리 시스템</title>
-<!-- fonts removed for debug -->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AI株価予測 | 米国株・ETFアナライザー</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:sans-serif;background:#fdf6ed;color:#2a1208;min-height:100vh}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#0a0e1a;color:#e2e8f0;min-height:100vh}
 button{font-family:inherit;cursor:pointer}
-input,select,textarea{font-family:inherit}
-@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-header{background:linear-gradient(135deg,#2a1208,#6b2f0a,#8b4c12);color:#fff;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
-.logo{display:flex;align-items:center;gap:12px}
-.logo-icon{font-size:34px}
-.logo-ko{font-size:18px;font-weight:700}
-.logo-en{font-size:9px;opacity:.5;letter-spacing:.2em}
-.hdr-r{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
-.kpi-row{display:flex;gap:8px;flex-wrap:wrap}
-.kchip{background:rgba(255,255,255,.12);border-radius:8px;padding:5px 12px;text-align:center}
-.kchip .v{font-size:14px;font-weight:700}
-.kchip .l{font-size:9px;opacity:.6}
-.hdr-bot{display:flex;align-items:center;gap:8px}
-.sdot{width:7px;height:7px;border-radius:50%;background:#2e7d5a;flex-shrink:0}
-.sdot.saving{background:#c8832a;animation:pulse 1s infinite}
-.stxt{font-size:10px;opacity:.7}
-.lbtn{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:20px;padding:4px 12px;font-size:11px;font-weight:600}
-nav{background:#fff;border-bottom:2px solid #e8d4b8;display:flex;overflow-x:auto;padding:0 12px;position:sticky;top:0;z-index:100;box-shadow:0 2px 6px rgba(0,0,0,.06)}
-nav button{padding:12px 14px;border:none;background:none;cursor:pointer;display:flex;align-items:center;gap:4px;font-size:13px;color:#7a4a20;font-weight:500;white-space:nowrap;border-bottom:3px solid transparent;transition:all .2s}
-nav button:hover{background:#f5ede2}
-nav button.active{color:#8b2500;border-bottom-color:#c8832a;background:#fff8ef}
-main{max-width:1300px;margin:0 auto;padding:20px 16px}
-.card{background:#fff;border-radius:14px;padding:18px;box-shadow:0 2px 10px rgba(0,0,0,.06);margin-bottom:16px}
-.sec-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:8px}
-h2{font-size:20px;font-weight:700;color:#2a1208}
-.add-btn{padding:9px 18px;background:linear-gradient(135deg,#8b2500,#c8832a);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;box-shadow:0 2px 8px rgba(200,131,42,.35)}
-.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:18px}
-.kcard{background:#fff;border-radius:14px;padding:18px;box-shadow:0 2px 10px rgba(0,0,0,.06);border-top:3px solid}
-.kcard .icon{font-size:26px;margin-bottom:7px}
-.kcard .val{font-size:20px;font-weight:700}
-.kcard .ttl{font-size:12px;color:#888;margin-top:3px}
-.toolbar{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:center}
-.swrap{position:relative;flex:1;min-width:180px}
-.swrap input{width:100%;padding:9px 34px 9px 13px;border:1px solid #e8d4b8;border-radius:10px;font-size:13px;background:#fff;outline:none}
-.swrap input:focus{border-color:#c8832a}
-.sclear{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:#aaa;font-size:16px;cursor:pointer}
-select.sel{padding:9px 13px;border:1px solid #e8d4b8;border-radius:10px;font-size:13px;background:#fff}
-select.sel-sm{padding:5px 9px;border:1px solid #e8d4b8;border-radius:8px;font-size:12px;background:#fff}
-table{width:100%;border-collapse:collapse;font-size:12px}
-th{padding:8px 10px;text-align:left;font-size:11px;color:#888;font-weight:700;border-bottom:2px solid #e8d4b8;background:#f5ede2}
-tr.tr{border-bottom:1px solid #f5ede2}
-tr.tr:hover{background:#fffbf6}
-td{padding:9px 10px;vertical-align:middle}
-.badge{padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700;display:inline-block}
-.mn{background:#f5ede2;padding:2px 6px;border-radius:4px;font-size:10px;font-family:monospace;color:#8b4c12}
-.unpaid-b{background:#ffeaea;color:#e05555;border:1px solid rgba(224,85,85,.3);padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700}
-.del-b{background:#fff0f0;color:#e05555;border:1px solid #ffd0d0;border-radius:7px;font-size:11px;font-weight:600;padding:5px 10px}
-.edit-b{background:#f5ede2;color:#6b2f0a;border:1px solid #e8d4b8;border-radius:7px;font-size:11px;font-weight:600;padding:5px 10px}
-.pay-b{background:#2e7d5a;color:#fff;border:none;border-radius:7px;font-size:11px;font-weight:700;padding:5px 10px}
-.print-b{background:#e3f2fd;color:#1565a8;border:1px solid #bbdefb;border-radius:7px;font-size:11px;font-weight:600;padding:5px 10px}
-.sms-b{display:inline-flex;align-items:center;gap:3px;padding:3px 8px;background:#fee500;color:#3a1d1d;border:none;border-radius:6px;font-size:10px;font-weight:700;cursor:pointer}
-.map-b{display:inline-flex;align-items:center;gap:3px;padding:3px 8px;background:#03c75a;color:#fff;border:none;border-radius:6px;font-size:10px;font-weight:700;cursor:pointer;text-decoration:none}
-.ocard{background:#fff;border-radius:12px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.06);border-left:4px solid;margin-bottom:10px}
-.otop{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;flex-wrap:wrap;gap:5px}
-.oname{font-size:16px;font-weight:700;color:#2a1208;margin-bottom:7px}
-.itags{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:7px}
-.itag{background:#fff3e0;color:#8b4c12;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600}
-.onote{font-size:11px;color:#aaa;background:#f5ede2;padding:4px 8px;border-radius:5px;margin-bottom:7px}
-.obot{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px}
-.cust-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:14px}
-.ccard{background:#fff;border-radius:14px;padding:16px;box-shadow:0 2px 10px rgba(0,0,0,.06);display:flex;gap:12px}
-.avatar{width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#c8832a,#8b2500);color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;flex-shrink:0}
-.cname{font-size:15px;font-weight:700;color:#2a1208;margin-bottom:3px}
-.cdet{font-size:11px;color:#777;margin-bottom:2px}
-.cnote{font-size:10px;color:#c8832a;background:#fff8ef;padding:2px 7px;border-radius:4px;margin-top:3px;display:inline-block}
-.cstats{display:flex;gap:12px;margin-top:7px;font-size:11px;color:#aaa}
-.exp-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
-.ecard{background:#fff;border-radius:12px;padding:14px;box-shadow:0 2px 8px rgba(0,0,0,.06);position:relative}
-.ecat{font-size:9px;color:#c8832a;font-weight:700;background:#fff8ef;display:inline-block;padding:2px 7px;border-radius:4px;margin-bottom:5px}
-.eitem{font-size:14px;font-weight:700;color:#2a1208;margin-bottom:3px}
-.eamt{font-size:18px;font-weight:700;color:#e05555}
-.delx{position:absolute;top:9px;right:9px;background:none;border:none;color:#ddd;cursor:pointer;font-size:13px}
-.urow{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid #f5ede2;flex-wrap:wrap;gap:6px;font-size:12px}
-.cal-wrap{background:#fff;border-radius:14px;padding:18px;box-shadow:0 2px 10px rgba(0,0,0,.06)}
-.cal-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
-.cal-title{font-size:18px;font-weight:700;color:#2a1208}
-.cal-nav{background:none;border:1px solid #e8d4b8;border-radius:7px;padding:5px 12px;font-size:16px;cursor:pointer;color:#6b2f0a}
-.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
-.cal-dh{text-align:center;font-size:11px;font-weight:700;padding:6px 0;background:#f5ede2;border-radius:5px}
-.cal-empty{min-height:80px;background:#f5ede2;border-radius:7px;opacity:.3}
-.cal-cell{min-height:80px;border-radius:7px;padding:5px;overflow:hidden;cursor:pointer;transition:border .15s;border:1px solid #e8d4b8}
-.cal-cell:hover{border-color:#c8832a}
-.cal-date{font-size:12px;font-weight:500;margin-bottom:1px}
-.lunar{font-size:8px;color:#ccc;margin-bottom:2px}
-.hol-tag{font-size:7px;background:#ffeaea;color:#e05555;border-radius:2px;padding:1px 3px;margin-bottom:2px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.lun-tag{font-size:7px;background:#f3e5f5;color:#7b1fa2;border-radius:2px;padding:1px 3px;margin-bottom:2px;font-weight:600}
-.cal-dot{font-size:8px;padding:2px 3px;border-radius:3px;margin-bottom:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
-.cal-detail{margin-top:14px;padding:14px;background:#f5ede2;border-radius:10px}
-.cdrow{display:flex;gap:10px;align-items:center;padding:7px 0;border-bottom:1px solid #e8d4b8;flex-wrap:wrap;font-size:12px}
-.lgrow{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap}
-.lgi{display:flex;align-items:center;gap:4px;font-size:11px;color:#888}
-.lgd{width:10px;height:10px;border-radius:3px}
-.bar-row{display:flex;align-items:center;gap:7px;margin-bottom:7px}
-.dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
-.blbl{font-size:11px;color:#888;width:62px;flex-shrink:0}
-.bcnt{font-size:11px;font-weight:700;width:54px;flex-shrink:0}
-.btrack{flex:1;height:5px;background:#f0e4d0;border-radius:3px;overflow:hidden}
-.bfill{height:100%;border-radius:3px;transition:width .6s}
-.dash-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-bottom:14px}
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:9999;padding:14px;backdrop-filter:blur(2px)}
-.modal{background:#fff;border-radius:16px;padding:24px;width:100%;max-width:500px;max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2);animation:fadeIn .3s}
-.mhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
-.mtitle{font-size:17px;font-weight:700;color:#2a1208}
-.xbtn{background:none;border:none;font-size:18px;cursor:pointer;color:#bbb}
-.fcol{display:flex;flex-direction:column;gap:12px}
-.lbl{display:block;font-size:11px;font-weight:700;color:#8b4c12;margin-bottom:3px}
-.inp{width:100%;padding:9px 13px;border:1px solid #e8d4b8;border-radius:9px;font-size:13px;background:#fdf8f4;outline:none}
-.inp:focus{border-color:#c8832a}
-.mact{display:flex;gap:8px;justify-content:flex-end;margin-top:18px}
-.canbtn{padding:9px 20px;background:#f5ede2;color:#888;border:none;border-radius:9px;font-size:13px;font-weight:600}
-.savbtn{padding:9px 20px;background:linear-gradient(135deg,#8b2500,#c8832a);color:#fff;border:none;border-radius:9px;font-size:13px;font-weight:700}
-.toast{position:fixed;bottom:24px;right:24px;background:#2a1208;color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:600;z-index:99999;box-shadow:0 4px 20px rgba(0,0,0,.3);animation:fadeIn .3s}
-.notif-card{background:linear-gradient(135deg,#fff8ef,#fff3e0);border:1px solid #f0ddc8;border-radius:12px;padding:16px;margin-bottom:12px}
-.ntitle{font-weight:700;font-size:14px;color:#2a1208;margin-bottom:4px}
-.ndesc{font-size:12px;color:#888;margin-bottom:10px;line-height:1.6}
-.bank-box{background:#fff8ef;border:1px solid #f0ddc8;border-radius:8px;padding:10px 14px;font-size:12px;line-height:1.8;color:#2a1208;margin-top:8px}
-.dbadge{display:inline-flex;align-items:center;gap:3px;background:#e3f2fd;color:#1565a8;border:1px solid #90caf9;padding:2px 9px;border-radius:20px;font-size:10px;font-weight:700}
-.pbadge{display:inline-flex;align-items:center;gap:3px;background:#e8f5e9;color:#2e7d5a;border:1px solid #a5d6a7;padding:2px 9px;border-radius:20px;font-size:10px;font-weight:700}
-.sug-box{position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #e8d4b8;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.12);z-index:999;max-height:180px;overflow-y:auto;display:none}
-.sug-item{padding:10px 14px;cursor:pointer;border-bottom:1px solid #f5ede2;font-size:13px}
-.sug-item:hover{background:#fff8ef}
-.file-area{border:1px dashed #e8d4b8;border-radius:9px;background:#fdf8f4;padding:8px}
-@media(max-width:600px){
-  header{padding:12px 14px}.logo-ko{font-size:15px}
-  nav button{padding:11px 11px;font-size:12px}
-  .kpi-grid{grid-template-columns:repeat(2,1fr)}
-  .cal-cell{min-height:60px;padding:3px}.cal-date{font-size:10px}
-}
+input{font-family:inherit}
+
+/* HEADER */
+header{background:linear-gradient(135deg,#0d1630,#1a2744);border-bottom:1px solid #1e2d4a;padding:16px 20px;position:sticky;top:0;z-index:200;box-shadow:0 4px 20px rgba(0,0,0,.4)}
+.header-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.logo{display:flex;align-items:center;gap:10px;flex-shrink:0;text-decoration:none;cursor:pointer}
+.logo-icon{font-size:28px}
+.logo-title{font-size:16px;font-weight:800;background:linear-gradient(135deg,#60a5fa,#818cf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.logo-sub{font-size:10px;color:#475569;letter-spacing:.06em;margin-top:1px}
+.search-wrap{flex:1;min-width:260px;position:relative}
+.search-box{display:flex;align-items:center;background:#12192c;border:1.5px solid #1e2d4a;border-radius:12px;padding:0 8px 0 14px;transition:border-color .2s;gap:6px}
+.search-box:focus-within{border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.1)}
+.search-icon{font-size:15px;opacity:.5;flex-shrink:0}
+.search-box input{flex:1;background:none;border:none;outline:none;color:#e2e8f0;font-size:14px;padding:11px 0;min-width:0}
+.search-box input::placeholder{color:#475569}
+#searchBtn{background:linear-gradient(135deg,#3b82f6,#6366f1);color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:700;transition:opacity .2s;white-space:nowrap;flex-shrink:0}
+#searchBtn:hover{opacity:.85}
+
+/* AUTOCOMPLETE */
+.autocomplete{position:absolute;top:calc(100% + 6px);left:0;right:0;background:#12192c;border:1.5px solid #1e2d4a;border-radius:12px;max-height:320px;overflow-y:auto;display:none;z-index:400;box-shadow:0 12px 32px rgba(0,0,0,.5)}
+.autocomplete.show{display:block}
+.ac-item{display:flex;align-items:center;gap:10px;padding:11px 16px;cursor:pointer;transition:background .12s;border-bottom:1px solid #0d1630}
+.ac-item:last-child{border-bottom:none}
+.ac-item:hover{background:#1a2744}
+.ac-ticker{font-weight:800;font-size:14px;color:#60a5fa;min-width:62px}
+.ac-name{font-size:12px;color:#94a3b8;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;flex:1}
+.ac-type{font-size:11px;padding:2px 8px;border-radius:4px;flex-shrink:0}
+.ac-type.stock{background:#0d2540;color:#60a5fa}
+.ac-type.etf{background:#1a0d40;color:#a78bfa}
+
+/* MAIN */
+main{max-width:1200px;margin:0 auto;padding:24px 16px 60px}
+
+/* HOME HERO */
+.home-hero{text-align:center;padding:52px 20px 36px}
+.home-hero h1{font-size:clamp(22px,4vw,38px);font-weight:900;background:linear-gradient(135deg,#60a5fa,#818cf8,#c084fc);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:12px;line-height:1.2}
+.home-hero p{font-size:15px;color:#64748b;max-width:520px;margin:0 auto 10px;line-height:1.7}
+
+/* POPULAR */
+.section-label{font-size:11px;font-weight:700;color:#475569;letter-spacing:.1em;text-transform:uppercase;margin-bottom:14px;padding-left:2px}
+.popular-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-bottom:28px}
+.pop-card{background:#12192c;border:1.5px solid #1e2d4a;border-radius:12px;padding:14px 12px;cursor:pointer;transition:all .2s;text-align:center}
+.pop-card:hover{border-color:#3b82f6;transform:translateY(-2px);box-shadow:0 6px 20px rgba(59,130,246,.18)}
+.pop-ticker{font-weight:800;font-size:15px;color:#e2e8f0;margin-bottom:3px}
+.pop-name{font-size:10px;color:#64748b;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;margin-bottom:6px}
+.pop-type{font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;display:inline-block}
+.pop-type.stock{background:#0d2540;color:#60a5fa}
+.pop-type.etf{background:#1a0d40;color:#a78bfa}
+
+/* HOW-TO */
+.howto-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:24px}
+.howto-card{background:#12192c;border:1.5px solid #1e2d4a;border-radius:14px;padding:22px;text-align:center}
+.howto-icon{font-size:30px;margin-bottom:10px}
+.howto-title{font-weight:700;font-size:14px;color:#e2e8f0;margin-bottom:5px}
+.howto-desc{font-size:12px;color:#64748b;line-height:1.6}
+
+/* LOADING */
+.loading-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:400px;gap:16px}
+.spinner{width:52px;height:52px;border:3px solid #1e2d4a;border-top-color:#3b82f6;border-radius:50%;animation:spin .75s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{color:#64748b;font-size:14px}
+.loading-sym{font-weight:700;color:#60a5fa}
+
+/* BACK BTN */
+.back-btn{display:inline-flex;align-items:center;gap:6px;background:none;border:1.5px solid #1e2d4a;color:#94a3b8;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:500;transition:all .2s;margin-bottom:18px}
+.back-btn:hover{border-color:#3b82f6;color:#60a5fa;background:#0d1630}
+
+/* STOCK HEADER */
+.stock-header{background:#12192c;border:1.5px solid #1e2d4a;border-radius:16px;padding:22px 24px;margin-bottom:16px;display:flex;align-items:center;flex-wrap:wrap;gap:16px;justify-content:space-between}
+.stock-symbol{font-size:30px;font-weight:900;color:#e2e8f0;letter-spacing:.02em}
+.stock-name{font-size:14px;color:#64748b;margin-top:2px}
+.stock-badge{font-size:11px;background:#1e2d4a;color:#94a3b8;padding:3px 9px;border-radius:5px;display:inline-block;margin-top:7px;font-weight:600}
+.stock-price{font-size:34px;font-weight:900;text-align:right}
+.stock-change{font-size:15px;font-weight:700;margin-top:4px;text-align:right}
+.up{color:#10b981}
+.down{color:#ef4444}
+
+/* PREDICTION */
+.pred-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+@media(max-width:680px){.pred-row{grid-template-columns:1fr}}
+.pred-card{background:#12192c;border:1.5px solid #1e2d4a;border-radius:16px;padding:24px}
+.card-label{font-size:11px;font-weight:700;color:#475569;letter-spacing:.08em;text-transform:uppercase;margin-bottom:16px}
+.pred-inner{display:flex;flex-direction:column;align-items:center;gap:14px}
+.pred-badge{font-size:42px;font-weight:900;letter-spacing:.05em;padding:10px 36px;border-radius:16px}
+.pred-badge.buy{background:linear-gradient(135deg,#064e3b,#059669);color:#fff;box-shadow:0 6px 24px rgba(16,185,129,.3)}
+.pred-badge.sell{background:linear-gradient(135deg,#7f1d1d,#dc2626);color:#fff;box-shadow:0 6px 24px rgba(239,68,68,.3)}
+.pred-badge.hold{background:linear-gradient(135deg,#78350f,#d97706);color:#fff;box-shadow:0 6px 24px rgba(245,158,11,.3)}
+.pred-label{font-size:14px;font-weight:600;margin-top:-8px}
+.pred-label.buy{color:#34d399}
+.pred-label.sell{color:#f87171}
+.pred-label.hold{color:#fbbf24}
+.pred-conf{font-size:20px;font-weight:800;color:#e2e8f0}
+.pred-conf span{font-size:13px;font-weight:400;color:#64748b}
+.conf-bar{width:100%;background:#1e2d4a;border-radius:10px;height:10px;overflow:hidden}
+.conf-fill{height:100%;border-radius:10px;transition:width .7s cubic-bezier(.4,0,.2,1)}
+.conf-fill.buy{background:linear-gradient(90deg,#10b981,#34d399)}
+.conf-fill.sell{background:linear-gradient(90deg,#ef4444,#f87171)}
+.conf-fill.hold{background:linear-gradient(90deg,#f59e0b,#fbbf24)}
+.pred-desc{font-size:12px;color:#64748b;text-align:center;line-height:1.7;max-width:280px}
+
+/* SIGNALS */
+.signal-list{display:flex;flex-direction:column;gap:9px}
+.sig-row{display:flex;align-items:flex-start;gap:8px}
+.sig-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:3px}
+.sig-dot.bullish{background:#10b981}
+.sig-dot.bearish{background:#ef4444}
+.sig-dot.neutral{background:#64748b}
+.sig-txt{font-size:12px;line-height:1.5}
+.sig-txt.bullish{color:#34d399}
+.sig-txt.bearish{color:#f87171}
+.sig-txt.neutral{color:#94a3b8}
+
+/* CHART */
+.chart-card{background:#12192c;border:1.5px solid #1e2d4a;border-radius:16px;padding:20px;margin-bottom:16px}
+.chart-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px}
+.chart-title{font-size:14px;font-weight:700;color:#e2e8f0}
+.range-row{display:flex;gap:5px}
+.rbtn{background:none;border:1.5px solid #1e2d4a;color:#64748b;padding:5px 12px;border-radius:7px;font-size:12px;font-weight:700;transition:all .15s}
+.rbtn:hover{border-color:#3b82f6;color:#60a5fa}
+.rbtn.active{background:#3b82f6;border-color:#3b82f6;color:#fff}
+.chart-legend{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:12px}
+.leg{display:flex;align-items:center;gap:5px;font-size:11px;color:#64748b}
+.leg-line{width:18px;height:2px;border-radius:1px}
+.chart-wrap{position:relative;height:300px}
+
+/* TECHNICALS GRID */
+.tech-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:12px;margin-bottom:16px}
+.tech-card{background:#12192c;border:1.5px solid #1e2d4a;border-radius:12px;padding:16px}
+.tech-lbl{font-size:11px;color:#64748b;letter-spacing:.05em;margin-bottom:6px;font-weight:600}
+.tech-val{font-size:22px;font-weight:800;color:#e2e8f0}
+.tech-sub{font-size:11px;color:#64748b;margin-top:3px}
+.tbadge{display:inline-block;padding:3px 8px;border-radius:5px;font-size:11px;font-weight:700;margin-top:5px}
+.tbadge.bull{background:#064e3b;color:#10b981}
+.tbadge.bear{background:#7f1d1d;color:#ef4444}
+.tbadge.neu{background:#1e2d4a;color:#64748b}
+
+/* STATS GRID */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-bottom:16px}
+.stat-card{background:#12192c;border:1.5px solid #1e2d4a;border-radius:12px;padding:16px}
+.stat-lbl{font-size:11px;color:#64748b;margin-bottom:5px;font-weight:600;letter-spacing:.04em}
+.stat-val{font-size:17px;font-weight:800;color:#e2e8f0}
+
+/* ERROR */
+.error-wrap{text-align:center;padding:60px 20px}
+.err-icon{font-size:52px;margin-bottom:16px}
+.err-title{font-size:22px;font-weight:800;color:#ef4444;margin-bottom:8px}
+.err-msg{font-size:14px;color:#64748b;max-width:420px;margin:0 auto 28px;line-height:1.7}
+.retry-btn{background:linear-gradient(135deg,#3b82f6,#6366f1);color:#fff;border:none;border-radius:10px;padding:12px 30px;font-size:14px;font-weight:700}
+.retry-btn:hover{opacity:.85}
+
+/* DISCLAIMER */
+.disclaimer{padding:14px 16px;background:#0d1630;border:1.5px solid #1e2d4a;border-radius:10px;font-size:11px;color:#475569;line-height:1.7}
 </style>
 </head>
 <body>
-<div id="toast" style="display:none"></div>
-<header>
-  <div class="logo">
-    <div class="logo-icon">🍡</div>
-    <div>
-      <div class="logo-ko" id="logo-text">해울떡 관리 시스템</div>
-      <div class="logo-en">HAEWOOL TTEOK MANAGER</div>
+<div id="app">
+  <header>
+    <div class="header-inner">
+      <div class="logo" onclick="showHome()">
+        <span class="logo-icon">📈</span>
+        <div>
+          <div class="logo-title">AI株価予測</div>
+          <div class="logo-sub">米国株・ETFアナライザー</div>
+        </div>
+      </div>
+      <div class="search-wrap">
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="searchInput" placeholder="ティッカー・銘柄名 (例: AAPL, NVDA, SPY)" autocomplete="off" spellcheck="false">
+          <button id="searchBtn">分析する</button>
+        </div>
+        <div id="autocomplete" class="autocomplete"></div>
+      </div>
     </div>
-  </div>
-  <div class="hdr-r">
-    <div class="kpi-row">
-      <div class="kchip"><div class="v" id="h-rev" style="color:#f5c842">₩0</div><div class="l" id="h-rev-l">이번 달 매출</div></div>
-      <div class="kchip"><div class="v" id="h-exp" style="color:#e05555">₩0</div><div class="l" id="h-exp-l">이번 달 경비</div></div>
-      <div class="kchip"><div class="v" id="h-unp" style="color:#9c6fe4">0건</div><div class="l" id="h-unp-l">미결제</div></div>
-    </div>
-    <div class="hdr-bot">
-      <div class="sdot saving" id="sdot"></div>
-      <span class="stxt" id="stxt">연결 중...</span>
-      <button class="lbtn" onclick="toggleLang()">🌐 日本語</button>
-    </div>
-  </div>
-</header>
-<nav id="nav">
-  <button class="active" onclick="go('dashboard')">📊 <span class="nl" data-ko="대시보드" data-ja="ダッシュボード">대시보드</span></button>
-  <button onclick="go('orders')">📋 <span class="nl" data-ko="예약 주문" data-ja="予約注文">예약 주문</span></button>
-  <button onclick="go('calendar')">📅 <span class="nl" data-ko="주문 캘린더" data-ja="注文カレンダー">주문 캘린더</span></button>
-  <button onclick="go('customers')">👥 <span class="nl" data-ko="고객 관리" data-ja="顧客管理">고객 관리</span></button>
-  <button onclick="go('payments')">💳 <span class="nl" data-ko="결제 관리" data-ja="決済管理">결제 관리</span></button>
-  <button onclick="go('expenses')">🧾 <span class="nl" data-ko="경비 관리" data-ja="経費管理">경비 관리</span></button>
-  <button onclick="go('settings')">⚙️ <span class="nl" data-ko="설정" data-ja="設定">설정</span></button>
-</nav>
-<main id="mc"></main>
-<div class="overlay" id="ov" style="display:none" onclick="cm()">
-  <div class="modal" onclick="event.stopPropagation()">
-    <div class="mhead"><span class="mtitle" id="mt"></span><button class="xbtn" onclick="cm()">✕</button></div>
-    <div id="mb"></div>
-    <div class="mact" id="ma"></div>
-  </div>
+  </header>
+  <main id="main"></main>
 </div>
+
 <script>
-const SUPABASE_URL='https://adkfwhkneptmndzgrsfq.supabase.co';
-const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFka2Z3aGtuZXB0bW5kemdyc2ZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzMTA4MzAsImV4cCI6MjA5Mzg4NjgzMH0.sYmgBSGGVMWWxzNo6qa9f2eTM1tfNG1ULrrH3jyRhJA';
+// =========================================================
+// CONSTANTS
+// =========================================================
 
-async function sb(method,table,body,id,q){
-  const url=SUPABASE_URL+'/rest/v1/'+table+(id?'?id=eq.'+id:(q||''));
-  const h={
-    'apikey':SUPABASE_KEY,
-    'Authorization':'Bearer '+SUPABASE_KEY,
-    'Content-Type':'application/json',
-    'Accept':'application/json'
+const STOCKS = {
+  // Technology
+  'AAPL':  {name:'Apple Inc.',type:'株式'},
+  'MSFT':  {name:'Microsoft Corporation',type:'株式'},
+  'GOOGL': {name:'Alphabet Inc. (Google)',type:'株式'},
+  'AMZN':  {name:'Amazon.com Inc.',type:'株式'},
+  'NVDA':  {name:'NVIDIA Corporation',type:'株式'},
+  'META':  {name:'Meta Platforms Inc.',type:'株式'},
+  'TSLA':  {name:'Tesla Inc.',type:'株式'},
+  'NFLX':  {name:'Netflix Inc.',type:'株式'},
+  'AMD':   {name:'Advanced Micro Devices',type:'株式'},
+  'INTC':  {name:'Intel Corporation',type:'株式'},
+  'CRM':   {name:'Salesforce Inc.',type:'株式'},
+  'ORCL':  {name:'Oracle Corporation',type:'株式'},
+  'ADBE':  {name:'Adobe Inc.',type:'株式'},
+  'QCOM':  {name:'Qualcomm Inc.',type:'株式'},
+  // Finance
+  'JPM':   {name:'JPMorgan Chase & Co.',type:'株式'},
+  'BAC':   {name:'Bank of America',type:'株式'},
+  'GS':    {name:'Goldman Sachs',type:'株式'},
+  'MS':    {name:'Morgan Stanley',type:'株式'},
+  'V':     {name:'Visa Inc.',type:'株式'},
+  'MA':    {name:'Mastercard Inc.',type:'株式'},
+  // Healthcare
+  'JNJ':   {name:'Johnson & Johnson',type:'株式'},
+  'UNH':   {name:'UnitedHealth Group',type:'株式'},
+  'PFE':   {name:'Pfizer Inc.',type:'株式'},
+  'ABBV':  {name:'AbbVie Inc.',type:'株式'},
+  // Consumer
+  'WMT':   {name:'Walmart Inc.',type:'株式'},
+  'PG':    {name:'Procter & Gamble',type:'株式'},
+  'KO':    {name:'Coca-Cola Company',type:'株式'},
+  'HD':    {name:'Home Depot',type:'株式'},
+  'DIS':   {name:'Walt Disney Co.',type:'株式'},
+  'MCD':   {name:"McDonald's Corporation",type:'株式'},
+  'NKE':   {name:'Nike Inc.',type:'株式'},
+  // Energy
+  'XOM':   {name:'Exxon Mobil Corporation',type:'株式'},
+  'CVX':   {name:'Chevron Corporation',type:'株式'},
+  // ETFs
+  'SPY':   {name:'SPDR S&P 500 ETF',type:'ETF'},
+  'QQQ':   {name:'Invesco QQQ Trust (NASDAQ 100)',type:'ETF'},
+  'VOO':   {name:'Vanguard S&P 500 ETF',type:'ETF'},
+  'IVV':   {name:'iShares Core S&P 500 ETF',type:'ETF'},
+  'VTI':   {name:'Vanguard Total Stock Market ETF',type:'ETF'},
+  'VGT':   {name:'Vanguard Information Technology ETF',type:'ETF'},
+  'ARKK':  {name:'ARK Innovation ETF',type:'ETF'},
+  'GLD':   {name:'SPDR Gold Shares',type:'ETF'},
+  'TLT':   {name:'iShares 20+ Year Treasury Bond ETF',type:'ETF'},
+  'SOXX':  {name:'iShares Semiconductor ETF',type:'ETF'},
+  'XLK':   {name:'Technology Select Sector SPDR Fund',type:'ETF'},
+  'XLF':   {name:'Financial Select Sector SPDR Fund',type:'ETF'},
+  'SOXL':  {name:'Direxion Semiconductor Bull 3X ETF',type:'ETF'},
+  'TQQQ':  {name:'ProShares UltraPro QQQ (3x)',type:'ETF'},
+};
+
+const FEATURED = ['AAPL','NVDA','MSFT','TSLA','GOOGL','META','AMZN','AMD','SPY','QQQ','VOO','SOXX'];
+
+const RANGE_DAYS = {'1M':21,'3M':63,'6M':126,'1Y':252,'2Y':504,'5Y':1300};
+
+// =========================================================
+// STATE
+// =========================================================
+
+const state = {view:'home', symbol:null, data:null, prediction:null, range:'1Y', chart:null};
+
+// =========================================================
+// TECHNICAL ANALYSIS
+// =========================================================
+
+function sma(prices, p) {
+  const r = new Array(prices.length).fill(null);
+  for (let i = p-1; i < prices.length; i++) {
+    let s = 0; for (let j=i-p+1;j<=i;j++) s+=prices[j];
+    r[i] = s/p;
+  }
+  return r;
+}
+
+function ema(prices, p) {
+  const r = new Array(prices.length).fill(null);
+  const k = 2/(p+1);
+  let s=0; for(let i=0;i<p;i++) s+=prices[i];
+  r[p-1]=s/p;
+  for(let i=p;i<prices.length;i++) r[i]=prices[i]*k+r[i-1]*(1-k);
+  return r;
+}
+
+function rsi(prices, p=14) {
+  const r = new Array(prices.length).fill(null);
+  for(let i=p;i<prices.length;i++){
+    let g=0,l=0;
+    for(let j=i-p+1;j<=i;j++){
+      const d=prices[j]-prices[j-1];
+      if(d>0) g+=d; else l-=d;
+    }
+    const ag=g/p, al=l/p;
+    r[i] = al===0 ? 100 : 100-100/(1+ag/al);
+  }
+  return r;
+}
+
+function macd(prices) {
+  const e12=ema(prices,12), e26=ema(prices,26);
+  const ml=prices.map((_,i)=>e12[i]!=null&&e26[i]!=null?e12[i]-e26[i]:null);
+  const sl=new Array(prices.length).fill(null);
+  const vs=ml.findIndex(v=>v!=null);
+  if(vs>=0&&vs+9<=prices.length){
+    const k=2/10;
+    let prev=ml.slice(vs,vs+9).reduce((a,b)=>a+b,0)/9;
+    sl[vs+8]=prev;
+    for(let i=vs+9;i<prices.length;i++){
+      if(ml[i]!=null){prev=ml[i]*k+prev*(1-k);sl[i]=prev;}
+    }
+  }
+  const hl=prices.map((_,i)=>ml[i]!=null&&sl[i]!=null?ml[i]-sl[i]:null);
+  return {ml,sl,hl};
+}
+
+function bb(prices, p=20, m=2) {
+  const mid=sma(prices,p);
+  const u=new Array(prices.length).fill(null);
+  const l=new Array(prices.length).fill(null);
+  for(let i=p-1;i<prices.length;i++){
+    const sl=prices.slice(i-p+1,i+1);
+    const std=Math.sqrt(sl.reduce((s,v)=>s+Math.pow(v-mid[i],2),0)/p);
+    u[i]=mid[i]+m*std; l[i]=mid[i]-m*std;
+  }
+  return {u,mid,l};
+}
+
+function predict(data) {
+  const {closes, volumes} = data;
+  const n = closes.length;
+  if(n < 60) return {signal:'HOLD',confidence:50,score:50,signals:{},tech:{}};
+
+  const s20=sma(closes,20), s50=sma(closes,50);
+  const s200=n>=200?sma(closes,200):null;
+  const r14=rsi(closes,14);
+  const m=macd(closes);
+  const b=bb(closes,20);
+  const last=n-1;
+  const px=closes[last];
+  let score=0;
+  const signals={};
+
+  // --- SMA 20 ---
+  if(s20[last]!=null){
+    if(px>s20[last]){score+=1.5;signals.sma20={s:'bullish',t:`価格 > SMA20 ($${s20[last].toFixed(2)}) — 短期上昇トレンド`};}
+    else{score-=1.5;signals.sma20={s:'bearish',t:`価格 < SMA20 ($${s20[last].toFixed(2)}) — 短期下降トレンド`};}
+  }
+  // --- SMA 50 ---
+  if(s50[last]!=null){
+    if(px>s50[last]){score+=1.5;signals.sma50={s:'bullish',t:`価格 > SMA50 ($${s50[last].toFixed(2)}) — 中期上昇トレンド`};}
+    else{score-=1.5;signals.sma50={s:'bearish',t:`価格 < SMA50 ($${s50[last].toFixed(2)}) — 中期下降トレンド`};}
+  }
+  // --- SMA 200 ---
+  if(s200&&s200[last]!=null){
+    if(px>s200[last]){score+=2;signals.sma200={s:'bullish',t:`価格 > SMA200 ($${s200[last].toFixed(2)}) — 長期強気トレンド`};}
+    else{score-=2;signals.sma200={s:'bearish',t:`価格 < SMA200 ($${s200[last].toFixed(2)}) — 長期弱気トレンド`};}
+  }
+  // --- Golden/Death Cross ---
+  if(s20[last]!=null&&s50[last]!=null){
+    if(s20[last]>s50[last]){score+=1;signals.cross={s:'bullish',t:'ゴールデンクロス: SMA20 > SMA50 (上昇シグナル)'};}
+    else{score-=1;signals.cross={s:'bearish',t:'デスクロス: SMA20 < SMA50 (下降シグナル)'};}
+  }
+  // --- RSI ---
+  const rv=r14[last];
+  if(rv!=null){
+    if(rv<30){score+=2.5;signals.rsi={s:'bullish',t:`RSI ${rv.toFixed(1)} — 売られすぎ圏 (強い反発シグナル)`};}
+    else if(rv<40){score+=1;signals.rsi={s:'bullish',t:`RSI ${rv.toFixed(1)} — 弱気だが反発余地あり`};}
+    else if(rv>80){score-=3;signals.rsi={s:'bearish',t:`RSI ${rv.toFixed(1)} — 極度の買われすぎ (調整リスク大)`};}
+    else if(rv>70){score-=2;signals.rsi={s:'bearish',t:`RSI ${rv.toFixed(1)} — 買われすぎ圏 (調整に注意)`};}
+    else if(rv>=55){score+=1;signals.rsi={s:'bullish',t:`RSI ${rv.toFixed(1)} — 強気ゾーン (モメンタム良好)`};}
+    else{signals.rsi={s:'neutral',t:`RSI ${rv.toFixed(1)} — 中立ゾーン`};}
+  }
+  // --- MACD ---
+  const mv=m.ml[last],msv=m.sl[last],mhv=m.hl[last];
+  if(mv!=null&&msv!=null){
+    if(mv>msv){score+=1.5;signals.macd={s:'bullish',t:`MACD(${mv.toFixed(2)}) > シグナル(${msv.toFixed(2)}) — 上昇モメンタム`};}
+    else{score-=1.5;signals.macd={s:'bearish',t:`MACD(${mv.toFixed(2)}) < シグナル(${msv.toFixed(2)}) — 下降モメンタム`};}
+    if(mhv!=null&&last>0){
+      const ph=m.hl[last-1];
+      if(ph!=null){
+        if(mhv>ph&&mhv>0){score+=0.5;signals.macdTrend={s:'bullish',t:'MACDヒストグラム拡大 (上昇加速中)'};}
+        else if(mhv<ph&&mhv<0){score-=0.5;signals.macdTrend={s:'bearish',t:'MACDヒストグラム拡大 (下降加速中)'};}
+      }
+    }
+  }
+  // --- Bollinger Bands ---
+  if(b.u[last]!=null&&b.l[last]!=null){
+    const range=b.u[last]-b.l[last];
+    const pos=range>0?(px-b.l[last])/range:0.5;
+    if(pos>1.05){score-=2;signals.bb={s:'bearish',t:`バンド上抜け — 過熱感 (短期調整リスク高)`};}
+    else if(pos<-0.05){score+=2;signals.bb={s:'bullish',t:`バンド下抜け — 売られすぎ (反発期待高)`};}
+    else if(pos>=0.8){score+=0.5;signals.bb={s:'bullish',t:`バンド上部 ${Math.round(pos*100)}% — 強い上昇力`};}
+    else if(pos<=0.2){score-=0.5;signals.bb={s:'bearish',t:`バンド下部 ${Math.round(pos*100)}% — 弱含み`};}
+    else{signals.bb={s:'neutral',t:`バンド中央付近 ${Math.round(pos*100)}% — 中立`};}
+  }
+  // --- Volume ---
+  if(volumes&&volumes.length>=10){
+    const rv5=volumes.slice(-5).reduce((a,b)=>a+b,0)/5;
+    const pv5=volumes.slice(-10,-5).reduce((a,b)=>a+b,0)/5;
+    if(rv5>pv5*1.2){score+=0.8;signals.vol={s:'bullish',t:`出来高急増 (直近${(rv5/1e6).toFixed(1)}M vs 前${(pv5/1e6).toFixed(1)}M) — 強い関心`};}
+    else if(rv5<pv5*0.8){score-=0.5;signals.vol={s:'bearish',t:'出来高急減 — 買い勢力の後退'};}
+    else{signals.vol={s:'neutral',t:'出来高は平常レベル'};}
+  }
+  // --- 5-day Momentum ---
+  if(n>5){
+    const mom5=((closes[last]-closes[last-5])/closes[last-5])*100;
+    if(mom5>5){score+=1;signals.mom={s:'bullish',t:`5日騰落率 +${mom5.toFixed(1)}% — 強いモメンタム`};}
+    else if(mom5<-5){score-=1;signals.mom={s:'bearish',t:`5日騰落率 ${mom5.toFixed(1)}% — 強い下落`};}
+  }
+  // --- 20-day Price Trend ---
+  if(n>20&&s20[last]!=null&&s20[last-10]!=null){
+    const smaSlope=(s20[last]-s20[last-10])/s20[last-10]*100;
+    if(smaSlope>1){score+=0.5;signals.trend={s:'bullish',t:`SMA20上向き (+${smaSlope.toFixed(1)}%) — 上昇トレンド継続`};}
+    else if(smaSlope<-1){score-=0.5;signals.trend={s:'bearish',t:`SMA20下向き (${smaSlope.toFixed(1)}%) — 下降トレンド継続`};}
+  }
+
+  // Normalize [-12, +12] → [0, 100]
+  const norm=Math.max(0,Math.min(100,(score+12)/24*100));
+  let signal,confidence;
+  if(norm>=62){
+    signal='BUY';
+    confidence=Math.min(92,Math.round(55+(norm-62)*1.4));
+  } else if(norm<=38){
+    signal='SELL';
+    confidence=Math.min(92,Math.round(55+(38-norm)*1.4));
+  } else {
+    signal='HOLD';
+    confidence=Math.round(48+Math.abs(norm-50)*0.6);
+  }
+
+  return {
+    signal, confidence,
+    score:norm, rawScore:score,
+    signals,
+    tech:{
+      sma20:s20[last], sma50:s50[last],
+      sma200:s200?s200[last]:null,
+      rsi:rv, macd:mv, macdSig:msv,
+      bbU:b.u[last], bbMid:b.mid[last], bbL:b.l[last],
+    },
+    chartArrays:{s20,s50,s200,bbU:b.u,bbL:b.l}
   };
-  if(method==='POST')h['Prefer']='return=representation';
-  if(method==='PATCH')h['Prefer']='return=minimal';
-  const r=await fetch(url,{method:method,headers:h,body:body?JSON.stringify(body):null});
-  if(!r.ok){
-    const errText=await r.text();
-    throw new Error(errText);
+}
+
+// =========================================================
+// DATA FETCHING
+// =========================================================
+
+async function fetchData(symbol) {
+  const base = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=5y&includePrePost=false`;
+  const proxies = [
+    `https://corsproxy.io/?${encodeURIComponent(base)}`,
+    `https://api.allorigins.win/raw?url=${encodeURIComponent(base)}`,
+    base,
+  ];
+
+  let lastErr;
+  for(const url of proxies){
+    try{
+      const ac=new AbortController();
+      const tid=setTimeout(()=>ac.abort(),14000);
+      const res=await fetch(url,{signal:ac.signal,headers:{'Accept':'application/json'}});
+      clearTimeout(tid);
+      if(!res.ok) continue;
+      const json=await res.json();
+      if(!json?.chart?.result?.[0]) throw new Error(json?.chart?.error?.description||'銘柄データが見つかりません');
+      return parseYahoo(json,symbol);
+    } catch(e){ lastErr=e; }
   }
-  const t=await r.text();
-  return t?JSON.parse(t):[];
-}
-const api={
-  get:(t,q)=>sb('GET',t,null,null,q||''),
-  post:(t,b)=>sb('POST',t,b),
-  patch:(t,id,b)=>sb('PATCH',t,b,id),
-  del:(t,id)=>sb('DELETE',t,null,id)
-};
-
-let DB={orders:[],customers:[],payments:[],expenses:[]};
-let LANG=localStorage.getItem('hw_lang')||'ko';
-let TAB='dashboard';
-let calY=new Date().getFullYear(),calM=new Date().getMonth(),calSel=null;
-let tmpItems=[],kakaoWH=localStorage.getItem('hw_kakao')||'';
-
-const SM={
-  pending:  {ko:'접수중',  ja:'受付中',  color:'#c8832a',bg:'#fff3e0'},
-  confirmed:{ko:'확인완료',ja:'確認済',  color:'#2e7d5a',bg:'#e8f5e9'},
-  preparing:{ko:'제조중',  ja:'製造中',  color:'#1565a8',bg:'#e3f2fd'},
-  ready:    {ko:'수령가능',ja:'受取可',  color:'#7b1fa2',bg:'#f3e5f5'},
-  done:     {ko:'완료',    ja:'完了',    color:'#666',   bg:'#f5f5f5'}
-};
-const KR_HOLIDAYS={
-  '2026-01-01':'신정','2026-01-28':'설날 연휴','2026-01-29':'설날','2026-01-30':'설날 연휴',
-  '2026-03-01':'삼일절','2026-05-05':'어린이날','2026-05-15':'부처님 오신 날',
-  '2026-06-06':'현충일','2026-08-15':'광복절','2026-09-24':'추석 연휴',
-  '2026-09-25':'추석','2026-09-26':'추석 연휴','2026-10-03':'개천절',
-  '2026-10-09':'한글날','2026-12-25':'크리스마스'
-};
-const LUNAR_FEST={
-  '2026-01-29':'정월 초하루','2026-02-17':'정월 대보름',
-  '2026-05-15':'사월 초파일','2026-09-25':'추석 (음8/15)'
-};
-function PRODS(){return['백설기','시루떡','무지개떡','콩설기','인절미','가래떡','절편','송편 (계절한정)','떡케이크','약식','호박인절미','호박콩설기','흑임자인절미','꿀떡','모듬찰떡','팥시루떡','완두배기 찰시루','콩깨편','두텁떡'];}
-function ECATS(){return['원재료','포장재','공과금','인건비','설비','기타'];}
-function METHS(){return['현금','카드','카카오페이','토스','계좌이체','입금','기타'];}
-function sl(ko,ja){return LANG==='ko'?ko:ja;}
-function slS(s){return SM[s]?SM[s][LANG]:s;}
-function getBankInfo(){try{return JSON.parse(localStorage.getItem('hw_bank'))||{};}catch{return {};}}
-
-// ── HELPERS ──
-function toast(msg,dur){
-  const el=document.getElementById('toast');
-  el.textContent=msg;el.style.display='block';
-  clearTimeout(el._t);el._t=setTimeout(()=>el.style.display='none',dur||2500);
-}
-function setStatus(s){
-  const dot=document.getElementById('sdot'),txt=document.getElementById('stxt');
-  if(s==='conn'){dot.className='sdot saving';txt.textContent=sl('연결 중...','接続中...');}
-  else if(s==='ok'){dot.className='sdot';dot.style.background='#2e7d5a';txt.textContent=sl('클라우드 연결됨','クラウド接続済');}
-  else if(s==='sav'){dot.className='sdot saving';txt.textContent=sl('저장 중...','保存中...');}
-  else if(s==='saved'){dot.className='sdot';dot.style.background='#2e7d5a';txt.textContent=sl('저장됨','保存済');}
-  else{dot.className='sdot';dot.style.background='#e05555';txt.textContent='오류';}
-}
-function badge(status){
-  const s=SM[status]||{ko:status,ja:status,color:'#888',bg:'#eee'};
-  return '<span class="badge" style="background:'+s.bg+';color:'+s.color+';border:1px solid '+s.color+'44">'+slS(status)+'</span>';
-}
-function mn(t){return '<code class="mn">'+t+'</code>';}
-function nid(){return (Date.now().toString(36)+Math.random().toString(36).slice(2,5)).toUpperCase();}
-function fmtDT(dt){
-  if(!dt)return '-';
-  const d=new Date(dt);if(isNaN(d))return dt;
-  const days=['일','월','화','수','목','금','토'];
-  const p=n=>String(n).padStart(2,'0');
-  return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+' ('+days[d.getDay()]+') '+p(d.getHours())+':'+p(d.getMinutes());
-}
-function getLunar(ds){
-  const d=new Date(ds),ep=new Date(1900,0,31).getTime();
-  const days=Math.floor((d.getTime()-ep)/86400000),cy=29.53059;
-  return {m:Math.floor((days/cy)%12)+1,d:Math.floor(((days/cy)%1)*cy)+1};
-}
-function kpiCard(icon,title,val,sub,color){
-  return '<div class="kcard" style="border-top:3px solid '+color+'">'
-    +'<div class="icon">'+icon+'</div>'
-    +'<div class="val" style="color:'+color+'">'+val+'</div>'
-    +'<div class="ttl">'+title+'</div>'
-    +'<div style="font-size:10px;color:#bbb;margin-top:2px">'+sub+'</div>'
-    +'</div>';
-}
-function filesHTML(urls){
-  if(!urls||!urls.length)return '';
-  return '<div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:5px">'
-    +urls.map(function(u){
-      var ext=(u.split('.').pop()||'').toLowerCase();
-      var icon=['jpg','jpeg','png','gif','webp','heic'].indexOf(ext)>=0?'🖼':ext==='pdf'?'📄':'📎';
-      var name=decodeURIComponent(u.split('/').pop()).slice(14)||'파일';
-      return '<a href="'+u+'" target="_blank" style="display:inline-flex;align-items:center;gap:3px;padding:3px 8px;background:#f5ede2;border-radius:6px;font-size:11px;color:#333;text-decoration:none">'+icon+' '+name+'</a>';
-    }).join('')
-    +'</div>';
-}
-async function uploadFile(file){
-  var ext=file.name.split('.').pop();
-  var path='orders/'+Date.now()+'-'+Math.random().toString(36).slice(2)+'.'+ext;
-  var r=await fetch(SUPABASE_URL+'/storage/v1/object/order-files/'+path,{
-    method:'POST',
-    headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':file.type},
-    body:file
-  });
-  if(!r.ok)throw new Error(await r.text());
-  return SUPABASE_URL+'/storage/v1/object/public/order-files/'+path;
-}
-function openNaverMap(addr){
-  if(!addr){toast(sl('주소가 없습니다','住所がありません'));return;}
-  window.open('https://map.naver.com/v5/search/'+encodeURIComponent(addr),'_blank');
-}
-function openSMS(phone,msg){
-  if(!phone){toast(sl('전화번호가 없습니다','電話番号がありません'));return;}
-  var clean=phone.replace(/[^0-9]/g,'');
-  window.open('sms:'+clean+(msg?'?body='+encodeURIComponent(msg):''),'_blank');
-}
-function buildNyumMsg(order){
-  var b=getBankInfo();
-  var d=new Date(order.pickup);
-  var days=['일','월','화','수','목','금','토'];
-  var dateStr=(order.pickup||'').slice(0,10)+' ('+days[d.getDay()]+')';
-  var bankLine=b.bank?'\n🏦 '+b.bank+' '+b.account+' ('+b.holder+')':'';
-  var items=(order.items||[]).map(function(it){return it.name+' ×'+it.qty+sl('개','個');}).join('\n');
-  return sl('안녕하세요! 해울떡입니다 🍡\n\n주문해 주셔서 감사합니다.\n\n[주문 내역]\n','いつもありがとうございます 🍡\n\nご注文ありがとうございます。\n\n[ご注文内容]\n')
-    +items+'\n'+sl('합계','合計')+': ₩'+order.total.toLocaleString()
-    +'\n\n'+sl('수령일','受取日')+': '+dateStr
-    +bankLine
-    +'\n\n'+sl('수령일까지 입금 부탁드립니다.\n감사합니다 🙏','受取日までにお振込をお願いいたします。\nよろしくお願いいたします 🙏');
-}
-function openSMSOrder(orderId){
-  var o=DB.orders.find(function(x){return x.id===orderId;});if(!o)return;
-  var cust=DB.customers.find(function(c){return c.name===o.customer_name;});
-  var phone=cust?cust.phone:'';
-  var msg=(!o.paid)?buildNyumMsg(o):(sl('안녕하세요! 해울떡입니다 🍡\n\n','いつもありがとうございます 🍡\n\n')+sl('주문 확인 감사합니다.\n','ご注文確認ありがとうございます。\n')+(o.items||[]).map(function(it){return it.name+' ×'+it.qty;}).join(', ')+'\n'+sl('합계','合計')+': ₩'+o.total.toLocaleString());
-  openSMS(phone,msg);
-}
-async function sendKakao(msg){
-  if(!kakaoWH)return;
-  try{await fetch(kakaoWH,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:'🍡 해울떡\n'+msg})});}catch(e){}
+  throw lastErr||new Error('データ取得に失敗しました');
 }
 
-// ── LOAD ──
-async function loadAll(){
-  setStatus('conn');
-  var mc=document.getElementById('mc');
-  if(mc) mc.innerHTML='<div style="padding:48px;text-align:center;color:#aaa">'
-    +'<div style="font-size:36px;margin-bottom:12px">🍡</div>'
-    +'<div style="font-size:14px">'+sl('데이터를 불러오는 중...','データを読み込み中...')+'</div>'
-    +'</div>';
-  try{
-    var orders=await api.get('orders','?order=created_at.desc');
-    var customers=await api.get('customers','?order=created_at.desc');
-    var payments=await api.get('payments','?order=created_at.desc');
-    var expenses=await api.get('expenses','?order=created_at.desc');
-    DB={
-      orders:orders.map(function(o){return Object.assign({},o,{items:o.items||[],file_urls:o.file_urls||[]});}),
-      customers:customers,
-      payments:payments,
-      expenses:expenses
-    };
-    setStatus('ok');updateHdr();go(TAB);
-  }catch(e){
-    setStatus('err');
-    var msg=e.message||sl('알 수 없는 오류','不明なエラー');
-    if(mc) mc.innerHTML='<div style="padding:24px;max-width:560px;margin:0 auto">'
-      +'<div style="background:#ffeaea;border-radius:12px;padding:20px;margin-bottom:16px">'
-      +'<p style="color:#e05555;font-weight:700;font-size:15px;margin-bottom:8px">❌ '+sl('데이터베이스 연결 오류','データベース接続エラー')+'</p>'
-      +'<p style="font-size:12px;color:#666;word-break:break-all;line-height:1.7">'+msg+'</p>'
-      +'</div>'
-      +'<div style="background:#fff8ef;border:1px solid #f0ddc8;border-radius:12px;padding:16px;font-size:12px;line-height:2;color:#2a1208">'
-      +'<p style="font-weight:700;margin-bottom:6px">'+sl('확인 사항','確認事項')+':</p>'
-      +'<p>① Supabase '+sl('대시보드 → Table Editor에서 4개 테이블(orders, customers, payments, expenses)이 생성되어 있는지 확인','ダッシュボード → Table Editorで4つのテーブルが作成されているか確認')+'</p>'
-      +'<p>② '+sl('Authentication → Policies에서 anon 사용자의 SELECT/INSERT/UPDATE/DELETE 정책이 설정되어 있는지 확인','Authentication → PoliciesでanonユーザーのSELECT/INSERT/UPDATE/DELETE ポリシーが設定されているか確認')+'</p>'
-      +'<p>③ '+sl('Settings → Network → Restrictions에서 IP 제한이 활성화되어 있는 경우 비활성화 또는 허용 IP 추가','Settings → Network → RestrictionsでIP制限が有効な場合は無効化するか許可IPを追加')+'</p>'
-      +'</div>'
-      +'<button class="add-btn" style="margin-top:16px" onclick="loadAll()">🔄 '+sl('다시 시도','再試行')+'</button>'
-      +'</div>';
-    toast('⚠️ '+sl('연결 오류. 화면의 안내를 확인하세요.','接続エラー。画面の案内を確認してください。'),6000);
+function parseYahoo(json,symbol){
+  const result=json.chart.result[0];
+  const meta=result.meta;
+  const ts=result.timestamp||[];
+  const q=result.indicators.quote[0];
+  const adj=result.indicators.adjclose?.[0]?.adjclose||q.close;
+
+  const dates=[],closes=[],opens=[],highs=[],lows=[],volumes=[];
+  for(let i=0;i<ts.length;i++){
+    if(adj[i]==null||isNaN(adj[i])) continue;
+    const d=new Date(ts[i]*1000);
+    const mo=String(d.getMonth()+1).padStart(2,'0');
+    const dy=String(d.getDate()).padStart(2,'0');
+    dates.push(`${d.getFullYear()}/${mo}/${dy}`);
+    closes.push(adj[i]);
+    opens.push(q.open[i]??adj[i]);
+    highs.push(q.high[i]??adj[i]);
+    lows.push(q.low[i]??adj[i]);
+    volumes.push(q.volume[i]||0);
   }
-}
-function updateHdr(){
-  var rev=DB.payments.filter(function(p){return p.status==='완료';}).reduce(function(s,p){return s+p.amount;},0);
-  var exp=DB.expenses.reduce(function(s,e){return s+e.amount;},0);
-  var unp=DB.orders.filter(function(o){return !o.paid;}).length;
-  document.getElementById('h-rev').textContent='₩'+rev.toLocaleString();
-  document.getElementById('h-exp').textContent='₩'+exp.toLocaleString();
-  document.getElementById('h-unp').textContent=unp+sl('건','件');
-}
-function go(tab){
-  TAB=tab;
-  document.querySelectorAll('nav button').forEach(function(b,i){
-    b.classList.toggle('active',['dashboard','orders','calendar','customers','payments','expenses','settings'][i]===tab);
-  });
-  var mc=document.getElementById('mc');
-  mc.style.animation='none';mc.offsetHeight;mc.style.animation='fadeIn .35s';
-  var fns={dashboard:renderDB,orders:function(){renderOrders('','all');},calendar:renderCal,customers:function(){renderCust('');},payments:renderPay,expenses:function(){renderExp('전체');},settings:renderSet};
-  if(fns[tab])fns[tab]();
-}
-function toggleLang(){
-  LANG=LANG==='ko'?'ja':'ko';
-  localStorage.setItem('hw_lang',LANG);
-  document.getElementById('logo-text').textContent=sl('해울떡 관리 시스템','ヘウルトック管理システム');
-  document.querySelector('.lbtn').textContent=sl('🌐 日本語','🌐 한국어');
-  document.querySelectorAll('.nl').forEach(function(el){el.textContent=el.dataset[LANG];});
-  document.getElementById('h-rev-l').textContent=sl('이번 달 매출','今月売上');
-  document.getElementById('h-exp-l').textContent=sl('이번 달 경비','今月経費');
-  document.getElementById('h-unp-l').textContent=sl('미결제','未払い');
-  updateHdr();go(TAB);
+
+  const last=closes.length-1;
+  const change=closes[last]-(closes[last-1]??closes[last]);
+  const changePct=closes[last-1]?change/closes[last-1]*100:0;
+  const y252=closes.slice(-252);
+
+  return {
+    symbol: meta.symbol||symbol.toUpperCase(),
+    name: STOCKS[symbol.toUpperCase()]?.name||meta.longName||meta.shortName||symbol.toUpperCase(),
+    exchange: meta.exchangeName||'',
+    currency: meta.currency||'USD',
+    currentPrice: closes[last],
+    change, changePct,
+    high52: Math.max(...y252),
+    low52: Math.min(...y252),
+    dates, closes, opens, highs, lows, volumes,
+  };
 }
 
-// ── DASHBOARD ──
-function renderDB(){
-  var rev=DB.payments.filter(function(p){return p.status==='완료';}).reduce(function(s,p){return s+p.amount;},0);
-  var exp=DB.expenses.reduce(function(s,e){return s+e.amount;},0);
-  var sc={};DB.orders.forEach(function(o){sc[o.status]=(sc[o.status]||0)+1;});
-  var ec={};DB.expenses.forEach(function(e){ec[e.category]=(ec[e.category]||0)+e.amount;});
-  var upcoming=DB.orders.filter(function(o){return o.status!=='done';}).sort(function(a,b){return a.pickup.localeCompare(b.pickup);}).slice(0,6);
-  var sbars=Object.entries(SM).map(function(e){var k=e[0],v=e[1];return '<div class="bar-row"><div class="dot" style="background:'+v.color+'"></div><div class="blbl">'+v[LANG]+'</div><div class="bcnt">'+(sc[k]||0)+sl('건','件')+'</div><div class="btrack"><div class="bfill" style="width:'+((sc[k]||0)/Math.max(DB.orders.length,1)*100)+'%;background:'+v.color+'"></div></div></div>';}).join('');
-  var ebars=Object.entries(ec).map(function(e){var cat=e[0],amt=e[1];return '<div class="bar-row"><div class="blbl">'+cat+'</div><div class="bcnt" style="width:80px">₩'+amt.toLocaleString()+'</div><div class="btrack"><div class="bfill" style="width:'+(amt/Math.max(exp,1)*100)+'%;background:#e05555"></div></div></div>';}).join('');
-  var urows=upcoming.map(function(o){return '<tr class="tr"><td>'+mn(o.id)+'</td><td>'+o.customer_name+'</td><td>'+fmtDT(o.pickup)+'</td><td>₩'+o.total.toLocaleString()+'</td><td>'+badge(o.status)+'</td><td style="color:'+(o.paid?'#2e7d5a':'#e05555')+';font-weight:600">'+(o.paid?sl('✓ 완료','✓ 完了'):sl('미결제','未払い'))+'</td></tr>';}).join('');
-  document.getElementById('mc').innerHTML=
-    '<div class="sec-head"><h2>📊 '+sl('대시보드','ダッシュボード')+'</h2></div>'
-    +'<div class="kpi-grid">'
-    +kpiCard('💰',sl('이번 달 매출','今月売上'),'₩'+rev.toLocaleString(),DB.payments.length+sl('건 결제','件の決済'),'#c8832a')
-    +kpiCard('🧾',sl('이번 달 경비','今月経費'),'₩'+exp.toLocaleString(),DB.expenses.length+sl('건 지출','件の支出'),'#e05555')
-    +kpiCard('📈',sl('순이익','純利益'),'₩'+(rev-exp).toLocaleString(),(rev-exp)>=0?sl('흑자 ▲','黒字 ▲'):sl('적자 ▼','赤字 ▼'),(rev-exp)>=0?'#2e7d5a':'#e05555')
-    +kpiCard('👥',sl('등록 고객 수','登録顧客数'),DB.customers.length+sl('명','名'),sl('누적 고객','累計顧客'),'#1565a8')
-    +'</div>'
-    +'<div class="dash-row">'
-    +'<div class="card"><div style="font-size:15px;font-weight:700;margin-bottom:14px">'+sl('주문 현황','注文状況')+'</div>'+sbars+'</div>'
-    +'<div class="card"><div style="font-size:15px;font-weight:700;margin-bottom:14px">'+sl('경비 카테고리별','経費カテゴリ別')+'</div>'+ebars+'</div>'
-    +'</div>'
-    +'<div class="card"><div style="font-size:15px;font-weight:700;margin-bottom:14px">'+sl('다가오는 예약 주문','直近の予約注文')+'</div>'
-    +'<table><thead><tr><th>'+sl('주문번호','注文番号')+'</th><th>'+sl('고객명','顧客名')+'</th><th>'+sl('수령일','受取日')+'</th><th>'+sl('금액','金額')+'</th><th>'+sl('상태','状態')+'</th><th>'+sl('결제','決済')+'</th></tr></thead><tbody>'+urows+'</tbody></table></div>';
-}
+// =========================================================
+// CHART
+// =========================================================
 
-// ── ORDERS ──
-function orderCard(o){
-  var sm=SM[o.status]||{color:'#ccc'};
-  var sOpts=Object.entries(SM).map(function(e){var k=e[0],v=e[1];return '<option value="'+k+'" '+(o.status===k?'selected':'')+'>'+v[LANG]+'</option>';}).join('');
-  var items=(o.items||[]).map(function(it){return '<span class="itag">'+it.name+' ×'+it.qty+'</span>';}).join('');
-  var files=(o.file_urls&&o.file_urls.length)?filesHTML(o.file_urls):'';
-  var unpaidB=!o.paid?'<span class="unpaid-b">'+sl('미결제','未払い')+'</span>':'';
-  var delB=o.delivery_type==='배달'?'<span class="dbadge">🚚 '+sl('배달','配達')+'</span>':'<span class="pbadge">🏪 '+sl('방문수령','店頭受取')+'</span>';
-  var addrLine=(o.delivery_type==='배달'&&o.delivery_addr)?'<div style="font-size:12px;color:#1565a8;margin-bottom:6px">🚚 '+o.delivery_addr+' <button class="map-b" onclick="openNaverMap(\''+o.delivery_addr+'\')">🗺 '+sl('지도','地図')+'</button></div>':'';
-  var noteLine=o.note?'<div class="onote">📝 '+o.note+'</div>':'';
-  var paidBtn=!o.paid?'<button class="pay-b" onclick="markPaid(\''+o.id+'\')">'+sl('결제 완료','支払完了')+'</button>':'';
-  return '<div class="ocard" style="border-left-color:'+sm.color+'">'
-    +'<div class="otop">'
-    +'<div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap">'+mn(o.id)+' '+badge(o.status)+' '+unpaidB+' '+delB+'</div>'
-    +'<span style="font-size:11px;color:#888">🗓 '+fmtDT(o.pickup)+'</span>'
-    +'</div>'
-    +'<div class="oname">'+o.customer_name+' <button class="sms-b" onclick="openSMSOrder(\''+o.id+'\')">💬 '+sl('문자','SMS')+'</button></div>'
-    +addrLine
-    +'<div class="itags">'+items+'</div>'
-    +noteLine+files
-    +'<div class="obot">'
-    +'<strong style="color:#c8832a">₩'+o.total.toLocaleString()+'</strong>'
-    +'<div style="display:flex;gap:5px;flex-wrap:wrap">'
-    +'<select class="sel-sm" onchange="updStatus(\''+o.id+'\',this.value)">'+sOpts+'</select>'
-    +paidBtn
-    +'<button class="print-b" onclick="printReceipt(\''+o.id+'\')">🖨 '+sl('영수증','領収書')+'</button>'
-    +'<button class="edit-b" onclick="viewOrder(\''+o.id+'\')">'+sl('상세','詳細')+'</button>'
-    +'<button class="edit-b" style="background:#e3f2fd;color:#1565a8" onclick="editOrder(\''+o.id+'\')">'+sl('수정','修正')+'</button>'
-    +'<button class="del-b" onclick="delOrder(\''+o.id+'\')">'+sl('삭제','削除')+'</button>'
-    +'</div></div></div>';
-}
-function refreshOList(){
-  var s=document.getElementById('os')?document.getElementById('os').value:'';
-  var f=document.getElementById('of')?document.getElementById('of').value:'all';
-  var el=document.getElementById('olist');
-  if(!el)return;
-  var filtered=DB.orders.filter(function(o){return (f==='all'||o.status===f)&&(o.customer_name.includes(s)||o.id.includes(s));}).sort(function(a,b){return a.pickup.localeCompare(b.pickup);});
-  el.innerHTML=filtered.length?filtered.map(orderCard).join(''):'<div class="card" style="text-align:center;color:#888;padding:32px">'+sl('주문이 없습니다','注文がありません')+'</div>';
-}
-function renderOrders(s,f){
-  s=s||'';f=f||'all';
-  var sOpts='<option value="all" '+(f==='all'?'selected':'')+'>'+sl('전체 상태','全状態')+'</option>'
-    +Object.entries(SM).map(function(e){var k=e[0],v=e[1];return '<option value="'+k+'" '+(f===k?'selected':'')+'>'+v[LANG]+'</option>';}).join('');
-  document.getElementById('mc').innerHTML=
-    '<div class="sec-head"><h2>📋 '+sl('예약 주문 관리','予約注文管理')+'</h2><button class="add-btn" onclick="addOrder()">+ '+sl('신규 주문','新規注文')+'</button></div>'
-    +'<div class="toolbar"><div class="swrap"><input id="os" placeholder="'+sl('고객명·주문번호 검색...','顧客名・注文番号検索...')+'" value="'+s+'" oninput="refreshOList()"/><button class="sclear" onclick="document.getElementById(\'os\').value=\'\';refreshOList()">×</button></div>'
-    +'<select class="sel" id="of" onchange="refreshOList()">'+sOpts+'</select></div>'
-    +'<div id="olist"></div>';
-  refreshOList();
-}
-async function updStatus(id,status){
-  try{setStatus('sav');await api.patch('orders',id,{status});DB.orders=DB.orders.map(function(o){return o.id===id?Object.assign({},o,{status:status}):o;});setStatus('saved');refreshOList();}catch(e){toast('⚠️ '+e.message);}
-}
-async function markPaid(id){
-  try{
-    setStatus('sav');await api.patch('orders',id,{paid:true});
-    DB.orders=DB.orders.map(function(o){return o.id===id?Object.assign({},o,{paid:true}):o;});
-    setStatus('saved');updateHdr();
-    var o=DB.orders.find(function(x){return x.id===id;});
-    await sendKakao(sl('결제 완료','支払完了')+'\n'+o.customer_name+' / ₩'+o.total.toLocaleString());
-    refreshOList();toast(sl('✓ 결제 완료','✓ 支払完了'));
-  }catch(e){toast('⚠️ '+e.message);}
-}
-async function delOrder(id){
-  if(!confirm(sl('삭제하시겠습니까?','削除しますか？')))return;
-  try{setStatus('sav');await api.del('orders',id);DB.orders=DB.orders.filter(function(o){return o.id!==id;});setStatus('saved');updateHdr();refreshOList();toast(sl('삭제되었습니다','削除しました'));}catch(e){toast('⚠️ '+e.message);}
-}
+function renderChart(data, pred, days){
+  const n=data.closes.length;
+  const si=Math.max(0,n-days);
 
-// ── ORDER FORM ──
-function showSuggest(){
-  var q=document.getElementById('fn').value.trim();
-  var box=document.getElementById('sug');
-  if(!box)return;
-  if(!q){box.style.display='none';return;}
-  var hits=DB.customers.filter(function(c){return c.name.includes(q)||(c.phone&&c.phone.slice(-4).includes(q));});
-  if(!hits.length){box.style.display='none';return;}
-  box.innerHTML=hits.map(function(c){return '<div class="sug-item" onclick="pickCust(\''+c.id+'\')">'+c.name+' <span style="color:#888;font-size:11px">'+c.phone+'</span></div>';}).join('');
-  box.style.display='block';
-}
-function pickCust(id){
-  var c=DB.customers.find(function(x){return x.id===id;});if(!c)return;
-  document.getElementById('fn').value=c.name;
-  document.getElementById('fph').value=c.phone||'';
-  var box=document.getElementById('sug');if(box)box.style.display='none';
-  var tag=document.getElementById('seltag');
-  if(tag){tag.textContent='✓ '+c.name+' ('+c.phone+')';tag.style.display='inline-block';}
-}
-function toggleAddr(){
-  var v=document.getElementById('fdel')?document.getElementById('fdel').value:'방문수령';
-  var w=document.getElementById('faddrw');
-  if(w)w.style.display=(v==='배달'?'block':'none');
-}
-function itemsHTML2(){
-  var total=tmpItems.reduce(function(s,i){return s+i.qty*i.price;},0);
-  var rows=tmpItems.map(function(it,i){
-    var opts=PRODS().map(function(p){return '<option '+(p===it.name?'selected':'')+'>'+p+'</option>';}).join('');
-    return '<div style="display:flex;gap:5px;margin-bottom:6px;flex-wrap:wrap;align-items:center">'
-      +'<select class="sel-sm" id="in'+i+'">'+opts+'</select>'
-      +'<input class="inp" style="width:55px" type="number" id="iq'+i+'" value="'+it.qty+'"/>'
-      +'<span style="font-size:11px;color:#888">'+sl('개','個')+'</span>'
-      +'<input class="inp" style="width:75px" type="number" id="ip'+i+'" value="'+it.price+'"/>'
-      +'<span style="font-size:11px;color:#888">'+sl('원/개','円/個')+'</span>'
-      +'<button class="del-b" onclick="rmItem('+i+')">✕</button>'
-      +'</div>';
-  }).join('');
-  return rows+'<div style="font-size:12px;color:#c8832a;font-weight:700;margin:4px 0">'+sl('합계','合計')+': ₩'+total.toLocaleString()+'</div>'
-    +'<button style="background:none;border:none;color:#c8832a;cursor:pointer;font-size:12px;font-weight:600" onclick="addItem()">+ '+sl('상품 추가','商品追加')+'</button>';
-}
-function syncItems(){
-  tmpItems=tmpItems.map(function(_,i){
-    return {
-      name:document.getElementById('in'+i)?document.getElementById('in'+i).value:tmpItems[i].name,
-      qty:Number(document.getElementById('iq'+i)?document.getElementById('iq'+i).value:tmpItems[i].qty),
-      price:Number(document.getElementById('ip'+i)?document.getElementById('ip'+i).value:tmpItems[i].price)
-    };
+  const labels=data.dates.slice(si);
+  const prices=data.closes.slice(si);
+  const {s20,s50,s200,bbU,bbL}=pred.chartArrays;
+
+  if(state.chart){state.chart.destroy();state.chart=null;}
+  const ctx=document.getElementById('priceChart');
+  if(!ctx) return;
+
+  const up=data.changePct>=0;
+  const mainColor=up?'#10b981':'#ef4444';
+
+  const ticks={color:'#475569',maxRotation:0};
+  state.chart=new Chart(ctx,{
+    type:'line',
+    data:{
+      labels,
+      datasets:[
+        {label:'株価',data:prices,borderColor:mainColor,borderWidth:2.5,pointRadius:0,fill:false,tension:0.15,order:1},
+        {label:'SMA20',data:s20.slice(si),borderColor:'#f59e0b',borderWidth:1.5,borderDash:[6,3],pointRadius:0,fill:false,tension:0.15,order:2},
+        {label:'SMA50',data:s50.slice(si),borderColor:'#8b5cf6',borderWidth:1.5,borderDash:[6,3],pointRadius:0,fill:false,tension:0.15,order:3},
+        ...(s200?[{label:'SMA200',data:s200.slice(si),borderColor:'#ef4444',borderWidth:1.5,borderDash:[9,4],pointRadius:0,fill:false,tension:0.15,order:4}]:[]),
+        {label:'BB上限',data:bbU.slice(si),borderColor:'rgba(148,163,184,.4)',borderWidth:1,borderDash:[3,3],pointRadius:0,fill:'+1',backgroundColor:'rgba(59,130,246,.04)',tension:0.15,order:5},
+        {label:'BB下限',data:bbL.slice(si),borderColor:'rgba(148,163,184,.4)',borderWidth:1,borderDash:[3,3],pointRadius:0,fill:false,tension:0.15,order:6},
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          backgroundColor:'#0d1630',borderColor:'#1e2d4a',borderWidth:1,
+          titleColor:'#94a3b8',bodyColor:'#e2e8f0',padding:10,
+          callbacks:{label:c=>`${c.dataset.label}: ${c.parsed.y!=null?'$'+c.parsed.y.toFixed(2):'-'}`}
+        }
+      },
+      scales:{
+        x:{ticks:{...ticks,maxTicksLimit:7},grid:{color:'#1a2333'}},
+        y:{position:'right',ticks:{...ticks,callback:v=>'$'+Number(v).toFixed(0)},grid:{color:'#1a2333'}}
+      }
+    }
   });
 }
-function addItem(){syncItems();tmpItems.push({name:PRODS()[0],qty:1,price:2500});document.getElementById('mb').innerHTML=orderFormBody(null);}
-function rmItem(i){syncItems();tmpItems.splice(i,1);if(!tmpItems.length)tmpItems=[{name:PRODS()[0],qty:1,price:2500}];document.getElementById('mb').innerHTML=orderFormBody(null);}
-function orderFormBody(o){
-  var isEdit=!!o;
-  var dt=o?o.delivery_type||'방문수령':'방문수령';
-  var pv=o?o.pickup||'':'';
-  var mOpts='<option value="">'+sl('-- 나중에 입력 --','-- 後で入力 --')+'</option>'+METHS().map(function(m){return '<option>'+m+'</option>';}).join('');
-  return '<div class="fcol">'
-    +'<div style="position:relative">'
-    +'<label class="lbl">'+sl('고객명 또는 전화번호 끝 4자리','顧客名または電話番号下4桁')+'</label>'
-    +'<input class="inp" id="fn" value="'+(o?o.customer_name:'')+'" placeholder="'+sl('입력하면 고객 후보가 나타납니다','入力すると候補が表示されます')+'" oninput="showSuggest()" autocomplete="off"/>'
-    +'<input type="hidden" id="fph" value=""/>'
-    +'<span id="seltag" style="display:none;font-size:11px;color:#2e7d5a;background:#e8f5e9;padding:2px 8px;border-radius:4px;margin-top:4px;"></span>'
-    +'<div class="sug-box" id="sug"></div>'
-    +'</div>'
-    +'<div><label class="lbl">'+sl('수령일 및 시간','受取日時')+'</label><input class="inp" type="datetime-local" id="fpk" value="'+pv+'"/></div>'
-    +'<div><label class="lbl">'+sl('수령 방법','受取方法')+'</label>'
-    +'<select class="inp sel" id="fdel" onchange="toggleAddr()">'
-    +'<option value="방문수령" '+(dt==='방문수령'?'selected':'')+'>🏪 '+sl('방문수령','店頭受取')+'</option>'
-    +'<option value="배달" '+(dt==='배달'?'selected':'')+'>🚚 '+sl('배달','配達')+'</option>'
-    +'</select></div>'
-    +'<div id="faddrw" style="display:'+(dt==='배달'?'block':'none')+'">'
-    +'<label class="lbl">'+sl('배달 주소','配達住所')+'</label>'
-    +'<input class="inp" id="faddr" value="'+(o?o.delivery_addr||'':'')+'" placeholder="'+sl('주소를 입력하세요','住所を入力してください')+'"/></div>'
-    +(isEdit
-      ?'<div><label class="lbl">'+sl('상태','状態')+'</label><select class="inp sel" id="fstat">'+Object.entries(SM).map(function(e){var k=e[0],v=e[1];return '<option value="'+k+'" '+(o.status===k?'selected':'')+'>'+v[LANG]+'</option>';}).join('')+'</select></div>'
-       +'<div><label class="lbl">'+sl('결제 상태','決済状態')+'</label><select class="inp sel" id="fpaid"><option value="false" '+(!o.paid?'selected':'')+'>'+sl('미결제','未払い')+'</option><option value="true" '+(o.paid?'selected':'')+'>'+sl('결제 완료','支払完了')+'</option></select></div>'
-      :'<div><label class="lbl">'+sl('결제 방법','決済方法')+'</label><select class="inp sel" id="fpay">'+mOpts+'</select></div>'
-    )
-    +'<div><label class="lbl">'+sl('비고','備考')+'</label><input class="inp" id="fnote" value="'+(o?o.note||'':'')+'" /></div>'
-    +'<div><label class="lbl">'+sl('상품','商品')+'</label><div id="iarea">'+itemsHTML2()+'</div></div>'
-    +(isEdit?'':
-      '<div><label class="lbl">'+sl('사진·파일 첨부','写真・ファイル添付')+'</label>'
-      +'<div class="file-area"><input type="file" id="ffiles" multiple accept="image/*,.pdf,.mp4,.mov" style="width:100%;font-size:12px;color:#888"/></div>'
-      +'<div style="font-size:10px;color:#bbb;margin-top:4px">'+sl('이미지·PDF·동영상 업로드 가능','画像・PDF・動画をアップロード可能')+'</div>'
-      +'</div>'
-    )
-    +'</div>';
+
+// =========================================================
+// RENDER HOME
+// =========================================================
+
+function renderHome(){
+  document.getElementById('main').innerHTML=`
+    <div class="home-hero">
+      <h1>AIが米国株・ETFの<br>株価方向を予測</h1>
+      <p>過去5年分の株価データを取得し、10種類のテクニカル指標をAIが総合判断。BUY / SELL / HOLD の予測を瞬時に表示します。</p>
+    </div>
+    <div class="section-label">人気銘柄・ETF クイック検索</div>
+    <div class="popular-grid">
+      ${FEATURED.map(s=>`
+        <div class="pop-card" onclick="doSearch('${s}')">
+          <div class="pop-ticker">${s}</div>
+          <div class="pop-name">${STOCKS[s]?.name||''}</div>
+          <span class="pop-type ${STOCKS[s]?.type==='ETF'?'etf':'stock'}">${STOCKS[s]?.type||''}</span>
+        </div>
+      `).join('')}
+    </div>
+    <div class="section-label">使い方</div>
+    <div class="howto-grid">
+      <div class="howto-card"><div class="howto-icon">🔍</div><div class="howto-title">1. 銘柄を検索</div><div class="howto-desc">上の検索バーにティッカーシンボル (AAPL, NVDA 等) または企業名を入力してください。</div></div>
+      <div class="howto-card"><div class="howto-icon">📊</div><div class="howto-title">2. データ取得</div><div class="howto-desc">Yahoo Financeから過去5年間の日足データを自動取得し、テクニカル指標を計算します。</div></div>
+      <div class="howto-card"><div class="howto-icon">🤖</div><div class="howto-title">3. AI予測</div><div class="howto-desc">SMA・RSI・MACD・ボリンジャーバンド等10指標を統合してBUY / HOLD / SELLを判定。</div></div>
+      <div class="howto-card"><div class="howto-icon">📈</div><div class="howto-title">4. チャート確認</div><div class="howto-desc">インタラクティブチャートで価格推移と各テクニカル指標ラインを視覚的に確認できます。</div></div>
+    </div>
+    <div class="disclaimer">⚠️ 本アプリはテクニカル分析のみに基づく参考情報であり、投資アドバイスではありません。投資判断は必ずご自身の責任で行い、ファンダメンタルズ分析や市場環境も総合的に考慮してください。過去のデータは将来の結果を保証しません。</div>
+  `;
 }
-function addOrder(){
-  tmpItems=[{name:PRODS()[0],qty:1,price:2500}];
-  om(sl('신규 주문 등록','新規注文登録'),orderFormBody(null),
-    '<button class="canbtn" onclick="cm()">'+sl('취소','キャンセル')+'</button>'
-    +'<button class="savbtn" onclick="submitOrder()">'+sl('저장하기','保存する')+'</button>');
+
+// =========================================================
+// RENDER RESULT
+// =========================================================
+
+function renderResult(data, pred){
+  const {signal,confidence,signals,tech}=pred;
+  const up=data.changePct>=0;
+  const cls=up?'up':'down';
+  const arrow=up?'▲':'▼';
+  const bc=signal.toLowerCase();
+  const slabel=signal==='BUY'?'買い推奨':signal==='SELL'?'売り推奨':'保留・様子見';
+  const sdesc=signal==='BUY'
+    ?'複数のテクニカル指標が上昇トレンドを示しています。短〜長期での価格上昇が期待されます。'
+    :signal==='SELL'
+    ?'複数のテクニカル指標が下降圧力を示しています。価格調整のリスクが高まっています。'
+    :'指標が混在しており方向感が定まっていません。新規ポジションは様子見が賢明です。';
+
+  const sigHtml=Object.values(signals).map(g=>`
+    <div class="sig-row">
+      <div class="sig-dot ${g.s}"></div>
+      <div class="sig-txt ${g.s}">${g.t}</div>
+    </div>
+  `).join('')||'<div style="color:#475569;font-size:12px">指標データが不足しています</div>';
+
+  const techCards=[
+    {lbl:'RSI (14)',val:tech.rsi!=null?tech.rsi.toFixed(1):'-',sub:tech.rsi!=null?(tech.rsi>70?'買われすぎ':tech.rsi<30?'売られすぎ':'正常範囲'):'-',b:tech.rsi!=null?(tech.rsi>70?'bear':tech.rsi<30?'bull':'neu'):'neu'},
+    {lbl:'SMA 20',val:tech.sma20!=null?'$'+tech.sma20.toFixed(2):'-',sub:tech.sma20?(data.currentPrice>tech.sma20?'価格 > SMA20':'価格 < SMA20'):'-',b:tech.sma20?(data.currentPrice>tech.sma20?'bull':'bear'):'neu'},
+    {lbl:'SMA 50',val:tech.sma50!=null?'$'+tech.sma50.toFixed(2):'-',sub:tech.sma50?(data.currentPrice>tech.sma50?'価格 > SMA50':'価格 < SMA50'):'-',b:tech.sma50?(data.currentPrice>tech.sma50?'bull':'bear'):'neu'},
+    {lbl:'SMA 200',val:tech.sma200!=null?'$'+tech.sma200.toFixed(2):'-',sub:tech.sma200?(data.currentPrice>tech.sma200?'長期上昇トレンド':'長期下降トレンド'):'データ不足',b:tech.sma200?(data.currentPrice>tech.sma200?'bull':'bear'):'neu'},
+    {lbl:'MACD',val:tech.macd!=null?tech.macd.toFixed(3):'-',sub:tech.macd!=null&&tech.macdSig!=null?(tech.macd>tech.macdSig?'シグナル上回り':'シグナル下回り'):'-',b:tech.macd!=null&&tech.macdSig!=null?(tech.macd>tech.macdSig?'bull':'bear'):'neu'},
+    {lbl:'BB位置',val:(tech.bbU&&tech.bbL)?Math.round((data.currentPrice-tech.bbL)/(tech.bbU-tech.bbL)*100)+'%':'-',sub:'バンド内位置 (0〜100%)',b:'neu'},
+  ];
+  const techHtml=techCards.map(t=>`
+    <div class="tech-card">
+      <div class="tech-lbl">${t.lbl}</div>
+      <div class="tech-val">${t.val}</div>
+      <div class="tech-sub">${t.sub}</div>
+      <span class="tbadge ${t.b}">${t.b==='bull'?'強気':t.b==='bear'?'弱気':'中立'}</span>
+    </div>
+  `).join('');
+
+  const statsData=[
+    {lbl:'現在値',val:`$${data.currentPrice.toFixed(2)} ${data.currency}`},
+    {lbl:'前日比',val:`${up?'+':''}${data.change.toFixed(2)} (${up?'+':''}${data.changePct.toFixed(2)}%)`,cls:up?'up':'down'},
+    {lbl:'52週高値',val:`$${data.high52.toFixed(2)}`},
+    {lbl:'52週安値',val:`$${data.low52.toFixed(2)}`},
+    {lbl:'高値比',val:`${(data.currentPrice/data.high52*100).toFixed(1)}%`},
+    {lbl:'市場',val:data.exchange||'-'},
+  ];
+  const statsHtml=statsData.map(s=>`
+    <div class="stat-card">
+      <div class="stat-lbl">${s.lbl}</div>
+      <div class="stat-val ${s.cls||''}">${s.val}</div>
+    </div>
+  `).join('');
+
+  document.getElementById('main').innerHTML=`
+    <button class="back-btn" onclick="showHome()">← ホームに戻る</button>
+
+    <div class="stock-header">
+      <div>
+        <div class="stock-symbol">${data.symbol}</div>
+        <div class="stock-name">${data.name}</div>
+        <span class="stock-badge">${data.exchange} · ${data.currency}</span>
+      </div>
+      <div>
+        <div class="stock-price ${cls}">$${data.currentPrice.toFixed(2)}</div>
+        <div class="stock-change ${cls}">${arrow} ${Math.abs(data.change).toFixed(2)} (${up?'+':''}${data.changePct.toFixed(2)}%)</div>
+      </div>
+    </div>
+
+    <div class="pred-row">
+      <div class="pred-card">
+        <div class="card-label">🤖 AI予測結果</div>
+        <div class="pred-inner">
+          <div class="pred-badge ${bc}">${signal}</div>
+          <div class="pred-label ${bc}">${slabel}</div>
+          <div class="pred-conf">信頼度: <span>${confidence}%</span></div>
+          <div style="width:100%">
+            <div class="conf-bar"><div class="conf-fill ${bc}" style="width:${confidence}%"></div></div>
+          </div>
+          <div class="pred-desc">${sdesc}</div>
+        </div>
+      </div>
+      <div class="pred-card">
+        <div class="card-label">📡 テクニカルシグナル詳細</div>
+        <div class="signal-list">${sigHtml}</div>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-top">
+        <div class="chart-title">価格チャート &amp; テクニカル</div>
+        <div class="range-row">
+          ${Object.keys(RANGE_DAYS).map(r=>`<button class="rbtn${r===state.range?' active':''}" onclick="changeRange('${r}')">${r}</button>`).join('')}
+        </div>
+      </div>
+      <div class="chart-legend">
+        <div class="leg"><div class="leg-line" style="background:${up?'#10b981':'#ef4444'}"></div>株価</div>
+        <div class="leg"><div class="leg-line" style="background:#f59e0b"></div>SMA20</div>
+        <div class="leg"><div class="leg-line" style="background:#8b5cf6"></div>SMA50</div>
+        <div class="leg"><div class="leg-line" style="background:#ef4444"></div>SMA200</div>
+        <div class="leg"><div class="leg-line" style="background:rgba(148,163,184,.5)"></div>BB</div>
+      </div>
+      <div class="chart-wrap"><canvas id="priceChart"></canvas></div>
+    </div>
+
+    <div class="section-label" style="margin-top:0">テクニカル指標</div>
+    <div class="tech-grid">${techHtml}</div>
+
+    <div class="section-label">基本情報</div>
+    <div class="stats-grid">${statsHtml}</div>
+
+    <div class="disclaimer">⚠️ 本予測はテクニカル分析のみに基づく参考情報であり、投資アドバイスではありません。ファンダメンタルズ・マクロ環境・企業情報も必ず確認し、投資判断はご自身の責任で行ってください。</div>
+  `;
+
+  requestAnimationFrame(()=>{
+    renderChart(data,pred,RANGE_DAYS[state.range]);
+  });
 }
-async function submitOrder(){
-  syncItems();
-  var name=document.getElementById('fn').value.trim();
-  var pickup=document.getElementById('fpk').value;
-  var note=document.getElementById('fnote').value.trim();
-  var payMethod=document.getElementById('fpay')?document.getElementById('fpay').value:'';
-  var phone=document.getElementById('fph')?document.getElementById('fph').value:'';
-  var delType=document.getElementById('fdel')?document.getElementById('fdel').value:'방문수령';
-  var delAddr=document.getElementById('faddr')?document.getElementById('faddr').value.trim():'';
-  if(!name||!pickup){toast(sl('고객명과 수령일을 입력해주세요','顧客名と受取日を入力してください'));return;}
-  var total=tmpItems.reduce(function(s,i){return s+i.qty*i.price;},0);
-  var fileUrls=[];
-  var fi=document.getElementById('ffiles');
-  if(fi&&fi.files&&fi.files.length){
-    toast(sl('파일 업로드 중...','ファイルアップロード中...'),5000);
-    for(var j=0;j<fi.files.length;j++){
-      try{fileUrls.push(await uploadFile(fi.files[j]));}catch(e){toast('⚠️ 파일 업로드 실패: '+fi.files[j].name);}
-    }
-  }
-  var newO={id:nid(),customer_name:name,items:tmpItems,total:total,pickup:pickup,status:'pending',paid:false,note:note,delivery_type:delType,delivery_addr:delAddr,file_urls:fileUrls};
+
+// =========================================================
+// RENDER ERROR
+// =========================================================
+
+function renderError(sym, msg){
+  document.getElementById('main').innerHTML=`
+    <button class="back-btn" onclick="showHome()">← ホームに戻る</button>
+    <div class="error-wrap">
+      <div class="err-icon">⚠️</div>
+      <div class="err-title">データ取得エラー</div>
+      <div class="err-msg">${sym?`「${sym}」の`:''}データを取得できませんでした。<br><br>${msg||'ティッカーシンボルをご確認いただくか、しばらく後でお試しください。'}<br><br>例: AAPL, NVDA, MSFT, SPY, QQQ</div>
+      <button class="retry-btn" onclick="showHome()">ホームに戻る</button>
+    </div>
+  `;
+}
+
+// =========================================================
+// ACTIONS
+// =========================================================
+
+async function doSearch(sym){
+  sym=(sym||'').trim().toUpperCase();
+  if(!sym) return;
+  document.getElementById('searchInput').value=sym;
+  document.getElementById('autocomplete').classList.remove('show');
+  state.view='loading';
+  state.symbol=sym;
+  state.range=state.range||'1Y';
+
+  document.getElementById('main').innerHTML=`
+    <div class="loading-wrap">
+      <div class="spinner"></div>
+      <div class="loading-text"><span class="loading-sym">${sym}</span> のデータを取得・分析中...</div>
+    </div>
+  `;
+
   try{
-    setStatus('sav');
-    var res=await api.post('orders',newO);
-    DB.orders.unshift(res[0]||newO);
-    var exist=DB.customers.find(function(c){return c.name===name;});
-    if(!exist&&name){
-      var nc={id:nid(),name:name,phone:phone,email:'',address:'',note:'',total_orders:1,total_spent:total};
-      try{var cr=await api.post('customers',nc);DB.customers.unshift(cr[0]||nc);}catch(e){}
-    } else if(exist){
-      var upd={total_orders:(exist.total_orders||0)+1,total_spent:(exist.total_spent||0)+total};
-      try{await api.patch('customers',exist.id,upd);DB.customers=DB.customers.map(function(c){return c.id===exist.id?Object.assign({},c,upd):c;});}catch(e){}
-    }
-    if(payMethod){
-      var np={id:nid(),order_id:(res[0]||newO).id,amount:total,method:payMethod,date:new Date().toISOString().slice(0,10),status:'완료'};
-      try{var pr=await api.post('payments',np);DB.payments.unshift(pr[0]||np);await api.patch('orders',(res[0]||newO).id,{paid:true});DB.orders=DB.orders.map(function(o){return o.id===(res[0]||newO).id?Object.assign({},o,{paid:true}):o;});}catch(e){}
-    }
-    setStatus('saved');cm();refreshOList();updateHdr();
-    toast(sl('✓ 주문이 등록되었습니다','✓ 注文を登録しました'));
-    await sendKakao(sl('신규 주문 접수','新規注文受付')+'\n'+sl('고객','顧客')+': '+name+'\n'+sl('수령일','受取日')+': '+pickup+'\n'+sl('합계','合計')+': ₩'+total.toLocaleString()+(payMethod?'\n'+sl('결제','決済')+': '+payMethod:''));
-  }catch(e){toast('⚠️ '+e.message);}
-}
-function viewOrder(id){
-  var o=DB.orders.find(function(x){return x.id===id;});if(!o)return;
-  var cust=DB.customers.find(function(c){return c.name===o.customer_name;});
-  var b=getBankInfo();
-  var irows=(o.items||[]).map(function(it){return '<p style="padding-left:14px">• '+it.name+' × '+it.qty+sl('개','個')+' = ₩'+(it.qty*it.price).toLocaleString()+'</p>';}).join('');
-  var bankBox=(!o.paid&&b.bank)?'<div class="bank-box">🏦 '+sl('입금 안내','振込案内')+'<br>'+b.bank+' '+b.account+' ('+b.holder+')<br>'+sl('수령일까지 입금 부탁드립니다','受取日までにお振込ください')+'</div>':'';
-  var body='<div style="font-size:13px;line-height:2.4">'
-    +'<p><b>'+sl('주문번호','注文番号')+':</b> '+o.id+'</p>'
-    +'<p><b>'+sl('고객명','顧客名')+':</b> '+o.customer_name+' <button class="sms-b" onclick="openSMSOrder(\''+o.id+'\')">💬 '+sl('문자','SMS')+'</button></p>'
-    +(cust&&cust.phone?'<p><b>'+sl('연락처','連絡先')+':</b> '+cust.phone+'</p>':'')
-    +'<p><b>'+sl('수령일 및 시간','受取日時')+':</b> '+fmtDT(o.pickup)+'</p>'
-    +'<p><b>'+sl('수령 방법','受取方法')+':</b> '+(o.delivery_type==='배달'?'🚚 '+sl('배달','配達'):'🏪 '+sl('방문수령','店頭受取'))+'</p>'
-    +(o.delivery_addr?'<p><b>'+sl('배달 주소','配達住所')+':</b> '+o.delivery_addr+' <button class="map-b" onclick="openNaverMap(\''+o.delivery_addr+'\')">🗺 '+sl('지도','地図')+'</button></p>':'')
-    +'<p><b>'+sl('상품','商品')+':</b></p>'+irows
-    +'<p><b>'+sl('합계','合計')+':</b> ₩'+o.total.toLocaleString()+'</p>'
-    +(o.note?'<p><b>'+sl('비고','備考')+':</b> '+o.note+'</p>':'')
-    +((o.file_urls&&o.file_urls.length)?'<p><b>'+sl('첨부 파일','添付ファイル')+':</b></p>'+filesHTML(o.file_urls):'')
-    +'<p><b>'+sl('결제','決済')+':</b> '+(o.paid?sl('✓ 완료','✓ 完了'):sl('미결제','未払い'))+'</p>'
-    +bankBox+'</div>';
-  om(sl('주문 상세','注文詳細'),body,'<button class="canbtn" onclick="cm()">'+sl('닫기','閉じる')+'</button><button class="print-b" onclick="printReceipt(\''+o.id+'\')">🖨 '+sl('영수증 출력','領収書印刷')+'</button>');
-}
-function editOrder(id){
-  var o=DB.orders.find(function(x){return x.id===id;});if(!o)return;
-  tmpItems=JSON.parse(JSON.stringify(o.items||[]));
-  om(sl('예약 수정','予約修正'),orderFormBody(o),'<button class="canbtn" onclick="cm()">'+sl('취소','キャンセル')+'</button><button class="savbtn" onclick="submitEdit(\''+id+'\')">'+sl('저장하기','保存する')+'</button>');
-}
-async function submitEdit(id){
-  syncItems();
-  var name=document.getElementById('fn').value.trim();
-  var pickup=document.getElementById('fpk').value;
-  var note=document.getElementById('fnote').value.trim();
-  var delType=document.getElementById('fdel')?document.getElementById('fdel').value:'방문수령';
-  var delAddr=document.getElementById('faddr')?document.getElementById('faddr').value.trim():'';
-  var status=document.getElementById('fstat')?document.getElementById('fstat').value:'pending';
-  var paid=document.getElementById('fpaid')?document.getElementById('fpaid').value==='true':false;
-  if(!name||!pickup){toast(sl('고객명과 수령일을 입력해주세요','顧客名と受取日を入力してください'));return;}
-  var total=tmpItems.reduce(function(s,i){return s+i.qty*i.price;},0);
-  var upd={customer_name:name,items:tmpItems,total:total,pickup:pickup,note:note,delivery_type:delType,delivery_addr:delAddr,status:status,paid:paid};
-  try{setStatus('sav');await api.patch('orders',id,upd);DB.orders=DB.orders.map(function(o){return o.id===id?Object.assign({},o,upd):o;});setStatus('saved');cm();refreshOList();updateHdr();toast(sl('✓ 수정되었습니다','✓ 修正しました'));}catch(e){toast('⚠️ '+e.message);}
-}
-function printReceipt(id){
-  var o=DB.orders.find(function(x){return x.id===id;});if(!o)return;
-  var w=window.open('','_blank','width=400,height=600');
-  var irows=(o.items||[]).map(function(it){return '<div class="row"><span>'+it.name+' \xd7'+it.qty+'</span><span>\u20a9'+(it.qty*it.price).toLocaleString()+'</span></div>';}).join('');
-  w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><style>body{font-family:sans-serif;padding:20px;max-width:320px;margin:0 auto}h2{text-align:center;font-size:18px;margin-bottom:4px}.sub{text-align:center;font-size:11px;color:#888;margin-bottom:16px}hr{border:none;border-top:1px dashed #ccc;margin:12px 0}.row{display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px}.tot{font-size:16px;font-weight:700}.foot{text-align:center;font-size:10px;color:#aaa;margin-top:16px}@media print{button{display:none}}</style></head><body>'
-    +'<h2>🍡 해울떡</h2><div class="sub">'+sl('영수증','領収書')+'</div><hr/>'
-    +'<div class="row"><span>'+sl('주문번호','注文番号')+'</span><span>'+o.id+'</span></div>'
-    +'<div class="row"><span>'+sl('고객명','顧客名')+'</span><span>'+o.customer_name+'</span></div>'
-    +'<div class="row"><span>'+sl('수령일','受取日')+'</span><span>'+(o.pickup||'').slice(0,16)+'</span></div>'
-    +'<hr/>'+irows+'<hr/>'
-    +'<div class="row tot"><span>'+sl('합계','合計')+'</span><span>\u20a9'+o.total.toLocaleString()+'</span></div>'
-    +'<div class="row"><span>'+sl('결제','決済')+'</span><span>'+(o.paid?sl('완료','完了'):sl('미결제','未払い'))+'</span></div>'
-    +(o.note?'<div class="row"><span>'+sl('비고','備考')+'</span><span>'+o.note+'</span></div>':'')
-    +'<hr/><div class="foot">'+new Date().toLocaleString('ko-KR')+'<br>'+sl('감사합니다 🍡','ありがとうございます 🍡')+'</div>'
-    +'<br><button onclick="window.print()" style="width:100%;padding:10px;background:#2a1208;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:14px">'+sl('인쇄하기','印刷する')+'</button>'
-    +'</body></html>');
-  w.document.close();
-}
-
-// ── CALENDAR ──
-function renderCal(){
-  var DAYS=LANG==='ko'?['일','월','화','수','목','금','토']:['日','月','火','水','木','金','土'];
-  var MONTHS=LANG==='ko'?['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월']:['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
-  var fd=new Date(calY,calM,1).getDay(),dim=new Date(calY,calM+1,0).getDate();
-  var tod=new Date().toISOString().slice(0,10);
-  var byDate={};
-  DB.orders.forEach(function(o){var dk=(o.pickup||'').slice(0,10);if(!byDate[dk])byDate[dk]=[];byDate[dk].push(o);});
-  var cells='';
-  for(var i=0;i<fd;i++)cells+='<div class="cal-empty"></div>';
-  for(var d=1;d<=dim;d++){
-    var ds=calY+'-'+String(calM+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
-    var hol=KR_HOLIDAYS[ds]||'',lun=LUNAR_FEST[ds]||'';
-    var orders=byDate[ds]||[],isT=ds===tod;
-    var isSun=(fd+d-1)%7===0,isSat=(fd+d-1)%7===6,isSel=calSel===ds;
-    var lunar=getLunar(ds);
-    var dc=hol?'#e05555':isSun?'#e05555':isSat?'#1565a8':'#2a1208';
-    var bg=isSel?'#fff3e0':isT?'#e8f5e9':'#fff';
-    var bdr=isT?'2px solid #2e7d5a':isSel?'2px solid #c8832a':'1px solid #e8d4b8';
-    var todBadge=isT?'<span style="font-size:7px;background:#2e7d5a;color:#fff;border-radius:2px;padding:0 2px;margin-left:2px">'+sl('오늘','今日')+'</span>':'';
-    var orderDots=orders.slice(0,2).map(function(o){
-      return '<div class="cal-dot" style="background:'+(SM[o.status]?SM[o.status].color:'#888')+'22;color:'+(SM[o.status]?SM[o.status].color:'#888')+'">'+o.customer_name+'</div>';
-    }).join('');
-    var moreTag=orders.length>2?'<div style="font-size:7px;color:#888">+'+(orders.length-2)+sl('건','件')+'</div>':'';
-    cells+='<div class="cal-cell" style="background:'+bg+';border:'+bdr+'" data-ds="'+ds+'" onclick="cSel(this.dataset.ds)">'
-      +'<div class="cal-date" style="color:'+dc+';font-weight:'+(isT?700:500)+'">'+d+todBadge+'</div>'
-      +'<div class="lunar">'+sl('음','陰')+' '+lunar.m+'/'+lunar.d+'</div>'
-      +(hol?'<div class="hol-tag">'+hol+'</div>':'')
-      +(lun&&!hol?'<div class="lun-tag">'+lun+'</div>':'')
-      +orderDots+moreTag
-      +'</div>';
+    const data=await fetchData(sym);
+    const pred=predict(data);
+    state.data=data;
+    state.prediction=pred;
+    state.view='result';
+    renderResult(data,pred);
+  } catch(e){
+    console.error(e);
+    renderError(sym,e.message);
   }
-  var selO=calSel?byDate[calSel]||[]:[];
-  var selDet=calSel&&selO.length
-    ?'<div class="cal-detail"><div style="font-size:15px;font-weight:700;margin-bottom:14px">'+calSel+' '+sl('주문 목록','注文一覧')+'</div>'
-      +selO.map(function(o){
-        return '<div class="cdrow">'+mn(o.id)+'<span>'+o.customer_name+'</span><span>'+(o.items||[]).map(function(it){return it.name+'×'+it.qty;}).join(', ')+'</span>'+badge(o.status)+'<strong style="color:#c8832a">₩'+o.total.toLocaleString()+'</strong><button class="print-b" onclick="printReceipt(\''+o.id+'\')">🖨</button></div>';
-      }).join('')+'</div>'
-    :'';
-  var dheads=DAYS.map(function(d,i){return '<div class="cal-dh" style="color:'+(i===0?'#e05555':i===6?'#1565a8':'#666')+'">'+d+'</div>';}).join('');
-  document.getElementById('mc').innerHTML=
-    '<div class="sec-head"><h2>📅 '+sl('주문 캘린더','注文カレンダー')+'</h2><button class="add-btn" onclick="addOrder()">+ '+sl('신규 주문','新規注文')+'</button></div>'
-    +'<div class="lgrow">'
-    +'<div class="lgi"><div class="lgd" style="background:#e05555"></div>'+sl('공휴일','祝日')+'</div>'
-    +'<div class="lgi"><div class="lgd" style="background:#7b1fa2"></div>'+sl('음력 명절','旧暦節句')+'</div>'
-    +'<div class="lgi"><div class="lgd" style="background:#2e7d5a"></div>'+sl('오늘','今日')+'</div>'
-    +'</div>'
-    +'<div class="cal-wrap">'
-    +'<div class="cal-hdr"><button class="cal-nav" onclick="calPrev()">&#8249;</button>'
-    +'<span class="cal-title">'+calY+sl('년 ','年')+MONTHS[calM]+'</span>'
-    +'<button class="cal-nav" onclick="calNext()">&#8250;</button></div>'
-    +'<div class="cal-grid">'+dheads+cells+'</div>'
-    +selDet+'</div>';
-}
-function calPrev(){if(calM===0){calY--;calM=11;}else calM--;calSel=null;renderCal();}
-function calNext(){if(calM===11){calY++;calM=0;}else calM++;calSel=null;renderCal();}
-function cSel(ds){calSel=calSel===ds?null:ds;renderCal();}
-
-// ── CUSTOMERS ──
-function custCard(c){
-  var smsBtn=c.phone?'<button class="sms-b" onclick="openSMS(\''+c.phone+'\',\'\')">💬 '+sl('문자','SMS')+'</button>':'';
-  var mapBtn=c.address?'<button class="map-b" onclick="openNaverMap(\''+c.address+'\')">🗺 '+sl('지도','地図')+'</button>':'';
-  return '<div class="ccard">'
-    +'<div class="avatar">'+c.name[0]+'</div>'
-    +'<div style="flex:1">'
-    +'<div class="cname">'+c.name+'</div>'
-    +'<div class="cdet">📞 '+c.phone+' '+smsBtn+'</div>'
-    +'<div class="cdet">✉️ '+c.email+'</div>'
-    +'<div class="cdet">📍 '+c.address+' '+mapBtn+'</div>'
-    +(c.note?'<div class="cnote">⭐ '+c.note+'</div>':'')
-    +'<div class="cstats"><span>'+sl('주문','注文')+' <strong>'+c.total_orders+sl('회','回')+'</strong></span><span>'+sl('누적','累計')+' <strong>₩'+c.total_spent.toLocaleString()+'</strong></span></div>'
-    +'</div>'
-    +'<div style="display:flex;flex-direction:column;gap:4px">'
-    +'<button class="edit-b" onclick="editCust(\''+c.id+'\')">'+sl('편집','編集')+'</button>'
-    +'<button class="edit-b" style="background:#e3f2fd;color:#1565a8" onclick="custHistory(\''+c.id+'\')">'+sl('주문이력','注文履歴')+'</button>'
-    +'<button class="del-b" onclick="delCust(\''+c.id+'\')">'+sl('삭제','削除')+'</button>'
-    +'</div></div>';
-}
-function refreshCList(){
-  var s=document.getElementById('cs')?document.getElementById('cs').value:'';
-  var el=document.getElementById('clist');if(!el)return;
-  var f=DB.customers.filter(function(c){return c.name.includes(s)||(c.phone&&c.phone.includes(s));});
-  el.innerHTML=f.length?'<div class="cust-grid">'+f.map(custCard).join('')+'</div>':'<div class="card" style="text-align:center;color:#888;padding:32px">'+sl('고객이 없습니다','顧客がいません')+'</div>';
-}
-function renderCust(s){
-  s=s||'';
-  document.getElementById('mc').innerHTML=
-    '<div class="sec-head"><h2>👥 '+sl('고객 관리','顧客管理')+'</h2><button class="add-btn" onclick="addCust()">+ '+sl('신규 고객','新規顧客')+'</button></div>'
-    +'<div class="toolbar"><div class="swrap"><input id="cs" placeholder="'+sl('이름·전화번호 검색...','氏名・電話番号検索...')+'" value="'+s+'" oninput="refreshCList()"/><button class="sclear" onclick="document.getElementById(\'cs\').value=\'\';refreshCList()">×</button></div></div>'
-    +'<div id="clist"></div>';
-  refreshCList();
-}
-function custFormBody(c){
-  return '<div class="fcol">'
-    +'<div><label class="lbl">'+sl('성명','氏名')+'</label><input class="inp" id="fcn" value="'+(c?c.name||'':'')+'" /></div>'
-    +'<div><label class="lbl">'+sl('전화번호','電話番号')+'</label><input class="inp" id="fcp" value="'+(c?c.phone||'':'')+'" placeholder="010-0000-0000"/></div>'
-    +'<div><label class="lbl">'+sl('이메일','メール')+'</label><input class="inp" id="fce" type="email" value="'+(c?c.email||'':'')+'" /></div>'
-    +'<div><label class="lbl">'+sl('주소','住所')+'</label><input class="inp" id="fca" value="'+(c?c.address||'':'')+'" /></div>'
-    +'<div><label class="lbl">'+sl('메모','メモ')+'</label><input class="inp" id="fcm" value="'+(c?c.note||'':'')+'" /></div>'
-    +'</div>';
-}
-function addCust(){
-  om(sl('신규 고객 등록','新規顧客登録'),custFormBody(null),
-    '<button class="canbtn" onclick="cm()">'+sl('취소','キャンセル')+'</button>'
-    +'<button class="savbtn" onclick="submitCust()">'+sl('저장하기','保存する')+'</button>');
-}
-async function submitCust(){
-  var name=document.getElementById('fcn').value.trim();
-  if(!name){toast(sl('성명을 입력해주세요','氏名を入力してください'));return;}
-  var nc={id:nid(),name:name,phone:document.getElementById('fcp').value,email:document.getElementById('fce').value,address:document.getElementById('fca').value,note:document.getElementById('fcm').value,total_orders:0,total_spent:0};
-  try{setStatus('sav');var r=await api.post('customers',nc);DB.customers.unshift(r[0]||nc);setStatus('saved');cm();refreshCList();toast(sl('✓ 등록되었습니다','✓ 登録しました'));}catch(e){toast('⚠️ '+e.message);}
-}
-function editCust(id){
-  var c=DB.customers.find(function(x){return x.id===id;});if(!c)return;
-  om(sl('고객 정보 수정','顧客情報編集'),custFormBody(c),
-    '<button class="canbtn" onclick="cm()">'+sl('취소','キャンセル')+'</button>'
-    +'<button class="savbtn" onclick="submitEditCust(\''+id+'\')">'+sl('저장하기','保存する')+'</button>');
-}
-async function submitEditCust(id){
-  var upd={name:document.getElementById('fcn').value,phone:document.getElementById('fcp').value,email:document.getElementById('fce').value,address:document.getElementById('fca').value,note:document.getElementById('fcm').value};
-  try{setStatus('sav');await api.patch('customers',id,upd);DB.customers=DB.customers.map(function(c){return c.id===id?Object.assign({},c,upd):c;});setStatus('saved');cm();refreshCList();toast(sl('✓ 수정되었습니다','✓ 更新しました'));}catch(e){toast('⚠️ '+e.message);}
-}
-async function delCust(id){
-  if(!confirm(sl('삭제하시겠습니까?','削除しますか？')))return;
-  try{setStatus('sav');await api.del('customers',id);DB.customers=DB.customers.filter(function(c){return c.id!==id;});setStatus('saved');refreshCList();toast(sl('삭제되었습니다','削除しました'));}catch(e){toast('⚠️ '+e.message);}
-}
-function custHistory(custId){
-  var cust=DB.customers.find(function(x){return x.id===custId;});if(!cust)return;
-  var orders=DB.orders.filter(function(o){return o.customer_name===cust.name;}).sort(function(a,b){return b.pickup.localeCompare(a.pickup);});
-  var totalAmt=orders.reduce(function(s,o){return s+o.total;},0);
-  var body='<div style="display:flex;gap:12px;margin-bottom:14px;flex-wrap:wrap">'
-    +'<div style="background:#fff8ef;border-radius:8px;padding:10px 16px;text-align:center"><div style="font-size:18px;font-weight:700;color:#c8832a">'+orders.length+sl('건','件')+'</div><div style="font-size:11px;color:#888">'+sl('총 주문','総注文')+'</div></div>'
-    +'<div style="background:#e8f5e9;border-radius:8px;padding:10px 16px;text-align:center"><div style="font-size:18px;font-weight:700;color:#2e7d5a">₩'+totalAmt.toLocaleString()+'</div><div style="font-size:11px;color:#888">'+sl('누적 금액','累計金額')+'</div></div>'
-    +'</div>'
-    +(orders.length===0?'<p style="text-align:center;color:#aaa;padding:20px">'+sl('주문 내역이 없습니다','注文履歴がありません')+'</p>'
-      :orders.map(function(o){
-        return '<div style="border:1px solid #f0ddc8;border-radius:10px;padding:12px;margin-bottom:8px">'
-          +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:4px">'+badge(o.status)+'<span style="font-size:11px;color:#888">'+fmtDT(o.pickup)+'</span></div>'
-          +'<div style="font-size:12px;color:#555;margin-bottom:4px">'+(o.items||[]).map(function(it){return it.name+' \xd7'+it.qty;}).join(' / ')+'</div>'
-          +(o.note?'<div style="font-size:11px;color:#aaa;margin-bottom:4px">📝 '+o.note+'</div>':'')
-          +((o.file_urls&&o.file_urls.length)?filesHTML(o.file_urls):'')
-          +'<div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">'
-          +'<strong style="color:#c8832a">₩'+o.total.toLocaleString()+'</strong>'
-          +'<span style="font-size:11px;font-weight:600;color:'+(o.paid?'#2e7d5a':'#e05555')+'">'+(o.paid?sl('✓ 결제완료','✓ 支払済'):sl('미결제','未払い'))+'</span>'
-          +'</div>'
-          +'<button class="print-b" style="margin-top:6px" onclick="printReceipt(\''+o.id+'\')">🖨 '+sl('영수증','領収書')+'</button>'
-          +'</div>';
-      }).join(''));
-  om(sl('주문 이력','注文履歴')+' - '+cust.name,body,'<button class="canbtn" onclick="cm()">'+sl('닫기','閉じる')+'</button>');
 }
 
-// ── PAYMENTS ──
-function renderPay(){
-  var total=DB.payments.filter(function(p){return p.status==='완료';}).reduce(function(s,p){return s+p.amount;},0);
-  var byM={};DB.payments.forEach(function(p){byM[p.method]=(byM[p.method]||0)+p.amount;});
-  var unpaid=DB.orders.filter(function(o){return !o.paid;});
-  var rows=DB.payments.map(function(p){
-    return '<tr class="tr"><td>'+mn(p.id)+'</td><td>'+mn(p.order_id)+'</td><td>₩'+p.amount.toLocaleString()+'</td><td>'+p.method+'</td><td>'+p.date+'</td><td style="color:#2e7d5a;font-weight:600">✓ '+p.status+'</td><td><button class="del-b" onclick="delPay(\''+p.id+'\')">'+sl('삭제','削除')+'</button></td></tr>';
-  }).join('');
-  var urows=unpaid.map(function(o){
-    return '<div class="urow">'+mn(o.id)+'<span>'+o.customer_name+'</span><span>'+sl('수령','受取')+': '+fmtDT(o.pickup)+'</span><strong style="color:#e05555">₩'+o.total.toLocaleString()+'</strong><button class="pay-b" onclick="addPayFor(\''+o.id+'\',\''+o.total+'\')">+ '+sl('결제 입력','決済入力')+'</button></div>';
-  }).join('');
-  var kpis=kpiCard('💰',sl('총 결제액','総決済額'),'₩'+total.toLocaleString(),DB.payments.length+sl('건','件'),'#2e7d5a')
-    +Object.entries(byM).map(function(e){return kpiCard('💳',e[0],'₩'+e[1].toLocaleString(),sl('결제 수단별','決済手段別'),'#1565a8');}).join('');
-  document.getElementById('mc').innerHTML=
-    '<div class="sec-head"><h2>💳 '+sl('결제 관리','決済管理')+'</h2><button class="add-btn" onclick="addPay()">+ '+sl('결제 입력','決済入力')+'</button></div>'
-    +'<div class="kpi-grid">'+kpis+'</div>'
-    +'<div class="card"><div style="font-size:15px;font-weight:700;margin-bottom:14px">'+sl('결제 내역','決済履歴')+'</div>'
-    +'<table><thead><tr><th>'+sl('결제ID','決済ID')+'</th><th>'+sl('주문번호','注文番号')+'</th><th>'+sl('금액','金額')+'</th><th>'+sl('결제 수단','決済手段')+'</th><th>'+sl('날짜','日付')+'</th><th>'+sl('상태','状態')+'</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div>'
-    +(unpaid.length?'<div class="card"><div style="font-size:15px;font-weight:700;margin-bottom:14px">'+sl('미결제 주문','未払い注文')+'</div>'+urows+'</div>':'');
-}
-function payFormBody(oid,amt){
-  var mOpts=METHS().map(function(m){return '<option>'+m+'</option>';}).join('');
-  return '<div class="fcol">'
-    +'<div><label class="lbl">'+sl('주문번호','注文番号')+'</label><input class="inp" id="poid" value="'+(oid||'')+'"/></div>'
-    +'<div><label class="lbl">'+sl('금액 (₩)','金額 (₩)')+'</label><input class="inp" type="number" id="pamt" value="'+(amt||'')+'"/></div>'
-    +'<div><label class="lbl">'+sl('결제 수단','決済手段')+'</label><select class="inp sel" id="pmeth">'+mOpts+'</select></div>'
-    +'<div><label class="lbl">'+sl('날짜','日付')+'</label><input class="inp" type="date" id="pdate" value="'+new Date().toISOString().slice(0,10)+'"/></div>'
-    +'</div>';
-}
-function addPay(){om(sl('결제 입력','決済入力'),payFormBody('',''),'<button class="canbtn" onclick="cm()">'+sl('취소','キャンセル')+'</button><button class="savbtn" onclick="submitPay()">'+sl('저장하기','保存する')+'</button>');}
-function addPayFor(id,amt){om(sl('결제 입력','決済入力'),payFormBody(id,amt),'<button class="canbtn" onclick="cm()">'+sl('취소','キャンセル')+'</button><button class="savbtn" onclick="submitPay()">'+sl('저장하기','保存する')+'</button>');}
-async function submitPay(){
-  var oid=document.getElementById('poid').value.trim(),amt=Number(document.getElementById('pamt').value);
-  if(!oid||!amt){toast(sl('주문번호와 금액을 입력해주세요','注文番号と金額を入力してください'));return;}
-  var np={id:nid(),order_id:oid,amount:amt,method:document.getElementById('pmeth').value,date:document.getElementById('pdate').value,status:'완료'};
-  try{
-    setStatus('sav');var r=await api.post('payments',np);DB.payments.unshift(r[0]||np);
-    await api.patch('orders',oid,{paid:true});DB.orders=DB.orders.map(function(o){return o.id===oid?Object.assign({},o,{paid:true}):o;});
-    setStatus('saved');cm();renderPay();updateHdr();
-    toast(sl('✓ 결제가 등록되었습니다','✓ 決済を登録しました'));
-    await sendKakao(sl('결제 완료','支払完了')+'\n'+sl('주문','注文')+': '+oid+'\n'+sl('금액','金額')+': ₩'+amt.toLocaleString());
-  }catch(e){toast('⚠️ '+e.message);}
-}
-async function delPay(id){
-  if(!confirm(sl('삭제하시겠습니까?','削除しますか？')))return;
-  try{setStatus('sav');await api.del('payments',id);DB.payments=DB.payments.filter(function(p){return p.id!==id;});setStatus('saved');renderPay();updateHdr();toast(sl('삭제되었습니다','削除しました'));}catch(e){toast('⚠️ '+e.message);}
+function showHome(){
+  state.view='home';
+  state.symbol=null;
+  state.data=null;
+  state.prediction=null;
+  document.getElementById('searchInput').value='';
+  if(state.chart){state.chart.destroy();state.chart=null;}
+  renderHome();
 }
 
-// ── EXPENSES ──
-function renderExp(cat){
-  var cv=cat||'전체';
-  var total=DB.expenses.reduce(function(s,e){return s+e.amount;},0);
-  var filtered=cv==='전체'?DB.expenses:DB.expenses.filter(function(e){return e.category===cv;});
-  var cOpts='<option value="전체" '+(cv==='전체'?'selected':'')+'>'+sl('전체','全て')+'</option>'+ECATS().map(function(x){return '<option value="'+x+'" '+(cv===x?'selected':'')+'>'+x+'</option>';}).join('');
-  var cards=filtered.length
-    ?'<div class="exp-grid">'+filtered.map(function(e){
-        return '<div class="ecard"><div class="ecat">'+e.category+'</div><div class="eitem">'+e.item+'</div>'
-          +'<div style="font-size:11px;color:#aaa;margin-bottom:2px">🏪 '+e.vendor+'</div>'
-          +'<div style="font-size:11px;color:#ccc;margin-bottom:7px">📅 '+e.date+'</div>'
-          +'<div class="eamt">₩'+e.amount.toLocaleString()+'</div>'
-          +'<button class="delx" onclick="delExp(\''+e.id+'\')">✕</button></div>';
-      }).join('')+'</div>'
-    :'<div class="card" style="text-align:center;color:#888;padding:32px">'+sl('경비가 없습니다','経費がありません')+'</div>';
-  document.getElementById('mc').innerHTML=
-    '<div class="sec-head"><h2>🧾 '+sl('경비 관리','経費管理')+'</h2><button class="add-btn" onclick="addExp()">+ '+sl('경비 추가','経費追加')+'</button></div>'
-    +'<div class="toolbar"><select class="sel" onchange="renderExp(this.value)">'+cOpts+'</select>'
-    +'<div style="font-size:14px;font-weight:700;color:#c8832a;margin-left:auto">'+sl('이번 달 합계','今月合計')+': ₩'+total.toLocaleString()+'</div></div>'
-    +cards;
-}
-function expFormBody(){
-  var cOpts=ECATS().map(function(c){return '<option>'+c+'</option>';}).join('');
-  return '<div class="fcol">'
-    +'<div><label class="lbl">'+sl('카테고리','カテゴリ')+'</label><select class="inp sel" id="ecat">'+cOpts+'</select></div>'
-    +'<div><label class="lbl">'+sl('품목명','品目名')+'</label><input class="inp" id="eitem"/></div>'
-    +'<div><label class="lbl">'+sl('금액 (₩)','金額 (₩)')+'</label><input class="inp" type="number" id="eamt"/></div>'
-    +'<div><label class="lbl">'+sl('납품업체','仕入先')+'</label><input class="inp" id="evend"/></div>'
-    +'<div><label class="lbl">'+sl('날짜','日付')+'</label><input class="inp" type="date" id="edate" value="'+new Date().toISOString().slice(0,10)+'"/></div>'
-    +'</div>';
-}
-function addExp(){om(sl('경비 추가','経費追加'),expFormBody(),'<button class="canbtn" onclick="cm()">'+sl('취소','キャンセル')+'</button><button class="savbtn" onclick="submitExp()">'+sl('저장하기','保存する')+'</button>');}
-async function submitExp(){
-  var item=document.getElementById('eitem').value.trim(),amt=Number(document.getElementById('eamt').value);
-  if(!item||!amt){toast(sl('품목명과 금액을 입력해주세요','品目名と金額を入力してください'));return;}
-  var ne={id:nid(),category:document.getElementById('ecat').value,item:item,amount:amt,vendor:document.getElementById('evend').value,date:document.getElementById('edate').value};
-  try{setStatus('sav');var r=await api.post('expenses',ne);DB.expenses.unshift(r[0]||ne);setStatus('saved');cm();renderExp('전체');updateHdr();toast(sl('✓ 경비가 등록되었습니다','✓ 経費を登録しました'));}catch(e){toast('⚠️ '+e.message);}
-}
-async function delExp(id){
-  if(!confirm(sl('삭제하시겠습니까?','削除しますか？')))return;
-  try{setStatus('sav');await api.del('expenses',id);DB.expenses=DB.expenses.filter(function(e){return e.id!==id;});setStatus('saved');renderExp('전체');updateHdr();toast(sl('삭제되었습니다','削除しました'));}catch(e){toast('⚠️ '+e.message);}
+function changeRange(r){
+  state.range=r;
+  if(state.data&&state.prediction) renderResult(state.data,state.prediction);
 }
 
-// ── SETTINGS ──
-function renderSet(){
-  var b=getBankInfo();
-  document.getElementById('mc').innerHTML=
-    '<div class="sec-head"><h2>⚙️ '+sl('설정','設定')+'</h2></div>'
-    +'<div class="notif-card"><div class="ntitle">💬 '+sl('카카오톡 알림 설정','カカオトーク通知設定')+'</div>'
-    +'<div class="ndesc">'+sl('카카오 오픈빌더 Webhook URL을 입력하면 자동으로 알림을 보냅니다.','カカオオープンビルダーのWebhook URLを入力すると自動通知を送ります。')+'</div>'
-    +'<div><label class="lbl">Webhook URL</label><input class="inp" id="kurl" placeholder="https://..." value="'+kakaoWH+'"/></div>'
-    +'<div style="display:flex;gap:8px;margin-top:10px">'
-    +'<button class="savbtn" onclick="saveKakao()">'+sl('저장','保存')+'</button>'
-    +'<button class="edit-b" onclick="testKakao()">'+sl('테스트 전송','テスト送信')+'</button>'
-    +(kakaoWH?'<button class="del-b" onclick="clearKakao()">'+sl('삭제','削除')+'</button>':'')
-    +'</div></div>'
-    +'<div class="notif-card"><div class="ntitle">🏦 '+sl('입금 안내 은행 정보','振込案内 銀行情報')+'</div>'
-    +'<div class="ndesc">'+sl('입금 결제 시 안내 메시지에 자동으로 포함됩니다.','振込決済時に案内メッセージに自動で含まれます。')+'</div>'
-    +'<div class="fcol">'
-    +'<div><label class="lbl">'+sl('은행명','銀行名')+'</label><input class="inp" id="bbank" value="'+(b.bank||'')+'" placeholder="'+sl('예: 국민은행','例: 国民銀行')+'"/></div>'
-    +'<div><label class="lbl">'+sl('계좌번호','口座番号')+'</label><input class="inp" id="bacct" value="'+(b.account||'')+'" placeholder="000-0000-0000-00"/></div>'
-    +'<div><label class="lbl">'+sl('예금주','口座名義')+'</label><input class="inp" id="bholder" value="'+(b.holder||'')+'"/></div>'
-    +'</div><button class="savbtn" style="margin-top:10px" onclick="saveBank()">'+sl('저장','保存')+'</button></div>'
-    +'<div class="card"><div style="font-size:15px;font-weight:700;margin-bottom:14px">'+sl('데이터 관리','データ管理')+'</div>'
-    +'<p style="font-size:13px;color:#888;margin-bottom:12px;line-height:1.7">✅ Supabase '+sl('클라우드 DB에 연결됨. 모든 기기에서 실시간 공유됩니다.','クラウドDBに接続済み。全端末でリアルタイム共有されます。')+'</p>'
-    +'<button class="edit-b" onclick="exportData()">📥 '+sl('데이터 내보내기','データ書き出し')+'</button></div>'
-    +'<div class="card"><div style="font-size:15px;font-weight:700;margin-bottom:14px">'+sl('언어 설정','言語設定')+'</div>'
-    +'<div style="display:flex;gap:10px">'
-    +'<button class="edit-b" style="'+(LANG==='ko'?'background:#f5ede2;font-weight:700':'')+'" onclick="if(LANG!==\'ko\')toggleLang()">🇰🇷 한국어</button>'
-    +'<button class="edit-b" style="'+(LANG==='ja'?'background:#f5ede2;font-weight:700':'')+'" onclick="if(LANG!==\'ja\')toggleLang()">🇯🇵 日本語</button>'
-    +'</div></div>';
-}
-function saveKakao(){kakaoWH=document.getElementById('kurl').value.trim();localStorage.setItem('hw_kakao',kakaoWH);toast(sl('✓ 저장되었습니다','✓ 保存しました'));renderSet();}
-async function testKakao(){var url=document.getElementById('kurl').value.trim();if(!url){toast(sl('URL을 입력해주세요','URLを入力してください'));return;}kakaoWH=url;await sendKakao(sl('테스트 메시지입니다 🍡','テストメッセージです 🍡'));toast(sl('✓ 전송했습니다','✓ 送信しました'));}
-function clearKakao(){kakaoWH='';localStorage.removeItem('hw_kakao');toast(sl('삭제되었습니다','削除しました'));renderSet();}
-function saveBank(){var b={bank:document.getElementById('bbank').value,account:document.getElementById('bacct').value,holder:document.getElementById('bholder').value};localStorage.setItem('hw_bank',JSON.stringify(b));toast(sl('✓ 저장되었습니다','✓ 保存しました'));}
-function exportData(){var a=document.createElement('a');a.href='data:application/json;charset=utf-8,'+encodeURIComponent(JSON.stringify(DB,null,2));a.download='haewool_backup_'+new Date().toISOString().slice(0,10)+'.json';a.click();toast(sl('✓ 내보내기 완료','✓ 書き出し完了'));}
+// =========================================================
+// AUTOCOMPLETE
+// =========================================================
 
-// ── MODAL ──
-function om(title,body,actions){
-  document.getElementById('mt').textContent=title;
-  document.getElementById('mb').innerHTML=body;
-  document.getElementById('ma').innerHTML=actions;
-  document.getElementById('ov').style.display='flex';
+function updateAC(q){
+  const ac=document.getElementById('autocomplete');
+  if(!q||q.length<1){ac.classList.remove('show');return;}
+  const uq=q.toUpperCase();
+  const matches=Object.entries(STOCKS).filter(([t,i])=>t.startsWith(uq)||i.name.toUpperCase().includes(uq)).slice(0,8);
+  if(!matches.length){ac.classList.remove('show');return;}
+  ac.innerHTML=matches.map(([t,i])=>`
+    <div class="ac-item" onclick="doSearch('${t}')">
+      <span class="ac-ticker">${t}</span>
+      <span class="ac-name">${i.name}</span>
+      <span class="ac-type ${i.type==='ETF'?'etf':'stock'}">${i.type}</span>
+    </div>
+  `).join('');
+  ac.classList.add('show');
 }
-function cm(){document.getElementById('ov').style.display='none';}
 
-// ── INIT ──
-if(LANG==='ja'){
-  document.getElementById('logo-text').textContent='ヘウルトック管理システム';
-  document.querySelector('.lbtn').textContent='🌐 한국어';
-  document.querySelectorAll('.nl').forEach(function(el){el.textContent=el.dataset.ja;});
-  document.getElementById('h-rev-l').textContent='今月売上';
-  document.getElementById('h-exp-l').textContent='今月経費';
-  document.getElementById('h-unp-l').textContent='未払い';
-}
-loadAll();
+// =========================================================
+// INIT
+// =========================================================
+
+document.addEventListener('DOMContentLoaded',()=>{
+  renderHome();
+  const inp=document.getElementById('searchInput');
+  const btn=document.getElementById('searchBtn');
+  inp.addEventListener('input',e=>updateAC(e.target.value));
+  inp.addEventListener('keydown',e=>{
+    if(e.key==='Enter') doSearch(inp.value);
+    if(e.key==='Escape') document.getElementById('autocomplete').classList.remove('show');
+  });
+  btn.addEventListener('click',()=>doSearch(inp.value));
+  document.addEventListener('click',e=>{
+    if(!e.target.closest('.search-wrap')) document.getElementById('autocomplete').classList.remove('show');
+  });
+});
 </script>
 </body>
 </html>
