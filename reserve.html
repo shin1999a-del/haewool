@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>해울떡 온라인 예약 · ヘウルトック 予約</title>
+<meta name="description" content="해울떡 온라인 예약 · 韓国餅のオンライン予約"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:sans-serif;background:#fdf6ed;color:#2a1208;min-height:100vh}
+button{font-family:inherit;cursor:pointer}
+input,select,textarea{font-family:inherit}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes checkPop{0%{transform:scale(0)}80%{transform:scale(1.2)}100%{transform:scale(1)}}
+
+/* Header */
+header{background:linear-gradient(135deg,#2a1208,#6b2f0a,#8b4c12);color:#fff;padding:20px 16px 24px;text-align:center;position:relative}
+.lbtn{position:absolute;top:16px;right:16px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:20px;padding:5px 14px;font-size:11px;font-weight:600}
+.logo-icon{font-size:44px;margin-bottom:8px}
+.logo-ko{font-size:22px;font-weight:700;margin-bottom:3px}
+.logo-sub{font-size:10px;opacity:.55;letter-spacing:.2em}
+
+/* Main */
+main{max-width:540px;margin:0 auto;padding:20px 16px 40px}
+.card{background:#fff;border-radius:16px;padding:20px;margin-bottom:14px;box-shadow:0 2px 12px rgba(0,0,0,.07);animation:fadeIn .35s}
+.step-title{font-size:15px;font-weight:700;color:#2a1208;margin-bottom:16px;display:flex;align-items:center;gap:9px}
+.snum{width:26px;height:26px;background:linear-gradient(135deg,#8b2500,#c8832a);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+
+/* Form */
+.fcol{display:flex;flex-direction:column;gap:12px}
+.flbl{display:block;font-size:11px;font-weight:700;color:#8b4c12;margin-bottom:4px}
+.opt{color:#aaa;font-weight:400}
+.inp{width:100%;padding:11px 14px;border:1.5px solid #e8d4b8;border-radius:10px;font-size:14px;background:#fdf8f4;outline:none;transition:border .2s}
+.inp:focus{border-color:#c8832a;background:#fff}
+.err{font-size:11px;color:#e05555;margin-top:4px;display:none}
+.err.show{display:block}
+
+/* Radio */
+.radio-row{display:flex;gap:8px}
+.ropt{flex:1;border:1.5px solid #e8d4b8;border-radius:10px;padding:11px;text-align:center;cursor:pointer;transition:all .2s;font-size:13px;color:#888}
+.ropt.sel{border-color:#c8832a;background:#fff8ef;color:#8b2500;font-weight:700}
+
+/* Products */
+.prod-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.pitem{border:1.5px solid #e8d4b8;border-radius:12px;padding:12px 10px;background:#fdf8f4;transition:all .2s;text-align:center}
+.pitem.on{border-color:#c8832a;background:#fff8ef}
+.pemoji{font-size:30px;margin-bottom:5px}
+.pname{font-size:12px;font-weight:700;margin-bottom:2px}
+.pprice{font-size:11px;color:#c8832a;font-weight:600;margin-bottom:8px}
+.pnote{font-size:9px;color:#c8832a;background:#fff3e0;padding:2px 6px;border-radius:4px;display:inline-block;margin-bottom:4px}
+.qctrl{display:flex;align-items:center;gap:6px;justify-content:center}
+.qbtn{width:28px;height:28px;border:1.5px solid #e8d4b8;border-radius:50%;background:#fff;font-size:17px;line-height:1;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.qbtn:hover{border-color:#c8832a;background:#fff8ef}
+.qnum{font-size:15px;font-weight:700;min-width:22px;text-align:center}
+
+/* Total */
+.total-bar{background:linear-gradient(135deg,#2a1208,#6b2f0a);color:#fff;border-radius:14px;padding:16px 20px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center}
+.tot-l{font-size:12px;opacity:.65}
+.tot-v{font-size:24px;font-weight:700}
+.notice{background:#fff8ef;border:1px solid #f0ddc8;border-radius:10px;padding:12px 14px;font-size:11px;color:#8b4c12;line-height:1.8;margin-bottom:14px}
+
+/* Submit */
+.sbtn{width:100%;padding:16px;background:linear-gradient(135deg,#8b2500,#c8832a);color:#fff;border:none;border-radius:14px;font-size:16px;font-weight:700;box-shadow:0 4px 16px rgba(200,131,42,.35);transition:all .2s}
+.sbtn:hover:not(:disabled){opacity:.9;transform:translateY(-1px)}
+.sbtn:disabled{opacity:.5;cursor:default;transform:none}
+.spin{display:inline-block;animation:spin 1s linear infinite}
+
+/* Success */
+#success{display:none;max-width:540px;margin:0 auto;padding:40px 16px;text-align:center;animation:fadeIn .5s}
+.chk{width:76px;height:76px;background:#e8f5e9;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;font-size:38px;animation:checkPop .5s}
+#success h2{font-size:22px;font-weight:700;margin-bottom:8px}
+#success p{font-size:13px;color:#888;line-height:1.9;margin-bottom:22px}
+.obox{background:#fff;border-radius:14px;padding:18px;text-align:left;box-shadow:0 2px 10px rgba(0,0,0,.07);margin-bottom:22px}
+.orow{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f5ede2;font-size:13px}
+.orow:last-child{border:none}
+.ol{color:#888}
+.ov{font-weight:600}
+.newbtn{padding:12px 28px;background:#f5ede2;color:#6b2f0a;border:none;border-radius:10px;font-size:14px;font-weight:600}
+
+/* Toast */
+#toast{position:fixed;bottom:20px;left:16px;right:16px;background:#2a1208;color:#fff;padding:13px 18px;border-radius:12px;font-size:13px;font-weight:600;z-index:9999;text-align:center;display:none;animation:fadeIn .3s}
+
+@media(max-width:380px){.prod-grid{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<div id="toast"></div>
+
+<header>
+  <button class="lbtn" onclick="toggleLang()">🌐 <span id="lbtn">日本語</span></button>
+  <div class="logo-icon">🍡</div>
+  <div class="logo-ko" id="logo-txt">해울떡 온라인 예약</div>
+  <div class="logo-sub">HAEWOOL TTEOK · ONLINE RESERVATION</div>
+</header>
+
+<div id="form-area">
+<main>
+
+  <!-- Step 1: 수령일시 -->
+  <div class="card">
+    <div class="step-title"><div class="snum">1</div><span id="t-s1">수령 일시</span></div>
+    <div class="fcol">
+      <div>
+        <label class="flbl" id="t-ldate">수령 날짜</label>
+        <input class="inp" type="date" id="f-date"/>
+        <div class="err" id="e-date">날짜를 선택해주세요</div>
+      </div>
+      <div>
+        <label class="flbl" id="t-ltime">수령 시간</label>
+        <input class="inp" type="time" id="f-time" value="10:00"/>
+        <div style="font-size:11px;color:#aaa;margin-top:4px" id="t-hours">영업시간: 09:00 〜 18:00</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 2: 수령방법 -->
+  <div class="card">
+    <div class="step-title"><div class="snum">2</div><span id="t-s2">수령 방법</span></div>
+    <div class="radio-row">
+      <div class="ropt sel" id="ropt-v" onclick="setDel('방문수령')">🏪 <span id="t-visit">방문수령</span></div>
+      <div class="ropt" id="ropt-d" onclick="setDel('배달')">🚚 <span id="t-del">배달</span></div>
+    </div>
+    <div id="addr-row" style="margin-top:12px;display:none">
+      <label class="flbl" id="t-laddr">배달 주소</label>
+      <input class="inp" id="f-addr" placeholder="주소를 입력해주세요"/>
+    </div>
+  </div>
+
+  <!-- Step 3: 상품 -->
+  <div class="card">
+    <div class="step-title"><div class="snum">3</div><span id="t-s3">상품 선택</span></div>
+    <div class="prod-grid" id="prod-grid"></div>
+    <div class="err" id="e-items" style="margin-top:8px">상품을 1개 이상 선택해주세요</div>
+  </div>
+
+  <!-- Step 4: 예약자 정보 -->
+  <div class="card">
+    <div class="step-title"><div class="snum">4</div><span id="t-s4">예약자 정보</span></div>
+    <div class="fcol">
+      <div>
+        <label class="flbl" id="t-lname">이름</label>
+        <input class="inp" id="f-name" placeholder="홍길동"/>
+        <div class="err" id="e-name">이름을 입력해주세요</div>
+      </div>
+      <div>
+        <label class="flbl" id="t-lphone">전화번호</label>
+        <input class="inp" id="f-phone" type="tel" placeholder="010-0000-0000"/>
+        <div class="err" id="e-phone">전화번호를 입력해주세요</div>
+      </div>
+      <div>
+        <label class="flbl">
+          <span id="t-lnote">요청 사항</span>
+          <span class="opt" id="t-opt"> (선택)</span>
+        </label>
+        <textarea class="inp" id="f-note" rows="3" style="resize:vertical" id="f-note"
+          placeholder="알레르기, 포장 방법, 기타 요청사항"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- Total -->
+  <div class="total-bar">
+    <div class="tot-l" id="t-total">합계 금액</div>
+    <div class="tot-v" id="total-v">₩0</div>
+  </div>
+  <div class="notice" id="t-notice">
+    ※ 예약 완료 후 담당자가 연락드립니다.<br>가격은 수량 및 내용에 따라 변동될 수 있습니다.
+  </div>
+  <button class="sbtn" id="sbtn" onclick="submitRes()">
+    <span id="t-sbtn">예약 신청하기 →</span>
+  </button>
+
+</main>
+</div>
+
+<!-- Success -->
+<div id="success">
+  <div class="chk">✅</div>
+  <h2 id="t-suc-h">예약이 접수되었습니다!</h2>
+  <p id="t-suc-p">담당자가 확인 후 연락드리겠습니다.<br>아래 예약번호를 메모해두세요.</p>
+  <div class="obox" id="obox"></div>
+  <button class="newbtn" onclick="resetForm()" id="t-newbtn">새 예약하기</button>
+</div>
+
+<script>
+const SUPABASE_URL='https://adkfwhkneptmndzgrsfq.supabase.co';
+const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFka2Z3aGtuZXB0bW5kemdyc2ZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzMTA4MzAsImV4cCI6MjA5Mzg4NjgzMH0.sYmgBSGGVMWWxzNo6qa9f2eTM1tfNG1ULrrH3jyRhJA';
+
+let LANG=localStorage.getItem('hw_lang')||'ko';
+let delType='방문수령';
+let qty={};
+
+const CATALOG=[
+  {name:'백설기',  ja:'白雪餅',      price:3000, emoji:'🍚'},
+  {name:'시루떡',  ja:'シルトッ',    price:3500, emoji:'🥮'},
+  {name:'인절미',  ja:'引切餅',      price:3000, emoji:'🍡'},
+  {name:'무지개떡',ja:'虹餅',        price:4000, emoji:'🌈'},
+  {name:'콩설기',  ja:'豆雪餅',      price:3000, emoji:'🫘'},
+  {name:'가래떡',  ja:'棒餅',        price:2500, emoji:'🥢'},
+  {name:'꿀떡',    ja:'蜂蜜餅',      price:2000, emoji:'🍯'},
+  {name:'호박인절미',ja:'かぼちゃ餅', price:3000, emoji:'🎃'},
+  {name:'흑임자인절미',ja:'黒ゴマ餅', price:3500, emoji:'⚫'},
+  {name:'팥시루떡',ja:'小豆蒸餅',    price:3500, emoji:'❤️'},
+  {name:'모듬찰떡',ja:'盛合せ餅',    price:4500, emoji:'🧆'},
+  {name:'약식',    ja:'薬食',        price:5000, emoji:'🍯'},
+  {name:'떡케이크',ja:'餅ケーキ',    price:45000,emoji:'🎂',note:'주문제작',noteJa:'オーダーメイド'},
+  {name:'송편',    ja:'ソンピョン',  price:3000, emoji:'🌙',note:'계절한정',noteJa:'季節限定'},
+];
+
+const I18N={
+  lbtn:     {ko:'日本語',ja:'한국어'},
+  logoTxt:  {ko:'해울떡 온라인 예약',ja:'ヘウルトック オンライン予約'},
+  's1':     {ko:'수령 일시',ja:'受取日時'},
+  's2':     {ko:'수령 방법',ja:'受取方法'},
+  's3':     {ko:'상품 선택',ja:'商品選択'},
+  's4':     {ko:'예약자 정보',ja:'予約者情報'},
+  ldate:    {ko:'수령 날짜',ja:'受取日'},
+  ltime:    {ko:'수령 시간',ja:'受取時間'},
+  hours:    {ko:'영업시간: 09:00 〜 18:00',ja:'営業時間: 09:00 〜 18:00'},
+  visit:    {ko:'방문수령',ja:'店頭受取'},
+  del:      {ko:'배달',ja:'配達'},
+  laddr:    {ko:'배달 주소',ja:'配達住所'},
+  addrPh:   {ko:'주소를 입력해주세요',ja:'住所を入力してください'},
+  lname:    {ko:'이름',ja:'お名前'},
+  namePh:   {ko:'홍길동',ja:'山田花子'},
+  lphone:   {ko:'전화번호',ja:'電話番号'},
+  phonePh:  {ko:'010-0000-0000',ja:'090-0000-0000'},
+  lnote:    {ko:'요청 사항',ja:'ご要望'},
+  notePh:   {ko:'알레르기, 포장 방법, 기타 요청사항',ja:'アレルギー・包装方法・その他ご要望'},
+  opt:      {ko:' (선택)',ja:' (任意)'},
+  total:    {ko:'합계 금액',ja:'合計金額'},
+  notice:   {ko:'※ 예약 완료 후 담당자가 연락드립니다.<br>가격은 수량 및 내용에 따라 변동될 수 있습니다.',
+             ja:'※ ご予約完了後、担当者よりご連絡いたします。<br>価格は数量・内容により変動する場合があります。'},
+  sbtn:     {ko:'예약 신청하기 →',ja:'予約を申し込む →'},
+  sucH:     {ko:'예약이 접수되었습니다!',ja:'ご予約を受け付けました！'},
+  sucP:     {ko:'담당자가 확인 후 연락드리겠습니다.<br>아래 예약번호를 메모해두세요.',
+             ja:'担当者が確認後、ご連絡いたします。<br>下記の予約番号をお控えください。'},
+  newbtn:   {ko:'새 예약하기',ja:'新しく予約する'},
+  edate:    {ko:'날짜를 선택해주세요',ja:'日付を選択してください'},
+  eitems:   {ko:'상품을 1개 이상 선택해주세요',ja:'商品を1つ以上選択してください'},
+  ename:    {ko:'이름을 입력해주세요',ja:'お名前を入力してください'},
+  ephone:   {ko:'전화번호를 입력해주세요',ja:'電話番号を入力してください'},
+  obId:     {ko:'예약번호',ja:'予約番号'},
+  obName:   {ko:'예약자',ja:'予約者'},
+  obDate:   {ko:'수령일시',ja:'受取日時'},
+  obMethod: {ko:'수령방법',ja:'受取方法'},
+  obItems:  {ko:'주문내역',ja:'注文内容'},
+  obTotal:  {ko:'합계',ja:'合計'},
+  visitLabel:{ko:'방문수령',ja:'店頭受取'},
+  delLabel:  {ko:'배달',ja:'配達'},
+};
+
+function t(key){return I18N[key]?I18N[key][LANG]:key;}
+
+function applyLang(){
+  document.getElementById('lbtn').textContent=t('lbtn');
+  document.getElementById('logo-txt').textContent=t('logoTxt');
+  document.getElementById('t-s1').textContent=t('s1');
+  document.getElementById('t-s2').textContent=t('s2');
+  document.getElementById('t-s3').textContent=t('s3');
+  document.getElementById('t-s4').textContent=t('s4');
+  document.getElementById('t-ldate').textContent=t('ldate');
+  document.getElementById('t-ltime').textContent=t('ltime');
+  document.getElementById('t-hours').textContent=t('hours');
+  document.getElementById('t-visit').textContent=t('visit');
+  document.getElementById('t-del').textContent=t('del');
+  document.getElementById('t-laddr').textContent=t('laddr');
+  document.getElementById('f-addr').placeholder=t('addrPh');
+  document.getElementById('t-lname').textContent=t('lname');
+  document.getElementById('f-name').placeholder=t('namePh');
+  document.getElementById('t-lphone').textContent=t('lphone');
+  document.getElementById('f-phone').placeholder=t('phonePh');
+  document.getElementById('t-lnote').textContent=t('lnote');
+  document.getElementById('t-opt').textContent=t('opt');
+  document.getElementById('f-note').placeholder=t('notePh');
+  document.getElementById('t-total').textContent=t('total');
+  document.getElementById('t-notice').innerHTML=t('notice');
+  document.getElementById('t-sbtn').textContent=t('sbtn');
+  document.getElementById('t-suc-h').textContent=t('sucH');
+  document.getElementById('t-suc-p').innerHTML=t('sucP');
+  document.getElementById('t-newbtn').textContent=t('newbtn');
+  document.getElementById('e-date').textContent=t('edate');
+  document.getElementById('e-items').textContent=t('eitems');
+  document.getElementById('e-name').textContent=t('ename');
+  document.getElementById('e-phone').textContent=t('ephone');
+}
+
+function toggleLang(){
+  LANG=LANG==='ko'?'ja':'ko';
+  localStorage.setItem('hw_lang',LANG);
+  applyLang();
+  renderProds();
+}
+
+function renderProds(){
+  document.getElementById('prod-grid').innerHTML=CATALOG.map(function(p){
+    var q=qty[p.name]||0;
+    var nm=LANG==='ja'?p.ja:p.name;
+    var noteHtml=p.note?'<div class="pnote">'+(LANG==='ja'?p.noteJa:p.note)+'</div>':'';
+    return '<div class="pitem'+(q>0?' on':'')+'" id="pi-'+p.name+'">'
+      +noteHtml
+      +'<div class="pemoji">'+p.emoji+'</div>'
+      +'<div class="pname">'+nm+'</div>'
+      +'<div class="pprice">₩'+p.price.toLocaleString()+'</div>'
+      +'<div class="qctrl">'
+      +'<button class="qbtn" onclick="chgQ(\''+p.name+'\',-1)">−</button>'
+      +'<div class="qnum" id="qn-'+p.name+'">'+q+'</div>'
+      +'<button class="qbtn" onclick="chgQ(\''+p.name+'\',1)">＋</button>'
+      +'</div></div>';
+  }).join('');
+}
+
+function chgQ(name,d){
+  qty[name]=Math.max(0,(qty[name]||0)+d);
+  var nel=document.getElementById('qn-'+name);
+  var pel=document.getElementById('pi-'+name);
+  if(nel)nel.textContent=qty[name];
+  if(pel)pel.className='pitem'+(qty[name]>0?' on':'');
+  calcTotal();
+}
+
+function calcTotal(){
+  var tot=CATALOG.reduce(function(s,p){return s+(qty[p.name]||0)*p.price;},0);
+  document.getElementById('total-v').textContent='₩'+tot.toLocaleString();
+  return tot;
+}
+
+function setDel(type){
+  delType=type;
+  document.getElementById('ropt-v').className='ropt'+(type==='방문수령'?' sel':'');
+  document.getElementById('ropt-d').className='ropt'+(type==='배달'?' sel':'');
+  document.getElementById('addr-row').style.display=type==='배달'?'block':'none';
+}
+
+function showErr(id,show){
+  var el=document.getElementById(id);
+  if(el)el.className='err'+(show?' show':'');
+}
+
+function toast(msg){
+  var el=document.getElementById('toast');
+  el.textContent=msg;el.style.display='block';
+  clearTimeout(el._t);el._t=setTimeout(function(){el.style.display='none';},3500);
+}
+
+function nid(){
+  return('ID-'+Date.now().toString(36)+Math.random().toString(36).slice(2,5)).toUpperCase();
+}
+
+async function sbReq(method,path,body){
+  var r=await fetch(SUPABASE_URL+'/rest/v1/'+path,{
+    method:method,
+    headers:{
+      'apikey':SUPABASE_KEY,
+      'Authorization':'Bearer '+SUPABASE_KEY,
+      'Content-Type':'application/json',
+      'Accept':'application/json',
+      'Prefer':method==='POST'?'return=representation':'return=minimal'
+    },
+    body:body?JSON.stringify(body):null
+  });
+  if(!r.ok)throw new Error(await r.text());
+  var tx=await r.text();return tx?JSON.parse(tx):[];
+}
+
+async function submitRes(){
+  var dateV=document.getElementById('f-date').value;
+  var timeV=document.getElementById('f-time').value||'10:00';
+  var nameV=document.getElementById('f-name').value.trim();
+  var phoneV=document.getElementById('f-phone').value.trim();
+  var noteV=document.getElementById('f-note').value.trim();
+  var addrV=document.getElementById('f-addr').value.trim();
+
+  var items=CATALOG.filter(function(p){return(qty[p.name]||0)>0;})
+    .map(function(p){return{name:p.name,qty:qty[p.name],price:p.price};});
+
+  var ok=true;
+  showErr('e-date',!dateV);  if(!dateV)ok=false;
+  showErr('e-items',!items.length); if(!items.length)ok=false;
+  showErr('e-name',!nameV);  if(!nameV)ok=false;
+  showErr('e-phone',!phoneV); if(!phoneV)ok=false;
+  if(!ok)return;
+
+  var total=items.reduce(function(s,i){return s+i.qty*i.price;},0);
+  var pickup=dateV+'T'+timeV;
+  var note=(noteV?noteV+'\n':'')+'[🌐 온라인 예약]';
+
+  var btn=document.getElementById('sbtn');
+  btn.disabled=true;
+  document.getElementById('t-sbtn').innerHTML='<span class="spin">⏳</span>';
+
+  try{
+    var oid=nid();
+    await sbReq('POST','orders',{
+      id:oid,customer_name:nameV,items:items,total:total,
+      pickup:pickup,status:'pending',paid:false,note:note,
+      delivery_type:delType,
+      delivery_addr:delType==='배달'?addrV:'',
+      file_urls:[]
+    });
+
+    // 고객 등록/업데이트
+    var custs=await sbReq('GET','customers?name=eq.'+encodeURIComponent(nameV));
+    if(!custs.length){
+      await sbReq('POST','customers',{
+        id:nid(),name:nameV,phone:phoneV,email:'',
+        address:delType==='배달'?addrV:'',note:'',
+        total_orders:1,total_spent:total
+      });
+    }else{
+      var c=custs[0];
+      await sbReq('PATCH','customers?id=eq.'+c.id,{
+        total_orders:(c.total_orders||0)+1,
+        total_spent:(c.total_spent||0)+total
+      });
+    }
+
+    showSuccess(oid,nameV,pickup,items,total);
+  }catch(e){
+    toast((LANG==='ja'?'予約に失敗しました: ':'예약 실패: ')+e.message);
+    btn.disabled=false;
+    document.getElementById('t-sbtn').textContent=t('sbtn');
+  }
+}
+
+function showSuccess(oid,name,pickup,items,total){
+  var d=new Date(pickup);
+  var ds=d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate())+' '+p2(d.getHours())+':'+p2(d.getMinutes());
+  var itemStr=items.map(function(i){
+    var p=CATALOG.find(function(c){return c.name===i.name;});
+    return(LANG==='ja'&&p?p.ja:i.name)+' ×'+i.qty;
+  }).join(' / ');
+
+  document.getElementById('obox').innerHTML=
+    row(t('obId'),'<span style="font-family:monospace;color:#c8832a">'+oid+'</span>')
+    +row(t('obName'),name)
+    +row(t('obDate'),ds)
+    +row(t('obMethod'),delType==='배달'?t('delLabel'):t('visitLabel'))
+    +row(t('obItems'),itemStr)
+    +row(t('obTotal'),'<span style="color:#c8832a;font-weight:700">₩'+total.toLocaleString()+'</span>');
+
+  document.getElementById('form-area').style.display='none';
+  document.getElementById('success').style.display='block';
+  window.scrollTo(0,0);
+}
+
+function row(l,v){
+  return'<div class="orow"><span class="ol">'+l+'</span><span class="ov">'+v+'</span></div>';
+}
+function p2(n){return String(n).padStart(2,'0');}
+
+function resetForm(){
+  qty={};delType='방문수령';
+  ['f-date','f-name','f-phone','f-note','f-addr'].forEach(function(id){
+    document.getElementById(id).value='';
+  });
+  document.getElementById('f-time').value='10:00';
+  setDel('방문수령');renderProds();calcTotal();
+  document.getElementById('sbtn').disabled=false;
+  document.getElementById('t-sbtn').textContent=t('sbtn');
+  document.getElementById('success').style.display='none';
+  document.getElementById('form-area').style.display='block';
+  window.scrollTo(0,0);
+}
+
+// Init
+(function(){
+  var d=new Date();d.setDate(d.getDate()+1);
+  document.getElementById('f-date').min=d.toISOString().slice(0,10);
+  if(LANG==='ja')applyLang();
+  renderProds();
+})();
+</script>
+</body>
+</html>
