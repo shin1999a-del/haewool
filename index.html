@@ -321,10 +321,53 @@ function renderOrders(){
 async function updStat(id,status){try{setStatus('sav');await sbReq('PATCH','orders',{status:status},id);DB.orders=DB.orders.map(function(o){return o.id===id?Object.assign({},o,{status:status}):o;});setStatus('saved');refreshO();}catch(e){toast('\u26a0\ufe0f '+e.message);}}
 async function markPaid(id){try{setStatus('sav');await sbReq('PATCH','orders',{paid:true},id);DB.orders=DB.orders.map(function(o){return o.id===id?Object.assign({},o,{paid:true}):o;});setStatus('saved');updateHdr();refreshO();toast(sl('\u2713 \uacb0\uc81c \uc644\ub8cc','\u2713 \u652f\u6255\u5b8c\u4e86'));}catch(e){toast('\u26a0\ufe0f '+e.message);}}
 async function delOrder(id){if(!confirm(sl('\uc0ad\uc81c\ud558\uc2dc\uaca0\uc2b5\ub2c8\uae4c?','\u524a\u9664\u3057\u307e\u3059\u304b\uff1f')))return;try{setStatus('sav');await sbReq('DELETE','orders',null,id);DB.orders=DB.orders.filter(function(o){return o.id!==id;});setStatus('saved');updateHdr();refreshO();toast(sl('\uc0ad\uc81c\ub418\uc5c8\uc2b5\ub2c8\ub2e4','\u524a\u9664\u3057\u307e\u3057\u305f'));}catch(e){toast('\u26a0\ufe0f '+e.message);}}
-function syncItems(){tmpItems=tmpItems.map(function(_,i){return{name:document.getElementById('in'+i)?document.getElementById('in'+i).value:tmpItems[i].name,qty:Number(document.getElementById('iq'+i)?document.getElementById('iq'+i).value:1),price:Number(document.getElementById('ip'+i)?document.getElementById('ip'+i).value:2500)};});}
+function syncItems(){
+  tmpItems=tmpItems.map(function(_,i){
+    var sel=document.getElementById('in'+i);
+    var inc=document.getElementById('inc'+i);
+    var name=tmpItems[i].name;
+    if(sel){
+      if(sel.value==='__custom__'){
+        name=inc?inc.value.trim()||'커스텀':'커스텀';
+      } else {
+        name=sel.value;
+      }
+    }
+    return{
+      name:name,
+      qty:Number(document.getElementById('iq'+i)?document.getElementById('iq'+i).value:1),
+      price:Number(document.getElementById('ip'+i)?document.getElementById('ip'+i).value:2500)
+    };
+  });
+}
 function itemsHTML2(){
   var tot=tmpItems.reduce(function(s,i){return s+i.qty*i.price;},0);
-  return tmpItems.map(function(it,i){return '<div style="display:flex;gap:5px;margin-bottom:6px;flex-wrap:wrap;align-items:center"><select class="inp" style="flex:2;min-width:100px" id="in'+i+'">'+PRODS().map(function(p){return '<option'+(p===it.name?' selected':'')+'>'+p+'</option>';}).join('')+'</select><input class="inp" style="width:55px" type="number" id="iq'+i+'" value="'+it.qty+'"/><span style="font-size:11px;color:#888">'+sl('\uac1c','\u500b')+'</span><input class="inp" style="width:75px" type="number" id="ip'+i+'" value="'+it.price+'"/><span style="font-size:11px;color:#888">'+sl('\uc6d0/\uac1c','\u5186/\u500b')+'</span><button class="del-b" onclick="rmItem('+i+')">\u2715</button></div>';}).join('')+'<div style="font-size:12px;color:#c8832a;font-weight:700;margin:4px 0">'+sl('\ud569\uacc4','\u5408\u8a08')+': \u20a9'+tot.toLocaleString()+'</div><button style="background:none;border:none;color:#c8832a;cursor:pointer;font-size:12px;font-weight:600" onclick="addItem()">+ '+sl('\uc0c1\ud488 \ucd94\uac00','\u5546\u54c1\u8ffd\u52a0')+'</button>';
+  var prods=PRODS();
+  var rows=tmpItems.map(function(it,i){
+    var isCustom=prods.indexOf(it.name)<0;
+    var selOpts=prods.map(function(p){return '<option'+(p===it.name?' selected':'')+'>'+p+'</option>';}).join('');
+    selOpts+='<option value="__custom__" '+(isCustom?'selected':'')+'>'+sl('+ 직접 입력','+ 直接入力')+'</option>';
+    return '<div style="display:flex;gap:5px;margin-bottom:6px;flex-wrap:wrap;align-items:center">'
+      +'<select class="inp" style="flex:2;min-width:100px" id="in'+i+'" onchange="toggleCustom('+i+')">'
+      +selOpts+'</select>'
+      +'<input class="inp" style="flex:2;min-width:100px;display:'+(isCustom?'block':'none')+'" id="inc'+i+'" placeholder="'+sl('상품명 입력','商品名入力')+'" value="'+(isCustom?it.name:'')+'" oninput="syncItems()"/>'
+      +'<input class="inp" style="width:55px" type="number" id="iq'+i+'" value="'+it.qty+'"/>'
+      +'<span style="font-size:11px;color:#888">'+sl('개','個')+'</span>'
+      +'<input class="inp" style="width:75px" type="number" id="ip'+i+'" value="'+it.price+'"/>'
+      +'<span style="font-size:11px;color:#888">'+sl('원/개','円/個')+'</span>'
+      +'<button class="del-b" onclick="rmItem('+i+')">✕</button>'
+      +'</div>';
+  }).join('');
+  return rows
+    +'<div style="font-size:12px;color:#c8832a;font-weight:700;margin:4px 0">'+sl('합계','合計')+': ₩'+tot.toLocaleString()+'</div>'
+    +'<button style="background:none;border:none;color:#c8832a;cursor:pointer;font-size:12px;font-weight:600" onclick="addItem()">&#43; '+sl('상품 추가','商品追加')+'</button>';
+}
+function toggleCustom(i){
+  var sel=document.getElementById('in'+i);
+  var inp=document.getElementById('inc'+i);
+  if(!sel||!inp)return;
+  inp.style.display=sel.value==='__custom__'?'block':'none';
+  if(sel.value!=='__custom__')inp.value='';
 }
 function addItem(){syncItems();tmpItems.push({name:PRODS()[0],qty:1,price:2500});document.getElementById('iarea').innerHTML=itemsHTML2();}
 function rmItem(i){syncItems();tmpItems.splice(i,1);if(!tmpItems.length)tmpItems=[{name:PRODS()[0],qty:1,price:2500}];document.getElementById('iarea').innerHTML=itemsHTML2();}
