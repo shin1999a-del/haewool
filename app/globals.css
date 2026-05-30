@@ -1,0 +1,62 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Noto+Serif+KR:wght@300;400;500;600&family=Noto+Serif+JP:wght@300;400;500&family=Noto+Serif+SC:wght@300;400;500&family=Inter:wght@300;400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --ivory: #FDFBF7;
+  --ivory-2: #F4F1EA;
+  --charcoal: #2C2A29;
+  --tan: #C4A882;
+  --tan-light: #E8DED0;
+  --copper: #A0704A;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--ivory);
+  color: var(--charcoal);
+  font-family: 'Inter', 'Noto Sans KR', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Lang-specific font overrides */
+:lang(ko) .font-display,
+:lang(ko) .serif {
+  font-family: 'Noto Serif KR', 'Cormorant Garamond', serif;
+}
+:lang(ja) .font-display,
+:lang(ja) .serif {
+  font-family: 'Noto Serif JP', 'Cormorant Garamond', serif;
+}
+:lang(zh) .font-display,
+:lang(zh) .serif {
+  font-family: 'Noto Serif SC', 'Cormorant Garamond', serif;
+}
+
+/* Display heading font */
+.font-display {
+  font-family: 'Cormorant Garamond', 'Noto Serif KR', serif;
+}
+
+/* Thin horizontal rule with gradient fade */
+.hr-fade {
+  border: none;
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--tan), transparent);
+}
+
+/* Smooth canvas container */
+canvas {
+  display: block;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--ivory-2); }
+::-webkit-scrollbar-thumb { background: var(--tan); border-radius: 3px; }

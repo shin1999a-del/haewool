@@ -1,0 +1,47 @@
+{
+  "nav": {
+    "story": "Our Story",
+    "menu": "Menu",
+    "access": "Visit Us",
+    "reserve": "Reserve"
+  },
+  "hero": {
+    "since": "Since 1988",
+    "tagline": "Connecting Hearts Through Tteok",
+    "subtitle": "Thirty-six years of tradition, one heartfelt bite at a time.",
+    "cta": "Explore Menu"
+  },
+  "story": {
+    "title": "Our Story",
+    "since": "Since 1988",
+    "p1": "Haeul was born in 1988 in Samseong-dong, Gangnam-gu, Seoul. Passed down through generations, our artisans craft every piece using only carefully selected, domestically sourced ingredients—preserving the same dedication and flavor for over 36 years.",
+    "p2": "Our tteok is more than food. It is a heartfelt gift that marks life's milestones and conveys warmth to those who matter most. Haeul is committed to honoring tradition while making every special moment shine a little brighter.",
+    "stat1_num": "36+",
+    "stat1_label": "Years of History",
+    "stat2_num": "100%",
+    "stat2_label": "Local Ingredients",
+    "stat3_num": "1988",
+    "stat3_label": "Founded"
+  },
+  "menu": {
+    "title": "Signature Menu",
+    "subtitle": "Haeul's tteok — crafted with seasonal ingredients and heartfelt care.",
+    "items": [
+      { "name": "Baekseolgi", "desc": "Steamed pure white rice cake with a delicate, clean flavor. A timeless classic.", "tag": "CLASSIC" },
+      { "name": "Kongseolgi", "desc": "Moist rice cake filled with sweet red beans and soybeans. Our beloved signature.", "tag": "SIGNATURE" },
+      { "name": "Rainbow Tteok", "desc": "A festive layered cake in five natural colors, perfect for celebrations.", "tag": "SPECIAL" },
+      { "name": "Injeolmi", "desc": "Chewy rice cake coated in domestic soybean powder, carrying the warmth of tradition.", "tag": "CLASSIC" },
+      { "name": "Duteoptteok", "desc": "Elegant royal-style tteok filled with sweet red bean paste. A refined delicacy.", "tag": "PREMIUM" },
+      { "name": "Yakshik", "desc": "Sweet traditional rice with jujube, chestnut, and pine nuts — a seasonal treasure.", "tag": "SEASONAL" }
+    ]
+  },
+  "info": {
+    "title": "Visit Us",
+    "address": "Samseong-dong, Gangnam-gu, Seoul",
+    "hours": "Daily 09:00 – 18:00",
+    "phone": "02-XXX-XXXX",
+    "map_btn": "View on Naver Map",
+    "reserve_btn": "Online Reservation · Order",
+    "reserve_note": "Advance reservation recommended for bulk or custom orders."
+  }
+}
