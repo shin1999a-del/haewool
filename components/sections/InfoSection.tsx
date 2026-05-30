@@ -105,7 +105,7 @@ export default function InfoSection({ lang, dict }: Props) {
                 </p>
 
                 <Link
-                  href="/reserve"
+                  href={`/${lang}/reserve`}
                   className="group w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-charcoal text-ivory text-xs tracking-[0.25em] uppercase rounded-full font-sans hover:bg-warm-brown transition-colors duration-500"
                 >
                   {info.reserve_btn}

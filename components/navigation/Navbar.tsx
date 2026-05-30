@@ -37,7 +37,7 @@ export default function Navbar({ lang, dict }: Props) {
         {/* Logo wordmark */}
         <Link
           href={`/${lang}`}
-          className="font-display text-xl tracking-[0.2em] text-charcoal hover:text-copper transition-colors duration-200 select-none"
+          className="font-display text-xl tracking-normal text-charcoal hover:text-copper transition-colors duration-200 select-none"
         >
           해울
         </Link>
@@ -59,7 +59,7 @@ export default function Navbar({ lang, dict }: Props) {
         {/* Right: reserve + language */}
         <div className="flex items-center gap-3">
           <Link
-            href="/reserve"
+            href={`/${lang}/reserve`}
             className="hidden md:inline-flex items-center px-4 py-1.5 text-xs tracking-widest uppercase border border-charcoal text-charcoal hover:bg-charcoal hover:text-ivory transition-all duration-300 rounded-full font-sans"
           >
             {dict.nav.reserve}
@@ -93,7 +93,7 @@ export default function Navbar({ lang, dict }: Props) {
             </a>
           ))}
           <Link
-            href="/reserve"
+            href={`/${lang}/reserve`}
             className="self-start px-5 py-2 text-xs tracking-widest uppercase border border-charcoal text-charcoal hover:bg-charcoal hover:text-ivory transition-all duration-300 rounded-full font-sans"
           >
             {dict.nav.reserve}
